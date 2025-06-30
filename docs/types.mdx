@@ -1,0 +1,776 @@
+---
+description: Tables has a fixed number of columns and each column has a data type.
+sidebar_position: 30
+---
+
+# Types
+
+## Introduction to the Examples
+
+The examples in this documentation demonstrate how to use different data types with the SQL API. Each example follows this pattern:
+
+1. **HTTP Request**: A POST request to the SQL API endpoint with a JSON payload containing:
+- `q`: A SQL query using parameterized values (`:parameter_name`) with explicit type casting (`::type`).
+- `params`: The values for each parameter used in the query.
+- `type_hints` (optional): Provides explicit type information for complex data types.
+- `type_formats` (optional): Specifies the format for parsing date/time values.
+
+2. **JSON Response**: The API returns a JSON object containing:
+- `schema`: Metadata about each column, including its PostgreSQL type and whether it's an array.
+- `data`: The actual query results, with values properly formatted according to their types.
+
+These examples show how the API handles type conversion between JSON and SQL data types, demonstrating proper data formatting for both input and output.
+
+## Numeric
+
+Numeric data types are used for storing numeric values, including integers, decimals, and floating-point numbers.
+
+**Examples of Numeric Types:**
+- `smallint`: A 2-byte signed integer.
+- `integer`: A 4-byte signed integer.
+- `bigint`: An 8-byte signed integer.
+- `decimal`/`numeric`: An exact number with user-defined precision and scale.
+- `real`: A 4-byte floating-point number.
+- `double precision`: An 8-byte floating-point number.
+
+
+```http request title="Example request, numeric types"
+POST http://localhost:8080/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8, dsd
+Authorization: Bearer Bearer abc123
+
+{
+  "q": "SELECT :my_smallint::smallint AS my_smallint, :my_integer::integer AS my_integer, :my_bigint::bigint AS my_bigint, :my_decimal::decimal(4,2) AS my_decimal, :my_numeric::numeric(3, 1) AS my_numeric, :my_real::real AS my_real, :my_double::double precision AS my_double",
+  "params": {
+    "my_smallint": 32767,
+    "my_integer": 2147483647,
+    "my_bigint": 9223372036854775807,
+    "my_decimal": 98.99999,
+    "my_numeric": 98.99999,
+    "my_real": 99.999,
+    "my_double": 99.999
+  }
+}
+```
+
+```json title="Response, numeric types"
+{
+  "schema": {
+    "my_smallint": {
+      "type": "int2",
+      "array": false
+    },
+    "my_integer": {
+      "type": "int4",
+      "array": false
+    },
+    "my_bigint": {
+      "type": "int8",
+      "array": false
+    },
+    "my_decimal": {
+      "type": "numeric",
+      "array": false
+    },
+    "my_numeric": {
+      "type": "numeric",
+      "array": false
+    },
+    "my_real": {
+      "type": "float4",
+      "array": false
+    },
+    "my_double": {
+      "type": "float8",
+      "array": false
+    }
+  },
+  "data": [
+    {
+      "my_smallint": 32767,
+      "my_integer": 2147483647,
+      "my_bigint": 9223372036854775807,
+      "my_decimal": "99.00",
+      "my_numeric": "99.0",
+      "my_real": 99.999,
+      "my_double": 99.999
+    }
+  ]
+}
+```
+
+
+## Character
+
+Character data types are used to store text values or strings.
+
+**Examples of Character Types:**
+- `varchar(n)`: A variable-length string with a maximum length of `n`.
+- `char(n)`: A fixed-length string padded with spaces up to `n` characters.
+- `bpchar`: A synonym for `char`, behaves as a fixed-length character type.
+- `text`: A variable-length string with no specific length limit.
+
+
+```http request
+POST http://localhost:8080/api/v4/sql
+Cookie: XDEBUG_SESSION=XDEBUG_ECLIPSE
+Content-Type: application/json
+Accept: application/json; charset=utf-8, dsd
+Authorization: Bearer abc123
+
+{
+  "q": "SELECT :my_varchar::varchar(22) as my_varchar, :my_char::char(22) as my_char, :my_bpchar::bpchar as my_bpchar, :my_text::text as my_text",
+  "params": {
+    "my_varchar": "Mary had a little lamb, little lamb, little lamb",
+    "my_char": "Mary",
+    "my_bpchar": "Mary had a little lamb, little lamb, little lamb",
+    "my_text": "Mary had a little lamb, little lamb, little lamb"
+
+  }
+}
+```
+
+```json
+{
+  "schema": {
+    "my_varchar": {
+      "type": "varchar",
+      "array": false
+    },
+    "my_char": {
+      "type": "bpchar",
+      "array": false
+    },
+    "my_bpchar": {
+      "type": "bpchar",
+      "array": false
+    },
+    "my_text": {
+      "type": "text",
+      "array": false
+    }
+  },
+  "data": [
+    {
+      "my_varchar": "Mary had a little lamb",
+      "my_char": "Mary                  ",
+      "my_bpchar": "Mary had a little lamb, little lamb, little lamb",
+      "my_text": "Mary had a little lamb, little lamb, little lamb"
+    }
+  ]
+}
+```
+
+## Boolean
+
+The boolean type holds logical values. It can be `true`, `false`, or `null`.
+
+**Example Usage:**
+- `boolean`: Represents true/false values, useful for logical operations or flags.
+
+
+```http request
+POST http://localhost:8080/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8, dsd
+Authorization: Bearer abc123
+
+{
+  "q": "SELECT :my_boolean::boolean as my_boolean",
+  "params": {
+    "my_boolean": true
+  }
+}
+```
+
+```json
+{
+  "schema": {
+    "my_boolean": {
+      "type": "bool",
+      "array": false
+    }
+  },
+  "data": [
+    {
+      "my_boolean": true
+    }
+  ]
+}
+```
+
+## JSON
+
+JSON types are used to store and query JSON data in a structured format.
+
+**Examples of JSON Data Types:**
+- `json`: A text-based representation of JSON data.
+- `jsonb`: A binary storage format for JSON that enables faster access and indexing.
+
+
+```http request
+POST http://localhost:8080/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8, dsd
+Authorization: Bearer abc123
+
+{
+  "q": "SELECT :my_json::jsonb as my_json",
+  "params": {
+    "my_json": {
+      "foo": [
+        true,
+        "bar"
+      ],
+      "tags": {
+        "a": 1,
+        "b": null
+      }
+    }
+  }
+}
+```
+```json
+{
+  "schema": {
+    "my_json": {
+      "type": "jsonb",
+      "array": false
+    }
+  },
+  "data": [
+    {
+      "my_json": {
+        "foo": [
+          true,
+          "bar"
+        ],
+        "tags": {
+          "a": 1,
+          "b": null
+        }
+      }
+    }
+  ]
+}
+```
+
+## Date/time
+
+Date and time data types are used to store temporal data, including dates, times, and timestamps.
+
+**Examples of Date/Time Types:**
+- `date`: Stores calendar dates (e.g., `YYYY-MM-DD`).
+- `time`: Stores time without a timezone.
+- `timetz`: Stores time with a timezone included.
+- `timestamp`: Stores date and time (without timezone).
+- `timestamptz`: Stores date and time with timezone information.
+- `interval`: Represents a duration of time, useful for calculating time differences.
+
+```http request
+POST http://localhost:8080/api/v4/sql
+Cookie: XDEBUG_SESSION=XDEBUG_ECLIPSE
+Content-Type: application/json
+Accept: application/json; charset=utf-8, dsd
+Authorization: Bearer abc123
+
+{
+  "q": "SELECT :my_date::date as my_date, :my_time::time as my_time,:my_timetz::timetz as my_timetz, :my_timestamp::timestamp as my_timestamp, :my_timestamptz::timestamptz as my_timestamptz, :my_interval::interval as my_interval",
+  "params": {
+    "my_date": "2011 04 01",
+    "my_time": "12:00",
+    "my_timetz": "14:00:00 GMT%2B0200",
+    "my_timestamp": "Friday 3rd 2011 at 14:00:00",
+    "my_timestamptz": "2011-04-01T12:00:00%2B00:00",
+    "my_interval":{
+      "y": 1,
+      "m": 2,
+      "d": 3,
+      "h": 4,
+      "i": 5,
+      "s": 6
+    }
+  },
+  "type_hints": {
+    "my_date": "date",
+    "my_time": "time",
+    "my_timetz": "timetz",
+    "my_timestamp": "timestamp",
+    "my_timestamptz": "timestamptz",
+    "my_interval": "interval"
+  },
+  "type_formats": {
+    "my_date": "Y m d",
+    "my_time": "H:i",
+    "my_timetz": "H:i:s T",
+    "my_timestamp": "l jS Y \\a\\t H:i:s",
+    "my_timestamptz": "Y-m-d\\TH:i:sP"
+  }
+}
+```
+
+```json
+{
+  "schema": {
+    "my_date": {
+      "type": "date",
+      "array": false
+    },
+    "my_time": {
+      "type": "time",
+      "array": false
+    },
+    "my_timetz": {
+      "type": "timetz",
+      "array": false
+    },
+    "my_timestamp": {
+      "type": "timestamp",
+      "array": false
+    },
+    "my_timestamptz": {
+      "type": "timestamptz",
+      "array": false
+    },
+    "my_interval": {
+      "type": "interval",
+      "array": false
+    }
+  },
+  "data": [
+    {
+      "my_date": "2011 04 01",
+      "my_time": "12:00",
+      "my_timetz": "14:00:00 GMT+0200",
+      "my_timestamp": "Friday 3rd 2011 at 14:00:00",
+      "my_timestamptz": "2011-04-01T12:00:00+00:00",
+      "my_interval": {
+        "y": 1,
+        "m": 2,
+        "d": 3,
+        "h": 4,
+        "i": 5,
+        "s": 6
+      }
+    }
+  ]
+}
+```
+
+## Geometric
+
+Geometric data types are used to store geometric calculations and spatial data like points, lines, and shapes.
+
+**Examples of Geometric Types:**
+- `point`: A single 2D point (`x`, `y`).
+- `line`: An infinite 2D line.
+- `lseg`: A line segment defined by a starting and ending point.
+- `box`: A rectangular box defined by its opposite corners.
+- `path`: A path, which can be open or closed, defined by a series of points.
+- `polygon`: A closed shape defined by three or more points in 2D space.
+- `circle`: A circle defined by its center and radius.
+
+
+```http request
+POST http://localhost:8080/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8, dsd
+Authorization: Bearer abc123
+
+{
+  "q": "SELECT :my_point::point as my_point, :my_line::line as my_line, :my_lseg::lseg as my_lseg, :my_box::box as my_box, :my_path::path as my_path, :my_polygon::polygon as my_polygon, :my_circle::circle as my_circle",
+  "params": {
+    "my_point": {
+      "x": 1,
+      "y": 1
+    },
+    "my_line": {
+      "A": 1,
+      "B": -1,
+      "C": 0
+    },
+    "my_lseg": {
+      "start": {
+        "x": 1,
+        "y": 1
+      },
+      "end": {
+        "x": 2,
+        "y": 2
+      }
+    },
+    "my_box": {
+      "start": {
+        "x": 2,
+        "y": 2
+      },
+      "end": {
+        "x": 1,
+        "y": 1
+      }
+    },
+    "my_path": [
+      true,
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "my_polygon": [
+      {
+        "x": 1,
+        "y": 1
+      },
+      {
+        "x": 2,
+        "y": 2
+      },
+      {
+        "x": 3,
+        "y": 3
+      }
+    ],
+    "my_circle": {
+      "center": {
+        "x": 1,
+        "y": 1
+      },
+      "radius": 5
+    }
+  },
+  "type_hints": {
+    "my_point": "point",
+    "my_line": "line",
+    "my_lseg": "lseg",
+    "my_box": "box",
+    "my_path": "path",
+    "my_polygon": "polygon",
+    "my_circle": "circle"
+  }
+}
+```
+
+```json
+{
+  "schema": {
+    "my_point": {
+      "type": "point",
+      "array": false
+    },
+    "my_line": {
+      "type": "line",
+      "array": false
+    },
+    "my_lseg": {
+      "type": "lseg",
+      "array": false
+    },
+    "my_box": {
+      "type": "box",
+      "array": false
+    },
+    "my_path": {
+      "type": "path",
+      "array": false
+    },
+    "my_polygon": {
+      "type": "polygon",
+      "array": false
+    },
+    "my_circle": {
+      "type": "circle",
+      "array": false
+    }
+  },
+  "data": [
+    {
+      "my_point": {
+        "x": 1,
+        "y": 1
+      },
+      "my_line": {
+        "A": 1,
+        "B": -1,
+        "C": 0
+      },
+      "my_lseg": {
+        "start": {
+          "x": 1,
+          "y": 1
+        },
+        "end": {
+          "x": 2,
+          "y": 2
+        }
+      },
+      "my_box": {
+        "start": {
+          "x": 2,
+          "y": 2
+        },
+        "end": {
+          "x": 1,
+          "y": 1
+        }
+      },
+      "my_path": [
+        true,
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 3
+        }
+      ],
+      "my_polygon": [
+        {
+          "x": 1,
+          "y": 1
+        },
+        {
+          "x": 2,
+          "y": 2
+        },
+        {
+          "x": 3,
+          "y": 3
+        }
+      ],
+      "my_circle": {
+        "center": {
+          "x": 1,
+          "y": 1
+        },
+        "radius": 5
+      }
+    }
+  ]
+}
+```
+
+## Range
+
+Range types represent a range of values between a lower and an upper bound.
+
+**Examples of Range Types:**
+- `int4range`: A range of 32-bit integers.
+- `int8range`: A range of 64-bit integers.
+- `numrange`: A range of numeric values.
+- `tsrange`: A range of timestamps (without timezone).
+- `tstzrange`: A range of timestamps (with timezone).
+- `daterange`: A range of dates.
+
+```http request
+POST http://127.0.0.1:8080/api/v4/sql HTTP/1.1
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "q": "SELECT :my_int4range::int4range AS my_int4range, :my_int8range::int8range AS my_int8range, :my_numrange::numrange AS my_numrange, :my_tsrange::tsrange AS my_tsrange, :my_tstzrange ::tstzrange AS my_tstzrange, :my_daterange::daterange AS my_daterange",
+  "params": {
+    "my_int4range": {
+      "lower": 11,
+      "upper": 20,
+      "lowerInclusive": true,
+      "upperInclusive": false
+    },
+    "my_int8range": {
+      "lower": 11,
+      "upper": 20,
+      "lowerInclusive": false,
+      "upperInclusive": true
+    },
+    "my_numrange": {
+      "lower": "11.1",
+      "upper": "22.2",
+      "lowerInclusive": false,
+      "upperInclusive": false
+    },
+    "my_tsrange": {
+      "lower": "Friday 4th 2010 at 14:30:00",
+      "upper": "Saturday 5th 2010 at 15:30:00",
+      "lowerInclusive": true,
+      "upperInclusive": false
+    },
+    "my_tstzrange": {
+      "lower": "2010-01-01 14:30:00%2B02:00",
+      "upper": "2010-01-01 15:30:00%2B02:00",
+      "lowerInclusive": true,
+      "upperInclusive": false
+    },
+    "my_daterange": {
+      "lower": "2010-01-02",
+      "upper": "2011-01-01",
+      "lowerInclusive": true,
+      "upperInclusive": false
+    }
+  },
+  "type_hints": {
+    "my_int4range": "int4range",
+    "my_int8range": "int8range",
+    "my_numrange": "numrange",
+    "my_tsrange": "tsrange",
+    "my_tstzrange": "tstzrange",
+    "my_daterange": "daterange"
+  },
+  "type_formats": {
+    "my_tsrange": "l jS Y \\a\\t H:i:s"
+  }
+}
+```
+
+```json
+{
+  "schema": {
+    "my_int4range": {
+      "type": "int4range",
+      "array": false
+    },
+    "my_int8range": {
+      "type": "int8range",
+      "array": false
+    },
+    "my_numrange": {
+      "type": "numrange",
+      "array": false
+    },
+    "my_tsrange": {
+      "type": "tsrange",
+      "array": false
+    },
+    "my_tstzrange": {
+      "type": "tstzrange",
+      "array": false
+    },
+    "my_daterange": {
+      "type": "daterange",
+      "array": false
+    }
+  },
+  "data": [
+    {
+      "my_int4range": {
+        "lower": 11,
+        "upper": 20,
+        "lowerInclusive": true,
+        "upperInclusive": false
+      },
+      "my_int8range": {
+        "lower": 12,
+        "upper": 21,
+        "lowerInclusive": true,
+        "upperInclusive": false
+      },
+      "my_numrange": {
+        "lower": "11.1",
+        "upper": "22.2",
+        "lowerInclusive": false,
+        "upperInclusive": false
+      },
+      "my_tsrange": {
+        "lower": "Friday 4th 2010 at 14:30:00",
+        "upper": "Saturday 5th 2010 at 15:30:00",
+        "lowerInclusive": true,
+        "upperInclusive": false
+      },
+      "my_tstzrange": {
+        "lower": "2010-01-01 12:30:00 +00:00",
+        "upper": "2010-01-01 13:30:00 +00:00",
+        "lowerInclusive": true,
+        "upperInclusive": false
+      },
+      "my_daterange": {
+        "lower": "2010-01-02",
+        "upper": "2011-01-01",
+        "lowerInclusive": true,
+        "upperInclusive": false
+      }
+    }
+  ]
+}
+```
+
+## Arrays
+
+Array types allow storing multiple values of the same data type in a single column.
+
+```http request
+POST http://localhost:8080/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8, dsd
+Authorization: Bearer abc123
+
+{
+  "q": "SELECT :my_smallint::smallint[], :my_tsrange::tsrange[] as my_tsrange",
+  "params": {
+    "my_smallint": [1,2],
+    "my_tsrange": [{
+      "lower": "Tuesday 1st 2010 at 14:30:00",
+      "upper": "Friday 4th 2010 at 15:30:00"
+    },{
+      "lower": "Wednesday 1st 2011 at 14:30:00",
+      "upper": "Sunday 10th 2012 at 15:30:00"
+    }]
+  },
+  "type_hints": {
+    "my_smallint": "smallint[]",
+    "my_tsrange": "tsrange[]"
+  },
+  "type_formats": {
+    "my_tsrange": "l jS Y \\a\\t H:i:s"
+  }
+}
+```
+
+```json
+{
+  "schema": {
+    "int2": {
+      "type": "int2",
+      "array": true
+    },
+    "my_tsrange": {
+      "type": "tsrange",
+      "array": true
+    }
+  },
+  "data": [
+    {
+      "int2": [
+        1,
+        2
+      ],
+      "my_tsrange": [
+        {
+          "lower": "Tuesday 1st 2010 at 14:30:00",
+          "upper": "Friday 4th 2010 at 15:30:00",
+          "lowerInclusive": true,
+          "upperInclusive": false
+        },
+        {
+          "lower": "Wednesday 1st 2011 at 14:30:00",
+          "upper": "Sunday 10th 2012 at 15:30:00",
+          "lowerInclusive": true,
+          "upperInclusive": false
+        }
+      ]
+    }
+  ]
+}
+```

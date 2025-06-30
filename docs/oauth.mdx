@@ -1,0 +1,294 @@
+---
+description: Token are ....
+sidebar_position: 10
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# OAuth
+OAuth is an industry-standard protocol for authorization. It enables applications (clients) to obtain limited access to
+user accounts on Centia.io, without sharing the user’s credentials
+directly with the client. OAuth accomplishes this by providing a secure, delegated access flow that grants tokens to
+client applications.
+
+Within Centia.io, we implement three main OAuth flows, each suited for different use cases:
+
+1. Password Flow
+2. Authorization Code Flow
+3. Device Flow
+
+Each flow handles authentication and authorization in a different manner.
+Below is an outline of how to use each flow and when to choose one over another.
+
+## Password Flow
+
+### Overview
+
+The Password Flow is the most direct OAuth flow. In this flow, the client application directly collects the user’s
+credentials (username and password) and exchanges them with Centia.io for an access token.
+
+Use cases:
+
+- Trusted first-party applications where you trust the client application to handle user credentials directly.
+- Legacy or internal applications that already require users to enter credentials directly into the app.
+- Situations where an interactive browser-based redirection might be cumbersome or unnecessary.
+
+Security considerations:
+
+- Since the client handles user credentials directly, this flow is generally considered less secure and should only be
+used when other flows are not feasible.
+- Always ensure your communication is happening over a secure HTTPS channel.
+- Store tokens securely and avoid persisting raw user credentials whenever possible.
+
+### Flow Steps
+
+1. Collect user credentials: Your application collects the username and password from the user securely.
+2. Send token request: The client application sends a POST request to Centia.io OAuth token endpoint:
+
+```http
+POST https://api.centia.io/api/v4/oauth
+Accept: application/json
+Content-Type: application/json
+
+{
+    "grant_type": "password",
+    "username": "<USER_USERNAME>",
+    "password": "<USER_PASSWORD>"
+}
+```
+
+
+3. Receive token response: If the credentials are valid, the authorization server returns an access_token and optionally a refresh_token:
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "some-refresh-token"
+}
+```
+4. Use the access token: The application includes the access_token in the Authorization header for subsequent requests:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1...
+```
+
+## Authorization Code Flow
+
+### Overview
+The Authorization Code Flow is the most commonly used OAuth 2.0 flow, particularly for web applications and single-page
+applications (SPAs) that can securely handle client secrets on a server or use PKCE (Proof Key for Code Exchange).
+
+Use cases:
+
+- Web or native applications that can securely manage client secrets or use PKCE for enhanced security.
+- Situations where you want to avoid collecting user credentials in the application and instead rely on a redirect to
+Centia.io login page.
+- Multi-tenant or third-party applications that must not handle user credentials directly.
+
+Security considerations:
+
+- When running on public clients (like a browser-only single-page app), use PKCE (Proof Key for Code Exchange)
+to prevent authorization code interception.
+
+- All callbacks and communications must use https:// to protect tokens and credentials.
+
+### Flow Steps
+
+1. User initiates login: The user attempts to log in, and the application redirects them to Centia.io login page:
+
+```http
+GET https://api.centia.io/auth?
+    response_type=code&
+    client_id=<CLIENT_ID>&
+    redirect_uri=<REDIRECT_URI>&
+    scope=<REQUESTED_SCOPES>&
+    state=<RANDOM_STATE_STRING>&
+    code_challenge=<CODE_CHALLENGE_STRING>&
+    code_challenge_method=S256
+```
+
+2. User authenticates: The user enters their credentials on the Centia.io login page.
+
+3. Centia.io returns code: If the user is authenticated and consents to the requested scopes, Centia.io
+redirects the user back to the specified redirect_uri with a short-lived authorization_code and the state string for
+the client to check:
+
+```http
+https://your_site.com?code=67c2b....&state=49c9282cd61698....
+```
+
+4. Exchange code for tokens: The client application sends a POST request to Centia.io token endpoint, including the
+authorization code and PKCE verifier:
+
+```http
+POST https://api.centia.io/api/v4/oauth
+Accept: application/json
+Content-Type: application/json
+
+{
+  "grant_type": "authorization_code",
+  "code": "<AUTH_CODE>",
+  "redirect_uri": "<REDIRECT_URI>",
+  "client_id": "<CLIENT_ID>",
+  "client_secret": "<CLIENT_SECRET>",
+  "code_verifier": "<CODE_VERIFIER>"
+}
+```
+
+5. Receive token response: Centia.io returns an access_token, refresh_token and related metadata:
+
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1...",
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "refresh_token": "some-refresh-token"
+}
+```
+
+6. Use the access token: Subsequent resource requests to the Centia.io APIs include the access_token:
+
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1...
+```
+
+## Device Flow
+
+### Overview
+The Device Flow is designed for input-constrained devices (e.g., Smart TVs, IoT devices) that either lack an integrated
+web browser or have limited/awkward input capabilities. It allows the device to display or otherwise provide a user code
+and verification URL. The user then completes the authorization on a separate device (like a phone or computer),
+and the original device obtains an access token when the user authorizes.
+
+Use cases:
+
+- Smart TVs or streaming devices.
+- IoT devices without a standard web browser input.
+- Any system where the device can show a short code but does not have a keyboard or the ability to handle redirects.
+
+Security considerations:
+
+- The device never directly handles user credentials; it only polls the server for authorization status.
+- Codes need to be displayed to the user in a secure and user-friendly manner.
+- Polling interval should be respected to avoid overwhelming the authorization server.
+
+### Flow Steps
+
+1. Device requests a device code: The device makes a POST request to the device authorization endpoint:
+
+```http
+POST https://api.centia.io/api/v4/oauth/device
+Accept: application/json
+Content-Type: application/json
+
+{
+    "client_id": "<DEVICE_CLIENT_ID>"
+}
+```
+
+2. Receive device and user codes: The Centia.io responds with a device_code, user_code, verification_uri, and interval:
+
+```json
+{
+    "device_code": "<DEVICE_CODE>",
+    "user_code": "AB12-CD34",
+    "verification_uri": "https://api.centia.io/api/v4/oauth",
+    "expires_in": 1800,
+    "interval": 5
+}
+```
+
+Display instructions to the user: The device shows or speaks instructions to the user:
+User Code: AB12-CD34
+Verification URL: https://your-baas.com/device
+User authorizes: On a separate device (phone, laptop), the user navigates to https://your-baas.com/device, enters the
+user_code, and logs in. The user grants permission for the device to access their account.
+Device polls for token: The device repeatedly polls the token endpoint with the device_code and client_id at intervals
+specified by interval:
+
+```http
+POST POST https://api.centia.io/api/v4/oauth
+Content-Type: application/json
+
+{
+    "grant_type": "device_code",
+    "device_code": "<DEVICE_CODE>",
+    "client_id": "<DEVICE_CLIENT_ID>"
+}
+```
+
+Token issued: Once the user authorizes, Centia.io returns the access_token and optional refresh_token to the device.
+The device then uses the access_token to communicate with Centia.io.
+
+## Token Lifecycles and Refresh Tokens
+
+For all three flows, Centia.io issue refresh tokens alongside access tokens. A refresh token lets you request new
+access tokens without re-authenticating the user.
+
+Refresh token request:
+
+```http
+POST https://api.centia.io/api/v4/oauth
+Content-Type: application/json
+
+{
+    "grant_type": "refresh_token",
+    "refresh_token": "<REFRESH_TOKEN>",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<CLIENT_SECRET>"
+}
+```
+
+Response: Returns a new access_token (and a new refresh_token), extending the session without requiring the user to log in again.
+
+## Choosing the Right Flow
+
+### Password Flow:
+
+Pros: Straightforward, easy to implement if you fully trust your client application.
+
+Cons: Requires handling raw user credentials, considered less secure.
+
+Best for: Internal apps, trusted first-party apps with a secure environment.
+
+### Authorization Code Flow:
+
+Pros: Highly secure when implemented correctly; works well for both web and native apps (PKCE).
+
+Cons: Requires handling redirects, slightly more complex.
+
+Best for: Public or third-party apps, and standard use cases with a browser or native application that can manage the
+OAuth redirect flow.
+
+### Device Flow:
+
+Pros: Ideal for devices with limited input or no browser; user-friendly for IoT or Smart TV scenarios.
+
+Cons: Requires an additional device to complete authorization; involves polling.
+
+Best for: IoT, smart devices, or other specialized hardware.
+
+## Implementation Details
+
+Each of these flows is fully supported by our Centia.io. In practice, you will:
+
+Register your client with Centia.io Client API to obtain a client_id and client_secret.
+Configure OAuth scopes and redirect URIs as needed for each application.
+Integrate the flow most appropriate for your application’s user experience and security requirements.
+Handle tokens securely on the client side and refresh them when needed to maintain user sessions.
+
+If you have any questions or need assistance choosing the right flow for your use case, please refer to our Best Practices guide or contact our support team.
+
+We hope this documentation helps you integrate OAuth smoothly with Centia.io. By selecting the correct flow and
+following recommended security practices, you can provide a secure and seamless authentication experience for your users.
+
+
+
+
+
+
+
+

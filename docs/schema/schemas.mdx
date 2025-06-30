@@ -1,0 +1,190 @@
+---
+description: A database contains one or more named schemas, which in turn contain tables.
+sidebar_position: 10
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Schemas
+
+A database contains one or more named schemas, which in turn contain tables. Within one schema, two tables cannot have
+the same name. The same table name can be used in different schemas without conflict; for example, both schema1 and
+schema2
+can contain tables named mytable.
+
+## Get schema
+
+You can either get a single schema or a collection of schemas. The schema object contains all nested object like
+tables, columns, indexes and constraints. Use the `namesOnly` parameter to omit nested objects.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="All schemas, names only"
+        GET https://api.centia.io/api/v4/schemas?namesOnly HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="Specific schemas"
+        GET https://api.centia.io/api/v4/schemas/myschema,anotherschema HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash
+        cen schema get "myschema,anotherschema"
+        ```
+
+    </TabItem>
+</Tabs>
+
+A schema object with nested objects looks like this.
+
+```json
+{
+  "name": "my_new_schema",
+  "tables": [
+    {
+      "name": "my_new_table",
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer",
+          "is_nullable": false,
+          "default_value": null,
+          "comment": null,
+          "_num": 1,
+          "_full_type": "integer",
+          "_typname": "int4",
+          "_is_array": false,
+          "_character_maximum_length": null,
+          "_numeric_precision": 32,
+          "_numeric_scale": 0,
+          "_max_bytes": 4,
+          "_reference": null,
+          "_restriction": null,
+          "_is_primary": true,
+          "_is_unique": true,
+          "_index_method": [
+            "btree"
+          ],
+          "_checks": null
+        },
+        {
+          "name": "name",
+          "type": "character varying",
+          "is_nullable": true,
+          "default_value": null,
+          "comment": null,
+          "_num": 2,
+          "_full_type": "character varying",
+          "_typname": "varchar",
+          "_is_array": false,
+          "_character_maximum_length": -5,
+          "_numeric_precision": null,
+          "_numeric_scale": null,
+          "_max_bytes": 1073741824,
+          "_reference": null,
+          "_restriction": null,
+          "_is_primary": false,
+          "_is_unique": false,
+          "_index_method": null,
+          "_checks": null
+        }
+      ],
+      "indices": [
+        {
+          "name": "my-new-table-primary",
+          "method": "btree",
+          "unique": true,
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "constraints": [
+        {
+          "name": "my-new-table-primary",
+          "constraint": "primary",
+          "columns": [
+            "id"
+          ]
+        }
+      ],
+      "comment": null
+    }
+  ]
+}
+```
+
+## Add schema
+
+A new schema object can be empty (name is the only property) or contain nested tables.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Create new empty schema"
+        POST https://api.centia.io/api/v4/schemas HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "name": "myschema"
+        }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash
+        cen schema add "myschema"
+        ```
+
+
+    </TabItem>
+</Tabs>
+
+## Rename schema
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+        ```http
+        PATCH https://api.centia.io/api/v4/schemas/myschema HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "name": "myschema2"
+        }
+        ```
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+        ```bash
+        cen schema rename "myschema" "myschema2"
+        ```
+    </TabItem>
+</Tabs>
+
+## Delete schema
+
+Be careful when delete schemas - all nested objects will also be deleted!
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+        ```http
+        DELETE https://api.centia.io/api/v4/schemas/myschema HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+        ```bash
+        cen schema drop "myschema"
+        ```
+    </TabItem>
+</Tabs>

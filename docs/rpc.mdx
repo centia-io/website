@@ -1,0 +1,220 @@
+---
+title: JSON-RPC
+description: Create JSON-RPC methods.
+sidebar_position: 40
+---
+
+JSON-RPC is a stateless, lightweight remote procedure call (RPC) protocol that uses JSON for data interchange. Defined by the JSON-RPC 2.0 specification, it enables clients to invoke methods on a server by sending JSON-formatted requests and receiving JSON-formatted responses, with support for batch calls, notifications, and standardized error handling.
+
+## Create a RPC method
+
+Creating af method is done the same way as running a query. Just add `method` property with a name for the method.
+The properties `output_format`, `type_formats` and `type_hints` are stored with the method and should not
+be applied when running the method.
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/rpc
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "q": "select now() as date",
+  "method": "getDate",
+  "type_formats": {
+    "date": "D M d Y"
+  }
+}
+```
+
+When creating a method, the statement is not executed and therefore you don't have to provide any parameters.
+
+So if you want create a method from an insert like this:
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "q": "insert into messages (id, message) values (default, :message)",
+  "params": [{"message": "Hello world"}]
+}
+```
+
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "q": "insert into messages (id, message) values (default, :message)",
+  "method": "createMessage"
+}
+```
+
+
+## Run a RPC method
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "jsonrpc": "2.0",
+  "method": "getDate",
+  "id": 1
+}
+```
+Below is an example of a successful JSON-RPC 2.0 response. It mirrors the `jsonrpc` version and the `id` from the request. The `result` object contains the `schema` (describing the data types) and the actual `data` returned by the `getDate` method.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "schema": {
+      "date": {
+        "type": "timestamptz",
+        "array": false
+      }
+    },
+    "data": [
+      {
+        "date": "Thu May 08 2025"
+      }
+    ]
+  },
+  "id": 1
+}
+```
+
+## Notifications
+
+JSON-RPC supports notifications, a special type of request sent without an id member. Notifications instruct the server to perform the method but indicate that no response is expected.
+
+A notification payload might look like:
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+    "jsonrpc": "2.0",
+    "method": "notifyEvent",
+    "params": { "event": "user_signup", "userId": 123 }
+}
+```
+Since the id field is omitted, the server must not send any response. Clients should handle notifications as one-way messages.
+
+## Execute multiple methods
+
+## Error Handling
+
+In the JSON-RPC 2.0 specification, errors are communicated using a standard structure in the response. If an error occurs during the processing of a request, the `error` object will be present in the response instead of the `result` object.
+
+### Error Response Format
+
+An error response has the following structure:
+
+```json
+{ "jsonrpc": "2.0", "error": { "code":  , "message": "  ", "data": }, "id": <id from request | null> }
+```
+### Error Object Fields
+
+- **code**: A numeric code that indicates the type of error. JSON-RPC defines these codes:
+    - `-32600`: Invalid Request (The JSON sent is not a valid Request object.)
+    - `-32601`: Method Not Found (The method does not exist or is unavailable.)
+    - `-32602`: Invalid Params (Invalid or missing method parameters.)
+    - `-32603`: Internal Error (Internal server error occurred while processing the request.)
+
+- **message**: A short description of the error. This is intended for developers and should not change based on runtime context.
+
+- **data**: Additional information about the error, which could include server-specific debug information or additional details to help the client understand what went wrong.
+
+- **id**: Mirrors the `id` from the request or `null` when the id is not present in the request (e.g., for notifications).
+
+### Example Error Scenarios and Responses
+
+#### Invalid Request
+
+This error occurs when the JSON payload does not conform to the JSON-RPC 2.0 specification.
+
+Request:
+
+```http request
+
+POST https://api.centia.io/api/v4/api/v4/rpc
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{ "jsonrpc": "2.0", "invalid_property": "invalid value" }
+```
+Response:
+
+```json
+{ "jsonrpc": "2.0", "error": { "code": -32600, "message": "Invalid Request" }, "id": null }
+```
+
+#### Method Not Found
+
+This error occurs when an unknown or unsupported method is invoked.
+
+Request:
+
+```http request
+POST https://api.centia.io/api/v4/api/v4/rpc
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{ "jsonrpc": "2.0", "method": "unknownMethod", "id": 10 }
+```
+
+Response:
+
+```json
+{ "jsonrpc": "2.0", "error": { "code": -32601, "message": "Method not found" }, "id": 10 }
+```
+
+#### Invalid Parameters
+
+This error occurs when the parameters provided in the request are invalid.
+
+Request:
+
+```http request
+POST https://api.centia.io/api/v4/api/v4/rpc
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{ "jsonrpc": "2.0", "method": "getDate", "params": { "invalid": "param" }, "id": 2 }
+```
+
+Response:
+
+```json
+{ "jsonrpc": "2.0", "error": { "code": -32602, "message": "Invalid params" }, "id": 2 }
+```
+#### Internal Server Error
+
+This error occurs when an unexpected error happens on the server while processing the request.
+
+Response:
+
+```json
+{ "jsonrpc": "2.0", "error": { "code": -32603, "message": "Internal error" }, "id": 3 }
+```
+
+### Client-Side Handling
+
+Clients should handle error responses gracefully by checking for the presence of the `error` object and using the `code` and `message` fields to determine actions or inform the user.
+
