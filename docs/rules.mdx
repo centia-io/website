@@ -1,7 +1,7 @@
 ---
 title: Rules
 description: Rules...
-sidebar_position: 30
+sidebar_position: 65
 ---
 
 import Tabs from '@theme/Tabs';
@@ -9,34 +9,172 @@ import TabItem from '@theme/TabItem';
 
 # Rules
 
+Rules can deny or allow access to tables or rewrite the SQL statement by adding a `where` clause. Rules are not attached to tables but applied to the incoming SQL statement before it actually runs in the database engine.
+
+Incoming statements are matched against the rules in a prioritized order, and if there is a match, the rule will be applied.
+
+A rule is applied to a statement if one or more matches are positive:
+
+- `username` matches the name of the user.
+- `service` matches the kind of service used. Always `sql`.
+- `request` matches the type of statement. Can be either `select`, `insert`, `update` or `delete`.
+- `schema` matches the schema of the tables in the statement.
+- `table` matches the tables in the statement.
+- `iprange` matches the IP address the statement comes from (CIDR block).
+
+Default for all is `*`, which means that it will match all.
+
+A rule has three outcomes:
+
+- It will `allow` access
+- It will `deny` access
+- It will `limit` access
+
+A `limit` rule should always have a `filter`, which is a `where` clause.
+
+Rules with lower `priority` are matched first.
+
+SQL statements with multiple tables (like JOIN, UNION, WITH or sub-queries) can match multiple rules. For a such statement to run all matched rules must either `allow` or `limit`.
+
+> When using rules, it is a good idea to add a "stop block" rule, so unmatched statements don't go through. A "stop block" rule should have the highest `priority` of all rules:
+```json
+{
+  "priority": 1000,
+  "access": "deny"
+}
+```
+> This stops any statement, which are not allowed or limited in prior matches rules.
+
+
 ## Create a new rule
+
 
 <Tabs>
     <TabItem value="http" label="HTTP" default>
 
-        ```http title="Create a new rule"
-        POST https://api.centia.io/api/v4/users HTTP/1.1
+        ```http title="Create a new rule, which will limit the records the user 'joe' can 'delete' from 'my_schema.my_table'"
+        POST https://api.centia.io/api/v4/rules HTTP/1.1
         Content-Type: application/json
         Authorization: Bearer abc123
 
         {
             "priority": 1,
-            "username": "Joe",
-            "service": "sql",
+            "username": "joe",
             "request": "delete",
-            "iprange": "*",
             "schema": "my_schema",
             "table": "my_table"
             "access": "limit",
-            "filter": "user='Joe'",
+            "filter": "user='joe'",
+        }
+        ```
+
+        ```http title="Create multiple rules"
+        POST https://api.centia.io/api/v4/rules HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "rules": [
+                {
+                    "priority": 1,
+                    "username": "joe",
+                    "request": "delete",
+                    "schema": "my_schema",
+                    "table": "my_table"
+                    "access": "limit",
+                    "filter": "user='joe'"
+                },
+                {
+                    "priority": 1,
+                    "username": "peter",
+                    "request": "delete",
+                    "schema": "my_schema",
+                    "table": "my_table"
+                    "access": "limit",
+                    "filter": "user='peter'"
+                }
+            ]
+
         }
         ```
 
     </TabItem>
     <TabItem value="cli" label="CLI">
 
+        ```bash title="Create a new rule"
+        cen rule add
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Get rules
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Get single rules"
+        GET https://api.centia.io/api/v4/rules/1,2 HTTP/1.1
+        Accept: application/json
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="Get all rules"
+        GET https://api.centia.io/api/v4/rules HTTP/1.1
+        Accept: application/json
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
         ```bash title="Create a new user"
-        cen user add "joe"
+        cen rule get
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Update a rule
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Update single rules"
+        PATCH https://api.centia.io/api/v4/rules/1,2 HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "priority": 2
+        }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash title="Update a rule"
+        cen rule update 1
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Delete a rule
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Delete single rules"
+        DELETE https://api.centia.io/api/v4/rules/1,2 HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash title="Delete a rule"
+        cen rule drop 1
         ```
 
     </TabItem>

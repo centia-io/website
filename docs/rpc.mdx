@@ -1,19 +1,40 @@
 ---
 title: JSON-RPC
 description: Create JSON-RPC methods.
-sidebar_position: 40
+sidebar_position: 60
 ---
 
-JSON-RPC is a stateless, lightweight remote procedure call (RPC) protocol that uses JSON for data interchange. Defined by the JSON-RPC 2.0 specification, it enables clients to invoke methods on a server by sending JSON-formatted requests and receiving JSON-formatted responses, with support for batch calls, notifications, and standardized error handling.
+In the Centia API, instead of sending raw SQL every time you want to run a statement, you can **wrap your SQL statements inside JSON-RPC methods**. This means you define a **named method** which holds your SQL query along with optional instructions on how to interpret and format the data types.
 
-## Create a RPC method
+### Why do this?
 
-Creating af method is done the same way as running a query. Just add `method` property with a name for the method.
-The properties `output_format`, `type_formats` and `type_hints` are stored with the method and should not
-be applied when running the method.
+- **Reusability:** Once a method is created, clients just call the method by name.
+- **Consistency:** You define _type hints_ to specify the data types of the query results and _formats_ for how the data should appear (e.g., date formats).
+- **Encapsulation:** The SQL code is stored on the server side, reducing the chance of SQL injection and improving security.
+- **Easier client code:** Clients don’t need to embed or parse SQL, they just call methods.
+
+
+> JSON-RPC is a stateless, lightweight remote procedure call (RPC) protocol that uses JSON for data interchange. Defined by the JSON-RPC 2.0 specification, it enables clients to invoke methods on a server by sending JSON-formatted requests and receiving JSON-formatted responses, with support for batch calls, notifications, and standardized error handling.
+
+
+### How it works
+1. You **create a JSON-RPC method** by sending a SQL statement with a `method` property giving the method name.
+2. You can include:
+    - `type_hints`: indicating expected types for query results.
+    - `type_formats`: specifying formats for those types (like date formatting).
+3. When calling the method later, clients only send the method name and parameters (if any).
+
+#### Example
+Suppose you have a SQL query that fetches the current timestamp:
+
+```sql
+select now() as date
+```
+
+You can wrap it as a JSON-RPC method named with a date formatting hint: `getDate`
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/rpc
+POST  https://api.centia.io/api/v4/api/v4/sql
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -27,40 +48,13 @@ Authorization: Bearer abc123
 }
 ```
 
-When creating a method, the statement is not executed and therefore you don't have to provide any parameters.
+- Here `"method": "getDate"` tells the server to save this SQL as a callable method.
+- `"type_formats"` specifies that the `date` column should be formatted as `D M d Y` (e.g., "Thu May 08 2025").
 
-So if you want create a method from an insert like this:
-
-```http request
-POST  https://api.centia.io/api/v4/api/v4/sql
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
-{
-  "q": "insert into messages (id, message) values (default, :message)",
-  "params": [{"message": "Hello world"}]
-}
-```
-
+After this is done, a client can simply call:
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/sql
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
-{
-  "q": "insert into messages (id, message) values (default, :message)",
-  "method": "createMessage"
-}
-```
-
-
-## Run a RPC method
-
-```http request
-POST  https://api.centia.io/api/v4/api/v4/sql
+POST  https://api.centia.io/api/v4/api/v4/rpc
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -71,7 +65,8 @@ Authorization: Bearer abc123
   "id": 1
 }
 ```
-Below is an example of a successful JSON-RPC 2.0 response. It mirrors the `jsonrpc` version and the `id` from the request. The `result` object contains the `schema` (describing the data types) and the actual `data` returned by the `getDate` method.
+
+And receive properly typed and formatted results without sending the SQL each time:
 
 ```json
 {
@@ -93,6 +88,76 @@ Below is an example of a successful JSON-RPC 2.0 response. It mirrors the `jsonr
 }
 ```
 
+### Sending parameters
+
+When creating a method, the statement is not executed, and therefore you don't have to provide any parameters.
+
+So if you want to create a method that gives you a formatted date plus a given number of days like this:
+
+```http request
+POST http://localhost:8080/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8, dsd
+Authorization: Bearer abc123
+
+{
+  "q": "select date(:date) %2B :days::int as result",
+  "params": {
+      "date": "09-07-10",
+      "days": 0
+  },
+  "type_hints": {
+    "date": "timestamptz",
+    "days": "int"
+  },
+  "type_formats": {
+    "result": "l jS F Y",
+    "date": "d-m-y"
+  }
+}
+```
+
+You can create the method without `params`:
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "method": "getDatePlusDays",
+  "q": "select date(:date) %2B :days::int as result",
+  "type_hints": {
+    "date": "timestamptz",
+    "days": "int"
+  },
+  "type_formats": {
+    "result": "l jS F Y",
+    "date": "d-m-y"
+  }
+}
+```
+
+And when call the the method with `params`:
+
+```http request
+POST http://localhost:8080/api/v4/rpc
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "jsonrpc": "2.0",
+  "methode": "getDatePlusDays",
+  "params": {
+    "date": "09-07-10",
+    "days": 10
+  },
+  "id": 1
+}
+```
+
 ## Notifications
 
 JSON-RPC supports notifications, a special type of request sent without an id member. Notifications instruct the server to perform the method but indicate that no response is expected.
@@ -100,7 +165,7 @@ JSON-RPC supports notifications, a special type of request sent without an id me
 A notification payload might look like:
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/sql
+POST  https://api.centia.io/api/v4/api/v4/rpc
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -114,6 +179,54 @@ Authorization: Bearer abc123
 Since the id field is omitted, the server must not send any response. Clients should handle notifications as one-way messages.
 
 ## Execute multiple methods
+
+You can run multiple methods like this:
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/rpc
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+[
+    {
+        "jsonrpc": "2.0",
+        "method": "withDrawFromAccount",
+        "params": { "name": "joe", "amount": 100 }
+    },
+    {
+        "jsonrpc": "2.0",
+        "method": "depositToAccount",
+        "params": { "name": "peter", "amount": 100 }
+    }
+]
+```
+
+This will run both `withDrawFromAccount` and `depositToAccount` in same transaction block,
+meaning both transactions must succeed or nothing will happen.
+
+If you are going to call the same transactional method for e.g., inserting multiple records,
+it's most efficient to call the method once with multiple parameters instead:
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+    "jsonrpc": "2.0",
+    "method": "notifyEvent",
+    "params": [
+        { "event": "user_signup", "userId": 123 },
+        { "event": "user_signup", "userId": 124 },
+        { "event": "user_signup", "userId": 125 },
+        { "event": "user_signup", "userId": 126 },
+        { "event": "user_signup", "userId": 127 },
+        { "event": "user_signup", "userId": 128 }
+    ]
+}
+```
 
 ## Error Handling
 
