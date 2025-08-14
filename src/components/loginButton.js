@@ -3,7 +3,8 @@ import {useEffect} from "react";
 
 function LoginButton(props) {
     const codeFlow = new CodeFlow({
-        redirectUri: 'http://localhost:4000/console/',
+        //redirectUri: 'http://localhost:4000/console/',
+        redirectUri: 'https://api.centia.io/console/',
         clientId: 'centia',
         host: 'https://api.centia.io',
         //host: 'http://localhost:8080',
