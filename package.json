@@ -16,7 +16,7 @@
   "dependencies": {
     "@docusaurus/core": "3.8.1",
     "@docusaurus/preset-classic": "3.8.1",
-    "@mapcentia/gc2-js-client": "link:../../.local/share/pnpm/global/5/node_modules/@mapcentia/gc2-js-client",
+    "@mapcentia/gc2-js-client": "^0.0.12",
     "@mdx-js/react": "^3.0.0",
     "@tanstack/react-query": "^5.76.1",
     "clsx": "^2.0.0",
@@ -44,8 +44,6 @@
     "node": ">=18.0"
   },
   "pnpm": {
-    "overrides": {
-      "@mapcentia/gc2-js-client": "link:../../.local/share/pnpm/global/5/node_modules/@mapcentia/gc2-js-client"
-    }
+    "overrides": {}
   }
 }
