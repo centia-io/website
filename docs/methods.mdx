@@ -1,6 +1,6 @@
 ---
-title: JSON-RPC
-description: Create JSON-RPC methods.
+title: Methods
+description: Create and execute JSON-RPC methods.
 sidebar_position: 60
 ---
 
@@ -18,10 +18,11 @@ In the Centia API, instead of sending raw SQL every time you want to run a state
 
 
 ### How it works
-1. You **create a JSON-RPC method** by sending a SQL statement with a `method` property giving the method name.
+1. You **create a JSON-RPC method** by posting a method definition to the `methods` API.
 2. You can include:
     - `type_hints`: indicating expected types for query results.
     - `type_formats`: specifying formats for those types (like date formatting).
+    - `output_format`: specifying output format for the result (like json, csv, ndjson).
 3. When calling the method later, clients only send the method name and parameters (if any).
 
 #### Example
@@ -34,7 +35,7 @@ select now() as date
 You can wrap it as a JSON-RPC method named with a date formatting hint: `getDate`
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/sql
+POST  https://api.centia.io/api/v4/api/v4/methods
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -54,7 +55,7 @@ Authorization: Bearer abc123
 After this is done, a client can simply call:
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/rpc
+POST  https://api.centia.io/api/v4/api/v4/call
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -92,7 +93,7 @@ And receive properly typed and formatted results without sending the SQL each ti
 
 When creating a method, the statement is not executed, and therefore you don't have to provide any parameters.
 
-So if you want to create a method that gives you a formatted date plus a given number of days like this:
+So if you want to create a method that gives you a formatted date plus a given number of days like this SQL request:
 
 ```http request
 POST http://localhost:8080/api/v4/sql
@@ -117,7 +118,7 @@ Authorization: Bearer abc123
 }
 ```
 
-You can create the method without `params`:
+You create the method without `params`:
 
 ```http request
 POST  https://api.centia.io/api/v4/api/v4/sql
@@ -142,7 +143,7 @@ Authorization: Bearer abc123
 And when call the the method with `params`:
 
 ```http request
-POST http://localhost:8080/api/v4/rpc
+POST http://localhost:8080/api/v4/call
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -165,7 +166,7 @@ JSON-RPC supports notifications, a special type of request sent without an id me
 A notification payload might look like:
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/rpc
+POST  https://api.centia.io/api/v4/api/v4/call
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -183,7 +184,7 @@ Since the id field is omitted, the server must not send any response. Clients sh
 You can run multiple methods like this:
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/rpc
+POST  https://api.centia.io/api/v4/api/v4/call
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -331,3 +332,6 @@ Response:
 
 Clients should handle error responses gracefully by checking for the presence of the `error` object and using the `code` and `message` fields to determine actions or inform the user.
 
+## Get methods
+## Update methods
+## Delete methods

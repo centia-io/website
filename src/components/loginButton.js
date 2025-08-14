@@ -6,6 +6,7 @@ function LoginButton(props) {
         redirectUri: 'http://localhost:4000/console/',
         clientId: 'centia',
         host: 'https://api.centia.io',
+        //host: 'http://localhost:8080',
     })
     const signInHandler = (e) => {
         codeFlow.signIn()
