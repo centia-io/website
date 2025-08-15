@@ -3,6 +3,7 @@ import Layout from '@theme/Layout';
 import LoginButton from "../components/loginButton"
 import StripePricingTable from "../components/stripePricingTable"
 import Creds from "../components/creds"
+import Stats from "../components/stats"
 
 
 import {QueryClient, QueryClientProvider} from "@tanstack/react-query"
@@ -22,9 +23,10 @@ export default function Home() {
                         <div className="col col--6">
                             <LoginButton status={{auth, setAuth}}></LoginButton>
                             <Creds status={{auth, setAuth}}/>
+                            <Stats status={{auth, setAuth}}/>
                         </div>
                         <div className="col col--6">
-                                <StripePricingTable status={{auth, setAuth}}/>
+                                {/*<StripePricingTable status={{auth, setAuth}}/>*/}
                         </div>
                     </div>
                 </div>
