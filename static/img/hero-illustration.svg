@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Centia Hero Illustration</title>
+  <desc id="desc">Subtle abstract lines and dots in brand gradient</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6a11cb"/>
+      <stop offset="100%" stop-color="#2575fc"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0v40" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="none"/>
+  <rect width="800" height="600" fill="url(#grid)"/>
+  <g fill="none" stroke="url(#g)" stroke-opacity="0.6" stroke-width="3">
+    <path d="M40 520C160 380 280 420 400 480s240 60 360-80"/>
+    <path d="M20 440C140 300 300 320 420 380s240 100 360-40" stroke-opacity="0.35"/>
+  </g>
+  <g fill="#ffffff" fill-opacity="0.25">
+    <circle cx="680" cy="140" r="3"/>
+    <circle cx="720" cy="220" r="3"/>
+    <circle cx="640" cy="260" r="2"/>
+    <circle cx="600" cy="180" r="2"/>
+  </g>
+</svg>

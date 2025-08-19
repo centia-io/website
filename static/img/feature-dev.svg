@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="160" height="120" viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Developer Friendly</title>
+  <desc id="desc">Code brackets and a small gear</desc>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6a11cb"/>
+      <stop offset="100%" stop-color="#2575fc"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M56 34L32 60l24 26" stroke="url(#g)"/>
+    <path d="M104 34l24 26-24 26" stroke="url(#g)"/>
+    <circle cx="80" cy="60" r="16" stroke="#94b1ff"/>
+    <g transform="translate(80 60)">
+      <circle r="4" fill="#94b1ff"/>
+      <g stroke="#94b1ff" stroke-width="2">
+        <path d="M0-9v-4M0 9v4M-9 0h-4M9 0h4M-6.4-6.4l-2.8-2.8M6.4-6.4l2.8-2.8M-6.4 6.4l-2.8 2.8M6.4 6.4l2.8 2.8"/>
+      </g>
+    </g>
+  </g>
+</svg>

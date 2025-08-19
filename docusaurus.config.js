@@ -13,7 +13,7 @@ const config = {
 
   title: 'Centia.io',
   tagline: 'Database as an API',
-  favicon: 'img/favicon.ico',
+  favicon: 'img/centia-logo.svg',
 
   // Set the production url of your site here
   url: 'https://centia.netlify.app',
@@ -79,8 +79,9 @@ const config = {
       navbar: {
         title: 'Centia.io',
         logo: {
-          alt: 'My Site Logo',
-          src: 'img/logo.svg',
+          alt: 'Centia logo',
+          src: 'img/centia-logo.svg',
+          srcDark: 'img/centia-logo-dark.svg',
         },
         items: [
           {to: 'console', label: 'Console', position: 'left'},
