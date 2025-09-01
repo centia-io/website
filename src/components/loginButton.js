@@ -42,7 +42,7 @@ function LoginButton(props) {
     else
         return (
             <>
-                <a href="https://api.centia.io/signup?redirect_uri=http%3A%2F%2Flocalhost%3A4000%2Fconsole?r">Sign
+                <a href="https://api.centia.io/signup?redirect_uri=https://centia.io/console?r">Sign
                     up for
                     an account</a>
                 <span className="margin-left--md">or</span>
