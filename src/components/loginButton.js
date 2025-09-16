@@ -52,7 +52,7 @@ function LoginButton(props) {
         if (process.env.NODE_ENV === 'production') {
             return (
                 <>
-                    <a className="button button--primary margin-left--md" href="https://centia.io/signup?redirect_uri=https://centia.io/console?r">Sign
+                    <a className="button button--primary margin-left--md" href="https://api.centia.io/signup?redirect_uri=https://centia.io/console?r">Sign
                         up for
                         an account</a>
                     <span className="margin-left--md">or</span>
