@@ -38,7 +38,7 @@ You can either get a single column or a collection of columns.
     <TabItem value="cli" label="CLI">
 
         ```bash
-        cen column get "myschema" "mytable" "id"
+        centia column get "myschema" "mytable" "id"
         ```
 
     </TabItem>
@@ -93,7 +93,7 @@ If submitted in a POST or PATCH they will be ignored.
     <TabItem value="cli" label="CLI">
 
         ```bash
-        cen table add "myschema" "mytable" "id" integer
+        centia table add "myschema" "mytable" "id" integer
         ```
 
     </TabItem>
@@ -120,16 +120,16 @@ You can change name, type, default and nullable of a column or collection of col
     </TabItem>
     <TabItem value="cli" label="CLI" >
         ```bash title="rename"
-        cen schema rename "myschema" "mytable" "id" "id2"
+        centia schema rename "myschema" "mytable" "id" "id2"
         ```
         ```bash title="type"
-        cen schema type "myschema" "mytable" "id" int8
+        centia schema type "myschema" "mytable" "id" int8
         ```
         ```bash title="nullable"
-        cen schema nullable "myschema" "mytable" "id" true
+        centia schema nullable "myschema" "mytable" "id" true
         ```
         ```bash title="default"
-        cen schema default "myschema" "mytable" "id" 100
+        centia schema default "myschema" "mytable" "id" 100
         ```
     </TabItem>
 </Tabs>
@@ -145,7 +145,7 @@ You can change name, type, default and nullable of a column or collection of col
     </TabItem>
     <TabItem value="cli" label="CLI">
         ```bash
-        cen column drop "myschema" "mytable" "id"
+        centia column drop "myschema" "mytable" "id"
         ```
     </TabItem>
 </Tabs>

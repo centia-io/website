@@ -37,7 +37,7 @@ tables, columns, indexes and constraints. Use the `namesOnly` parameter to omit 
     <TabItem value="cli" label="CLI">
 
         ```bash
-        cen schema get "myschema,anotherschema"
+        centia schema get "myschema,anotherschema"
         ```
 
     </TabItem>
@@ -143,7 +143,7 @@ A new schema object can be empty (name is the only property) or contain nested t
     <TabItem value="cli" label="CLI">
 
         ```bash
-        cen schema add "myschema"
+        centia schema add "myschema"
         ```
 
 
@@ -166,7 +166,7 @@ A new schema object can be empty (name is the only property) or contain nested t
     </TabItem>
     <TabItem value="cli" label="CLI">
         ```bash
-        cen schema rename "myschema" "myschema2"
+        centia schema rename "myschema" "myschema2"
         ```
     </TabItem>
 </Tabs>
@@ -184,7 +184,7 @@ Be careful when delete schemas - all nested objects will also be deleted!
     </TabItem>
     <TabItem value="cli" label="CLI">
         ```bash
-        cen schema drop "myschema"
+        centia schema drop "myschema"
         ```
     </TabItem>
 </Tabs>

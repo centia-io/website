@@ -36,7 +36,7 @@ columns, indexes and constraints. Use the `namesOnly` parameter to omit nested o
     <TabItem value="cli" label="CLI">
 
         ```bash
-        cen table get "myschema" "anotherschema"
+        centia table get "myschema" "anotherschema"
         ```
 
     </TabItem>
@@ -137,7 +137,7 @@ A new table object can be empty (name is the only property) or contain nested co
     <TabItem value="cli" label="CLI">
 
         ```bash
-        cen table add "myschema" "mytable"
+        centia table add "myschema" "mytable"
         ```
 
 
@@ -163,10 +163,10 @@ You can move a table to another schema by setting the `schema` property.
     </TabItem>
     <TabItem value="cli" label="CLI">
         ```bash
-        cen schema rename "myschema" "mytable" "mytable2"
+        centia schema rename "myschema" "mytable" "mytable2"
         ```
         ```bash
-        cen schema move "myschema" "mytable" "mytable2"
+        centia schema move "myschema" "mytable" "mytable2"
         ```
     </TabItem>
 </Tabs>
@@ -182,7 +182,7 @@ You can move a table to another schema by setting the `schema` property.
     </TabItem>
     <TabItem value="cli" label="CLI">
         ```bash
-        cen table drop "myschema" "mytable"
+        centia table drop "myschema" "mytable"
         ```
     </TabItem>
 </Tabs>

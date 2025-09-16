@@ -45,7 +45,7 @@ function Stats(props) {
                             </tr>
                             <tr>
                                 <td>Cost</td>
-                                <td>${data.cost.toFixed(2)}</td>
+
                             </tr>
                             </tbody>
                         </table>

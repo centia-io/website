@@ -2,13 +2,24 @@ import {CodeFlow} from '@mapcentia/gc2-js-client'
 import {useEffect} from "react";
 
 function LoginButton(props) {
-    const codeFlow = new CodeFlow({
-       redirectUri: 'https://centia.io/console/',
-        //redirectUri: 'http://localhost:4000/console/',
-        clientId: 'centia',
-       host: 'https://api.centia.io',
-    // host: 'http://localhost:8080',
-    })
+
+    let options;
+
+    if (process.env.NODE_ENV === 'production') {
+        options = {
+            redirectUri: 'https://centia.io/console/',
+            clientId: 'centia',
+            host: 'https://api.centia.io',
+        }
+    } else {
+        options = {
+            redirectUri: 'http://localhost:4000/console/',
+            clientId: 'centia',
+            host: 'http://localhost:8080',
+        }
+    }
+
+    const codeFlow = new CodeFlow(options)
     const signInHandler = (e) => {
         codeFlow.signIn()
     }
@@ -38,13 +49,24 @@ function LoginButton(props) {
             </>
         )
     else
+        if (process.env.NODE_ENV === 'production') {
+            return (
+                <>
+                    <a className="button button--primary margin-left--md" href="https://centia.io/signup?redirect_uri=https://centia.io/console?r">Sign
+                        up for
+                        an account</a>
+                    <span className="margin-left--md">or</span>
+                    <button className="button button--secondary margin-left--md" onClick={signInHandler}>Sign in</button>
+                </>
+            )
+        }
         return (
             <>
-                <a href="https://api.centia.io/signup?redirect_uri=https://centia.io/console?r">Sign
+                <a className="button button--primary margin-left--md" href="http://localhost:8080/signup?redirect_uri=http://localhost:4000/console?r">Sign
                     up for
                     an account</a>
                 <span className="margin-left--md">or</span>
-                <button className="button button--primary margin-left--md" onClick={signInHandler}>Sign in</button>
+                <button className="button button--secondary margin-left--md" onClick={signInHandler}>Sign in</button>
             </>
         )
 

@@ -54,7 +54,7 @@ See also: [Types](./types) for data type formatting/conversion and [Rules](./rul
   <TabItem value="cli" label="CLI">
 
     ```bash title="Select rows"
-    echo "select id, name from my_schema.my_table where id = 1" | cen sql
+    echo "select id, name from my_schema.my_table where id = 1" | centia sql
     ```
 
   </TabItem>
@@ -93,7 +93,7 @@ See also: [Types](./types) for data type formatting/conversion and [Rules](./rul
   <TabItem value="cli" label="CLI">
 
     ```bash title="Insert a row"
-    echo "insert into my_schema.my_table (id, name) values (2, 'Alice') returning id, name" | cen sql
+    echo "insert into my_schema.my_table (id, name) values (2, 'Alice') returning id, name" | centia sql
     ```
 
   </TabItem>
@@ -132,7 +132,7 @@ See also: [Types](./types) for data type formatting/conversion and [Rules](./rul
   <TabItem value="cli" label="CLI">
 
     ```bash title="Update a row"
-    echo "update my_schema.my_table set name = 'Alice Cooper' where id = 2 returning id, name" | cen sql
+    echo "update my_schema.my_table set name = 'Alice Cooper' where id = 2 returning id, name" | centia sql
     ```
 
   </TabItem>
@@ -170,7 +170,7 @@ See also: [Types](./types) for data type formatting/conversion and [Rules](./rul
   <TabItem value="cli" label="CLI">
 
     ```bash title="Delete a row"
-    echo "delete from my_schema.my_table where id = 2 returning id" | cen sql
+    echo "delete from my_schema.my_table where id = 2 returning id" | centia sql
     ```
 
   </TabItem>
