@@ -33,15 +33,15 @@ function Stats(props) {
                             <tbody>
                             <tr>
                                 <td>Number of Tables</td>
-                                <td>{data.number_of_tables}</td>
+                                <td>{data.stat.number_of_tables}</td>
                             </tr>
                             <tr>
                                 <td>Total Size</td>
-                                <td>{data.total_size}</td>
+                                <td>{data.stat.total_size}</td>
                             </tr>
                             <tr>
                                 <td>Total Size (Bytes)</td>
-                                <td>{data.total_size_byte}</td>
+                                <td>{data.stat.total_size_byte}</td>
                             </tr>
                             <tr>
                                 <td>Cost</td>
