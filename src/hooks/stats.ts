@@ -6,7 +6,7 @@ function useStats() {
         queryKey: ['stats'],
         queryFn: () => {
             const stat = new Stats()
-            return stat.get()
+            return stat.get().stat
         }
     })
 }
