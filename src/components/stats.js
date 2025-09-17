@@ -40,7 +40,7 @@ function Stats(props) {
                                 <td>{data.stat.total_size}</td>
                             </tr>
                             <tr>
-                                <td>Cost</td>
+                                <td>Usage</td>
                                 <td>{Math.round(parseFloat(data.stat.cost))} units</td>
                             </tr>
                             </tbody>
