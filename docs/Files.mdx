@@ -1,0 +1,167 @@
+---
+title: Files
+description: Upload and import files into your schema
+sidebar_position: 70
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Files
+
+Use the Files endpoints to upload one or more files to temporary storage and then process them into a database table.
+
+The flow is typically two steps:
+
+1. Upload the file(s) using multipart/form-data to get them staged on the server.
+2. Process the uploaded file into a target schema/table with desired options (dry-run, append, SRS, etc.).
+
+## 1) Upload files
+
+Uploads one or more files to be processed later.
+
+<Tabs>
+  <TabItem value="http" label="HTTP" default>
+
+```http title="Upload a file for later import"
+POST https://api.centia.io/api/v4/file/upload HTTP/1.1
+Authorization: Bearer abc123
+Content-Type: multipart/form-data
+
+[attach file as form field: filename]
+```
+
+```bash title="Upload using curl"
+curl \
+  -X POST "https://api.centia.io/api/v4/file/upload" \
+  -H "Authorization: Bearer abc123" \
+  -F "filename=@./mydata.geojson"
+```
+
+  </TabItem>
+  <TabItem value="cli" label="CLI">
+
+```bash title="Upload a file"
+centia file upload ./mydata.geojson
+```
+
+  </TabItem>
+</Tabs>
+
+Notes
+- Form field name: filename (binary)
+- File can be a zip archive containing multiple files in subdirectories
+- File format is determined by the file extension (e.g. .csv, .geojson, .zip)
+- File formats with multiple parts (e.g. ESRI Shape Files) must be zipped
+- Response: 201 Created on success
+
+## 2) Process/import uploaded file
+
+Imports the previously uploaded file into a database schema. You can run a dry-run by setting import to false (default) to validate before committing.
+
+<Tabs>
+  <TabItem value="http" label="HTTP" default>
+
+```http title="Dry-run import (no changes written)"
+POST https://api.centia.io/api/v4/file/process HTTP/1.1
+Authorization: Bearer abc123
+Content-Type: application/json
+```
+
+```http title="Commit import (write data to table)"
+POST https://api.centia.io/api/v4/file/process HTTP/1.1
+Authorization: Bearer abc123
+Content-Type: application/json
+```
+
+  </TabItem>
+  <TabItem value="cli" label="CLI">
+
+```bash title="Dry-run import"
+centia file process --file mydata.geojson --schema my_schema
+```
+
+```bash title="Commit import"
+centia file process --file mydata.geojson --schema my_schema --import
+```
+
+  </TabItem>
+</Tabs>
+
+Parameters
+- file: File name previously uploaded with /file/upload (required)
+- schema: Destination schema (required)
+- import: If false, perform dry-run only. If true, commit import. Default: false
+- t_srs: Target SRS to use if no authority is available. Default: EPSG:4326
+- s_srs: Source SRS to use if the file lacks projection info. Default: EPSG:4326
+- append: Append to an existing table instead of creating a new one. Default: false
+- truncate: Truncate table before appending (only effective with append). Default: false
+- p_multi: Promote single geometries to multi-part. Default: false
+- timestamp: Name of timestamp field to create on import (omit to skip)
+- x_possible_names: Possible column names for X/longitude in CSV. Default: "lon*,Lon*,x,X"
+- y_possible_names: Possible column names for Y/latitude in CSV. Default: "lat*,Lat*,y,Y"
+
+Responses
+- 201 Created on successful processing
+- 404 Not found if the file or target cannot be processed
+
+## Geospatial formats and PostGIS import
+
+This service can import common geographic file formats and create fully usable PostGIS tables in your schema. Below is how each is handled and what to expect in the resulting table(s).
+
+Supported formats
+- GeoJSON (.geojson, .json): Single layer. Geometry type and SRID are detected. Attributes are imported as text/number/boolean where possible.
+- ESRI Shapefile (.shp): Must be uploaded as a .zip including all sidecar files (.dbf, .shx, .prj, etc.). One PostGIS table is created per shapefile.
+- GeoPackage (.gpkg): May contain multiple layers. One PostGIS table is created per layer.
+- KML (.kml): Geometry and attributes are imported. If the file mixes geometry types, use p_multi to promote to multi-part.
+- GPX (.gpx): Waypoints, tracks, and routes are imported. Multiple tables may be created (e.g., waypoints, tracks).
+- CSV (.csv): If the file contains coordinates, a geometry column will be constructed. See CSV geometry detection below.
+
+How data becomes a PostGIS table
+- Table name: Derived from the source layer or file name. When appending, the existing table name is reused.
+- Geometry column: Named geom. Geometry type is inferred (e.g., Point, LineString, Polygon). Use p_multi: true to promote single to multi-part types when needed (e.g., MultiPolygon).
+- SRID (projection):
+  - If the source has an authority/code (e.g., EPSG:25832), it will be preserved.
+  - If the source lacks projection info, s_srs is used as the source, and the geometry will be assigned/transformed accordingly.
+  - If no target authority can be determined, t_srs is used as a fallback target. Defaults for both are EPSG:4326.
+- Attributes: Field types are inferred where possible (integer, numeric, text, boolean, timestamp). The optional timestamp property can add a created timestamp column.
+- Indexes: A standard GiST index on geom may be created by the platform. If you append, existing indexes are preserved; new indexes are not recreated unless needed.
+
+Multiple layers in one upload
+- Zip with multiple shapefiles: Each shapefile becomes a separate table.
+- GeoPackage with multiple layers: Each layer becomes a separate table.
+
+Append and truncate semantics
+- append: true will insert features into an existing table (schema.table). The table must be compatible (same or castable attribute types and geometry type/SRID).
+- truncate: true can be combined with append to clear the table before loading new data.
+
+CSV geometry detection
+- The importer will look for X/longitude and Y/latitude columns when the format is CSV.
+- You can control the column name patterns via x_possible_names and y_possible_names. Defaults are:
+  - x_possible_names: "lon*,Lon*,x,X"
+  - y_possible_names: "lat*,Lat*,y,Y"
+- If a matching pair is found, a Point geometry in the target SRID is created from those columns. If not, the CSV is imported without a geometry column.
+
+Examples
+
+```bash title="Import a zipped Shapefile as MultiPolygon and assign EPSG:4326 if missing"
+# 1) Upload
+curl -X POST "https://api.centia.io/api/v4/file/upload" \
+  -H "Authorization: Bearer abc123" \
+  -F "filename=@./parcels.zip"
+
+# 2) Process (commit)
+curl -X PATCH "https://api.centia.io/api/v4/file/process" \
+  -H "Authorization: Bearer abc123" \
+  -H "Content-Type: application/json" \
+  -d "{\n  \"file\": \"parcels.zip\",\n  \"schema\": \"cadastre\",\n  \"import\": true,\n  \"p_multi\": true,\n  \"s_srs\": \"EPSG:4326\"\n}"
+```
+
+```bash title="Import a CSV with lon/lat columns into my_schema.points"
+# 1) Upload
+centia file upload ./points.csv
+# 2) Dry-run to validate coordinate detection
+centia file process --file points.csv --schema my_schema
+# 3) Commit
+centia file process --file points.csv --schema my_schema --import
+```

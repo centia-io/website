@@ -179,6 +179,8 @@ Authorization: Bearer abc123
 ```
 Since the id field is omitted, the server must not send any response. Clients should handle notifications as one-way messages.
 
+In a RESTful context, notifications will result in a 204 No Content response. In a websocket context, notifications will not result in a response.
+
 ## Execute multiple methods
 
 You can run multiple methods like this:

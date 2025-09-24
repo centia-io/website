@@ -3,3 +3,203 @@ title: Real time events
 description: Real time events
 sidebar_position: 100
 ---
+
+
+# Real‑Time Event
+
+
+## Overview
+
+The real‑time system exposes a lightweight HTTP/WebSocket server built on Amp that provides:
+
+- A WebSocket endpoint for authenticated clients: `ws://event.centia.io/`
+- Accepts a JWT token and (for sub‑users) a list of relations they need access to.
+- Broadcasts batched database notifications to all connected clients subscribed to the same database.
+- Receives SQL statements or JSON-RPC calls from the client and returns the query result as JSON.
+- A simple health endpoint: `/ping` → `pong`.
+
+## Authentication and connection
+
+The WebSocket endpoint is:
+
+- ws://event.centia.io?token=...&rel=...
+
+Query parameters:
+
+- `token` (required): A centia.io JWT.
+- `rel` (optional): Comma‑separated list of relations the client needs to access (e.g., `public.parcels,public.addresses`). Superusers don’t need `rel`.
+
+Connection flow:
+
+1. Server validates the token in a worker .
+2. If sub-user, server enforces per‑relation access for each entry in `rel`. Missing or unauthorized relations result in an error message and socket close.
+3. On success, the client is registered.
+
+Errors are returned as JSON and the socket is closed. Examples:
+
+- Missing token:
+`{ "type": "error", "error": "missing_token", "message": "Missing token" }`
+- Invalid token:
+`{ "type": "error", "error": "invalid_token", "message": "..." }`
+- Unauthorized rel:
+`{ "type": "error", "error": "not_allowed", "message": "Not allowed to access this resource: <rel>" }`
+
+
+## Sending SQL or JSON-RPC over WebSocket
+
+Once connected, the client can send a JSON message containing a SQL statement or JSON-RPC call and
+replies with a JSON object similar to what the SQL and RPC-JSON API returns.
+
+Example of SQL (client → server):
+
+```json
+{
+    "q": "select now() as date",
+    "type_formats": {
+        "date": "D M d Y"
+    },
+    "id": "1"
+}
+```
+Example response (server → client):
+
+```json
+{
+  "success": true,
+  "schema": {
+    "date": {
+      "type": "timestamptz",
+      "array": false
+    }
+  },
+  "data": [
+    {
+      "date": "2025-09-23 12:16:22.557084+00"
+    }
+  ],
+  "statement": "select now() as date",
+  "id": "1"
+}
+```
+
+Example JSON-RPC (client → server):
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "getDate",
+  "id": 1
+}
+```
+Example response (server → client):
+
+```json
+{
+  "jsonrpc": "2.0",
+  "result": {
+    "schema": {
+      "date": {
+        "type": "timestamptz",
+        "array": false
+      }
+    },
+    "data": [
+      {
+        "date": "Thu May 08 2025"
+      }
+    ]
+  },
+  "id": 1
+}
+```
+For both, the `id` field is used to match the request and response.
+If omitted no response is sent back to the client.
+This is essential "notifications",
+which instruct the server to perform the request but indicate that no response is expected.
+
+
+## Receiving database change events
+
+To enable database change events, set `emit_events` to `true` in the table schema:
+
+```http request
+PATCH https://api.centia.io/api/v4/schemas/my_schema/tables/my_table
+Content-Type: application/json
+Authorization: Bearer <token>
+
+{
+  "emit_events": true
+}
+```
+
+Events are batched and delivered to all connected clients subscribed to the table.
+
+Batching defaults:
+
+- 10 notifications or
+- 2 seconds (whichever comes first),
+- checked every 1 second.
+
+When a batch is flushed, a message is sent to the clients:
+
+```json
+{
+  "type": "batch",
+  "db": "my_database",
+  "batch": {
+    "my_database": {
+      "my_schema.my_table": {
+        "INSERT": [["key","value"]],
+        "UPDATE": [["key","value"]],
+        "DELETE": [["key","value"]],
+        "full_data": [ { "col1": "val", "col2": 123 } ]
+      },
+      "another_schema.table": {}
+    }
+  }
+}
+```
+
+Important:
+- The server broadcasts to all clients connected to that database, without further per‑table filtering at send time. If you need additional client‑side filtering, filter messages on the client.
+
+
+## Client examples
+
+JavaScript (browser):
+
+```html
+<script>
+  const token = "<your-jwt>";
+  const rel = "public.parcels,public.addresses"; // required for sub-users
+  const ws = new WebSocket(`ws://localhost:8088/broadcast?token=${encodeURIComponent(token)}&rel=${encodeURIComponent(rel)}`);
+
+  ws.onopen = () => {
+    console.log("connected");
+    ws.send("SELECT NOW() AS ts");
+  };
+
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (msg.type === 'batch') {
+      console.log("DB batch:", msg.batch);
+    } else {
+      console.log("SQL result:", msg);
+    }
+  };
+
+  ws.onclose = () => console.log("closed");
+  ws.onerror = (err) => console.error("ws error", err);
+</script>
+```
+
+Node (ws):
+
+```js
+import WebSocket from 'ws';
+const token = process.env.GC2_TOKEN;
+const ws = new WebSocket(`ws://localhost:8088/broadcast?token=${encodeURIComponent(token)}`);
+ws.on('open', () => ws.send('SELECT 42 AS answer'));
+ws.on('message', (data) => console.log(JSON.parse(data.toString())));
+```
+

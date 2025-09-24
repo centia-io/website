@@ -18,6 +18,10 @@ Send an HTTP POST to the SQL endpoint with a JSON body:
 - `params`: an object with values for each named parameter.
 - `type_hints` (optional): help the server parse complex types.
 - `type_formats` (optional): control formatting for date/time outputs.
+- `id` (optional): a unique identifier for the request. The server will return the same identifier in the response.
+Useful for tracking requests in a websocket context. If omitted:
+    - In REST context: The server will generate a random UUID in the response.
+    - In Websocket context: The server will not send any message.
 
 See also: [Types](./types) for data type formatting/conversion and [Rules](./rules) for row-level access control and query limiting.
 
@@ -34,7 +38,8 @@ See also: [Types](./types) for data type formatting/conversion and [Rules](./rul
 
     {
       "q": "select id, name from my_schema.my_table where id = :id::int",
-      "params": { "id": 1 }
+      "params": { "id": 1 },
+      "id": "1"
     }
     ```
 
