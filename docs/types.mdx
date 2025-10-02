@@ -123,12 +123,12 @@ Accept: application/json; charset=utf-8, dsd
 Authorization: Bearer abc123
 
 {
-  "q": "SELECT :my_varchar::varchar(22) as my_varchar, :my_char::char(22) as my_char, :my_bpchar::bpchar as my_bpchar, :my_text::text as my_text",
+  "q": "SELECT :my_varchar::varchar(14) as my_varchar, :my_char::char(14) as my_char, :my_bpchar::bpchar as my_bpchar, :my_text::text as my_text",
   "params": {
-    "my_varchar": "Mary had a little lamb, little lamb, little lamb",
-    "my_char": "Mary",
-    "my_bpchar": "Mary had a little lamb, little lamb, little lamb",
-    "my_text": "Mary had a little lamb, little lamb, little lamb"
+    "my_varchar": "My my, hey hey, Rock and roll is here to stay",
+    "my_char": "My my",
+    "my_bpchar": "My my, hey hey, Rock and roll is here to stay",
+    "my_text": "My my, hey hey, Rock and roll is here to stay"
 
   }
 }
@@ -156,10 +156,10 @@ Authorization: Bearer abc123
   },
   "data": [
     {
-      "my_varchar": "Mary had a little lamb",
-      "my_char": "Mary                  ",
-      "my_bpchar": "Mary had a little lamb, little lamb, little lamb",
-      "my_text": "Mary had a little lamb, little lamb, little lamb"
+      "my_varchar": "My my, hey hey",
+      "my_char": "My my         ",
+      "my_bpchar": "My my, hey hey, Rock and roll is here to stay",
+      "my_text": "My my, hey hey, Rock and roll is here to stay"
     }
   ]
 }
