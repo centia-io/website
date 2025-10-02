@@ -43,33 +43,33 @@ centia login
 
 Create a new schema for your tables:
 ```bash
-centia schema add "my_new_schema"
+centia schema add "rollhall"
 ```
 
 Create a new table in the schema:
 ```bash
-centia table add "my_new_schema" "my_new_table"
+centia table add "rollhall" "inductees"
 ```
 
 Add columns in your table:
 ```bash
-centia column add "my_new_schema" "my_new_table" "id" int
-centia column add "my_new_schema" "my_new_table" "name" varchar
+centia column add "rollhall" "inductees" "id" int
+centia column add "rollhall" "inductees" "name" varchar
 ```
 
 And maybe you want to add a primary key to your id column:
 ```bash
-centia constraint add "my_new_schema" "my_new_table" "id" primary
+centia constraint add "rollhall" "inductees" "id" primary
 ```
 
 So now your table is ready for insert of data:
 ```bash
-echo "INSERT into my_new_schema.my_new_table values(1, 'Martin')" | centia sql
+echo "INSERT into rollhall.inductees values(1, 'Guns n’ Roses')" | centia sql
 ```
 
 And run queries on your table:
 ```bash
-echo "select * from my_new_schema.my_new_table" | centia sql
+echo "select * from rollhall.inductees" | centia sql
 ```
 
 

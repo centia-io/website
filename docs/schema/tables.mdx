@@ -12,22 +12,50 @@ A table is much like a table on paper: It consists of rows and columns. The numb
 the columns is fixed, and each column has a name. The number of rows is variable — it reflects how much data is stored
 at a given moment.
 
+## Add table
+
+A new table object can be empty (name is the only property) or contain nested columns, indexes and constraints.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Create new empty table"
+        POST https://api.centia.io/api/v4/schemas/rockhall HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "name": "inductees"
+        }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash
+        centia table add "rockhall" "inductees"
+        ```
+
+
+    </TabItem>
+</Tabs>
+
 ## Get table
 
-You can either get a single table or a collection of tables. The schema object contains all nested object like
+You can either get a single table or a collection of tables. The schema object contains all nested objects like
 columns, indexes and constraints. Use the `namesOnly` parameter to omit nested objects.
 
 <Tabs>
     <TabItem value="http" label="HTTP" default>
 
         ```http title="All tables, names only"
-        GET https://api.centia.io/api/v4/schemas/myschema/tables?namesOnly HTTP/1.1
+        GET https://api.centia.io/api/v4/schemas/rockhall/tables?namesOnly HTTP/1.1
         Accept: application/json; charset=utf-8
         Authorization: Bearer abc123
         ```
 
         ```http title="Specific tables"
-        GET https://api.centia.io/api/v4/schemas/myschema/tables/mytable,anothertable HTTP/1.1
+        GET https://api.centia.io/api/v4/schemas/rockhall/tables/inductees,anothertable HTTP/1.1
         Accept: application/json; charset=utf-8
         Authorization: Bearer abc123
         ```
@@ -36,7 +64,7 @@ columns, indexes and constraints. Use the `namesOnly` parameter to omit nested o
     <TabItem value="cli" label="CLI">
 
         ```bash
-        centia table get "myschema" "anotherschema"
+        centia table get "rockhall" "inductees"
         ```
 
     </TabItem>
@@ -46,7 +74,7 @@ A table object with nested objects looks like this:
 
 ```json
 {
-  "name": "my_new_table",
+  "name": "inductees",
   "columns": [
     {
       "name": "id",
@@ -95,7 +123,7 @@ A table object with nested objects looks like this:
   ],
   "indices": [
     {
-      "name": "my-new-table-primary",
+      "name": "inductees-id-btree",
       "method": "btree",
       "unique": true,
       "columns": [
@@ -105,7 +133,7 @@ A table object with nested objects looks like this:
   ],
   "constraints": [
     {
-      "name": "my-new-table-primary",
+      "name": "inductees-id-primary",
       "constraint": "primary",
       "columns": [
         "id"
@@ -116,57 +144,30 @@ A table object with nested objects looks like this:
 }
 ```
 
-## Add table
-
-A new table object can be empty (name is the only property) or contain nested columns, indexes and constraints.
-
-<Tabs>
-    <TabItem value="http" label="HTTP" default>
-
-        ```http title="Create new empty table"
-        POST https://api.centia.io/api/v4/schemas/myschema HTTP/1.1
-        Content-Type: application/json
-        Authorization: Bearer abc123
-
-        {
-            "name": "mytable"
-        }
-        ```
-
-    </TabItem>
-    <TabItem value="cli" label="CLI">
-
-        ```bash
-        centia table add "myschema" "mytable"
-        ```
-
-
-    </TabItem>
-</Tabs>
-
 ## Rename and move table
 
-You can move a table to another schema by setting the `schema` property.
+You can move a table to another schema by setting the `schema` property and renaming the table by setting the
+`name` property.
 
 <Tabs>
     <TabItem value="http" label="HTTP" default>
         ```http
-        PATCH https://api.centia.io/api/v4/schemas/myschema/tables/mytable HTTP/1.1
+        PATCH https://api.centia.io/api/v4/schemas/rockhall/tables/inductees HTTP/1.1
         Content-Type: application/json
         Authorization: Bearer abc123
 
         {
-            "name": "mytable2",
-            "schema": "myschema2"
+            "name": "members",
+            "schema": "rock_roll_of_hall"
         }
         ```
     </TabItem>
     <TabItem value="cli" label="CLI">
         ```bash
-        centia schema rename "myschema" "mytable" "mytable2"
+        centia schema rename "rock_roll_of_hall" "inductees" "members"
         ```
         ```bash
-        centia schema move "myschema" "mytable" "mytable2"
+        centia schema move "rock_roll_of_hall" "inductees" "members"
         ```
     </TabItem>
 </Tabs>
@@ -176,13 +177,13 @@ You can move a table to another schema by setting the `schema` property.
 <Tabs>
     <TabItem value="http" label="HTTP" default>
         ```http
-        DELETE https://api.centia.io/api/v4/schemas/myschema/tables/mytable HTTP/1.1
+        DELETE https://api.centia.io/api/v4/schemas/rockhall/tables/inductees HTTP/1.1
         Authorization: Bearer abc123
         ```
     </TabItem>
     <TabItem value="cli" label="CLI">
         ```bash
-        centia table drop "myschema" "mytable"
+        centia table drop "rockhall" "inductees"
         ```
     </TabItem>
 </Tabs>

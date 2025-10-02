@@ -22,9 +22,9 @@ Sub-users are users for your API. While you can use your super-user for single u
         Authorization: Bearer abc123
 
         {
-            "name": "joe",
+            "name": "Alx Rose",
             "email": "joe@example.com",
-            "password": "Abc123!!"
+            "password": "1! Paradise City"
         }
         ```
         ```http title="Create multiple sub-users"
@@ -35,14 +35,14 @@ Sub-users are users for your API. While you can use your super-user for single u
         {
             "users": [
                 {
-                    "name": "joe",
-                    "email": "joe@example.com",
-                    "password": "Abc123!!"
+                    "name": "Alx",
+                    "email": "alx@awesome.com",
+                    "password": "1! Paradise City"
                 },
                 {
-                    "name": "peter",
-                    "email": "peter@example.com",
-                    "password": "Abc123!!"
+                    "name": "Slash",
+                    "email": "slash@awesome.com",
+                    "password": "1! November Rain"
                 }
             ]
         }
@@ -53,7 +53,7 @@ Sub-users are users for your API. While you can use your super-user for single u
     <TabItem value="cli" label="CLI">
 
         ```bash title="Create a new sub-user"
-        centia user add "joe"
+        centia user add "Alx Rose"
         ```
 
     </TabItem>
@@ -65,7 +65,7 @@ Sub-users are users for your API. While you can use your super-user for single u
     <TabItem value="http" label="HTTP" default>
 
         ```http title="A single sub-users"
-        GET https://api.centia.io/api/v4/users/joe,peter HTTP/1.1
+        GET https://api.centia.io/api/v4/users/alx,slash HTTP/1.1
         Accept: application/json; charset=utf-8
         Authorization: Bearer abc123
         ```
@@ -80,7 +80,7 @@ Sub-users are users for your API. While you can use your super-user for single u
     <TabItem value="cli" label="CLI">
 
         ```bash title="A single sub-user"
-        centia user get "joe"
+        centia user get "alx"
         ```
 
     </TabItem>
@@ -94,12 +94,12 @@ It is not possible to update the collection of all sub-users. Only explicit give
     <TabItem value="http" label="HTTP" default>
 
         ```http title="Update single sub-users"
-        PATCH https://api.centia.io/api/v4/users/joe,peter HTTP/1.1
+        PATCH https://api.centia.io/api/v4/users/alx,slash HTTP/1.1
         Content-Type: application/json
         Authorization: Bearer abc123
 
         {
-            "user_group": "planning"
+            "user_group": "awesomeness"
         }
 
         ```
@@ -108,7 +108,7 @@ It is not possible to update the collection of all sub-users. Only explicit give
     <TabItem value="cli" label="CLI">
 
         ```bash title="A single user"
-        centia user update "joe"
+        centia user update "alx"
         ```
 
     </TabItem>
@@ -123,7 +123,7 @@ It is not possible to delete the collection of all sub-users. Only explicit give
     <TabItem value="http" label="HTTP" default>
 
         ```http title="Delete single sub-users"
-        DELETE https://api.centia.io/api/v4/users/joe,peter HTTP/1.1
+        DELETE https://api.centia.io/api/v4/users/alx,slash HTTP/1.1
         Accept: application/json; charset=utf-8
         Authorization: Bearer abc123
         ```
@@ -132,7 +132,7 @@ It is not possible to delete the collection of all sub-users. Only explicit give
     <TabItem value="cli" label="CLI">
 
         ```bash
-        centia user drop "joe"
+        centia user drop "alx"
         ```
 
     </TabItem>

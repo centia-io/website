@@ -4,7 +4,10 @@ description: Create and execute JSON-RPC methods.
 sidebar_position: 60
 ---
 
-In the Centia API, instead of sending raw SQL every time you want to run a statement, you can **wrap your SQL statements inside JSON-RPC methods**. This means you define a **named method** which holds your SQL query along with optional instructions on how to interpret and format the data types.
+In the Centia.io API, instead of sending raw SQL every time you want to run a statement,
+you can **wrap your SQL statements inside JSON-RPC methods**.
+This means you define a **named method** which holds your SQL query along with optional instructions on how to
+interpret and format the data types.
 
 ### Why do this?
 
@@ -13,9 +16,7 @@ In the Centia API, instead of sending raw SQL every time you want to run a state
 - **Encapsulation:** The SQL code is stored on the server side, reducing the chance of SQL injection and improving security.
 - **Easier client code:** Clients don’t need to embed or parse SQL, they just call methods.
 
-
 > JSON-RPC is a stateless, lightweight remote procedure call (RPC) protocol that uses JSON for data interchange. Defined by the JSON-RPC 2.0 specification, it enables clients to invoke methods on a server by sending JSON-formatted requests and receiving JSON-formatted responses, with support for batch calls, notifications, and standardized error handling.
-
 
 ### How it works
 1. You **create a JSON-RPC method** by posting a method definition to the `methods` API.
@@ -24,6 +25,7 @@ In the Centia API, instead of sending raw SQL every time you want to run a state
     - `type_formats`: specifying formats for those types (like date formatting).
     - `output_format`: specifying output format for the result (like json, csv, ndjson).
 3. When calling the method later, clients only send the method name and parameters (if any).
+
 
 #### Example
 Suppose you have a SQL query that fetches the current timestamp:
@@ -41,11 +43,11 @@ Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
 
 {
-  "q": "select now() as date",
-  "method": "getDate",
-  "type_formats": {
-    "date": "D M d Y"
-  }
+    "q": "select now() as date",
+    "method": "getDate",
+    "type_formats": {
+      "date": "D M d Y"
+    }
 }
 ```
 
@@ -54,12 +56,7 @@ Authorization: Bearer abc123
 
 After this is done, a client can simply call:
 
-```http request
-POST  https://api.centia.io/api/v4/api/v4/call
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 {
   "jsonrpc": "2.0",
   "method": "getDate",
@@ -67,7 +64,7 @@ Authorization: Bearer abc123
 }
 ```
 
-And receive properly typed and formatted results without sending the SQL each time:
+And receive properly typed and formatted results without sending the SQL each time..
 
 ```json
 {
@@ -89,18 +86,45 @@ And receive properly typed and formatted results without sending the SQL each ti
 }
 ```
 
+The `result` property is similar to what the [SQL API](./statement) returns.
+
+
+The REST API is used like this:
+
+```http request
+POST  https://api.centia.io/api/v4/api/v4/call
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+    "jsonrpc": "2.0",
+    "method": "getDate",
+    "id": 1
+}
+
+```
+
+And the websocket API is used like this:
+
+```javascript
+const socket = new WebSocket("wss://event.centia.io?token=abc123");
+socket.onopen = () => {
+    socket.send(JSON.stringify({
+      "jsonrpc": "2.0",
+      "method": "getDate",
+      "id": 1
+    }))
+}
+```
+
 ### Sending parameters
 
 When creating a method, the statement is not executed, and therefore you don't have to provide any parameters.
 
 So if you want to create a method that gives you a formatted date plus a given number of days like this SQL request:
 
-```http request
-POST http://localhost:8080/api/v4/sql
-Content-Type: application/json
-Accept: application/json; charset=utf-8, dsd
-Authorization: Bearer abc123
-
+```json
 {
   "q": "select date(:date) %2B :days::int as result",
   "params": {
@@ -120,12 +144,7 @@ Authorization: Bearer abc123
 
 You create the method without `params`:
 
-```http request
-POST  https://api.centia.io/api/v4/api/v4/sql
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 {
   "method": "getDatePlusDays",
   "q": "select date(:date) %2B :days::int as result",
@@ -142,12 +161,7 @@ Authorization: Bearer abc123
 
 And when call the the method with `params`:
 
-```http request
-POST http://localhost:8080/api/v4/call
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 {
   "jsonrpc": "2.0",
   "methode": "getDatePlusDays",
@@ -161,16 +175,12 @@ Authorization: Bearer abc123
 
 ## Notifications
 
-JSON-RPC supports notifications, a special type of request sent without an id member. Notifications instruct the server to perform the method but indicate that no response is expected.
+JSON-RPC supports notifications, a special type of request sent without an id member.
+Notifications instruct the server to perform the method but indicate that no response is expected.
 
 A notification payload might look like:
 
-```http request
-POST  https://api.centia.io/api/v4/api/v4/call
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 {
     "jsonrpc": "2.0",
     "method": "notifyEvent",
@@ -179,18 +189,14 @@ Authorization: Bearer abc123
 ```
 Since the id field is omitted, the server must not send any response. Clients should handle notifications as one-way messages.
 
-In a RESTful context, notifications will result in a 204 No Content response. In a websocket context, notifications will not result in a response.
+In a REST context, notifications will result in a 204 No Content response.
+In a websocket context, notifications will not result in a response.
 
 ## Execute multiple methods
 
 You can run multiple methods like this:
 
-```http request
-POST  https://api.centia.io/api/v4/api/v4/call
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 [
     {
         "jsonrpc": "2.0",
@@ -211,12 +217,7 @@ meaning both transactions must succeed or nothing will happen.
 If you are going to call the same transactional method for e.g., inserting multiple records,
 it's most efficient to call the method once with multiple parameters instead:
 
-```http request
-POST  https://api.centia.io/api/v4/api/v4/sql
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 {
     "jsonrpc": "2.0",
     "method": "notifyEvent",
@@ -233,7 +234,9 @@ Authorization: Bearer abc123
 
 ## Error Handling
 
-In the JSON-RPC 2.0 specification, errors are communicated using a standard structure in the response. If an error occurs during the processing of a request, the `error` object will be present in the response instead of the `result` object.
+In the JSON-RPC 2.0 specification, errors are communicated using a standard structure in the response.
+If an error occurs during the processing of a request,
+the `error` object will be present in the response instead of the `result` object.
 
 ### Error Response Format
 
@@ -250,11 +253,14 @@ An error response has the following structure:
     - `-32602`: Invalid Params (Invalid or missing method parameters.)
     - `-32603`: Internal Error (Internal server error occurred while processing the request.)
 
-- **message**: A short description of the error. This is intended for developers and should not change based on runtime context.
+- **message**: A short description of the error. This is intended for developers and should not change based on
+runtime context.
 
-- **data**: Additional information about the error, which could include server-specific debug information or additional details to help the client understand what went wrong.
+- **data**: Additional information about the error, which could include server-specific debug information or
+additional details to help the client understand what went wrong.
 
-- **id**: Mirrors the `id` from the request or `null` when the id is not present in the request (e.g., for notifications).
+- **id**: Mirrors the `id` from the request or `null` when the id is not present in
+the request (e.g., for notifications).
 
 ### Example Error Scenarios and Responses
 
@@ -264,13 +270,7 @@ This error occurs when the JSON payload does not conform to the JSON-RPC 2.0 spe
 
 Request:
 
-```http request
-
-POST https://api.centia.io/api/v4/api/v4/rpc
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 { "jsonrpc": "2.0", "invalid_property": "invalid value" }
 ```
 Response:
@@ -285,12 +285,7 @@ This error occurs when an unknown or unsupported method is invoked.
 
 Request:
 
-```http request
-POST https://api.centia.io/api/v4/api/v4/rpc
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 { "jsonrpc": "2.0", "method": "unknownMethod", "id": 10 }
 ```
 
@@ -306,12 +301,7 @@ This error occurs when the parameters provided in the request are invalid.
 
 Request:
 
-```http request
-POST https://api.centia.io/api/v4/api/v4/rpc
-Content-Type: application/json
-Accept: application/json; charset=utf-8
-Authorization: Bearer abc123
-
+```json
 { "jsonrpc": "2.0", "method": "getDate", "params": { "invalid": "param" }, "id": 2 }
 ```
 

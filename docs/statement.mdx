@@ -1,6 +1,6 @@
 ---
 title: Statements
-description: Execute parameterized SELECT, INSERT, UPDATE and DELETE via the SQL API.
+description: Execute parameterized SELECT, INSERT, UPDATE, DELETE or MERGE via the SQL API.
 sidebar_position: 50
 ---
 
@@ -9,9 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Statements
 
-Data can be retrieved and altered using the `sql` API.
+Data can be retrieved and altered using the `sql` API or a websocket.
 
-Only `select`, `insert`, `update` and `delete` statements can be executed. Any other types of SQL (DDL, transaction control, etc.) will be rejected by the API.
+Only `select`, `insert`, `update`, `delete` and `merge` statements can be executed. Any other types of SQL (DDL, transaction control, etc.) will be rejected by the API.
 
 Send an HTTP POST to the SQL endpoint with a JSON body:
 - `q`: the SQL text. Use named parameters like `:name` with explicit casts (e.g., `:id::int`).
@@ -20,169 +20,203 @@ Send an HTTP POST to the SQL endpoint with a JSON body:
 - `type_formats` (optional): control formatting for date/time outputs.
 - `id` (optional): a unique identifier for the request. The server will return the same identifier in the response.
 Useful for tracking requests in a websocket context. If omitted:
-    - In REST context: The server will generate a random UUID in the response.
-    - In Websocket context: The server will not send any message.
+  - In REST context: The server will generate a random UUID in the response.
+  - In websocket context: The server will not send any message.
 
 See also: [Types](./types) for data type formatting/conversion and [Rules](./rules) for row-level access control and query limiting.
 
+The REST API is used like this:
+```http request
+POST  https://api.centia.io/api/v4/api/v4/sql
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "q": "...",
+  "params": { ... },
+  "id": 1
+}
+
+```
+
+And the websocket API is used like this:
+```javascript
+const socket = new WebSocket("wss://event.centia.io?token=abc123");
+socket.onopen = () => {
+    socket.send(JSON.stringify({
+        "q": "...",
+        "params": { ... },
+        "id": 1
+    }))
+}
+```
+
+## Transactions
+
+If inserting, updating or deleting multiple rows, pass an array of objects.
+All rows will be affected in a single transaction, meaning that either all rows will be affected or none.
+
+### Insert
+
+Insert new rows into a table.
+
+```json title="Insert a row"
+{
+  "q": "insert into rockhall.inductees (id, name) values (:id::int, :name::varchar)",
+  "params": { "id": 4, "name": "Aerosmith" },
+  "id": 1
+}
+```
+
+```json title="Insert multiple rows"
+{
+  "q": "insert into rockhall.inductees (id, name) values (:id::int, :name::varchar)",
+  "params": [
+      { "id": 4, "name": "Aerosmith" },
+      { "id": 5, "name": "Red Hot Chili Peppers" },
+      { "id": 6, "name": "Green Day" }
+    ],
+  "id": 1
+}
+```
+
+### Update
+
+Update existing rows in a table. The `where` clause is optional, but recommended. If omitted, all rows will be affected.
+
+```json title="Update a row and return the changed values"
+{
+  "q": "update rockhall.inductees set name = :name::varchar where id = :id::int",
+  "params": { "id": 2, "name": "Alice Cooper" },
+  "id": 1
+}
+```
+
+### Delete
+
+Delete rows from a table. The `where` clause is optional, but recommended. If omitted, all rows will be deleted.
+
+```json title="Delete a row and return the id"
+{
+  "q": "delete from rockhall.inductees where id = :id::int",
+  "params": { "id": 2 },
+  "id": 1
+}
+```
+
+### Response
+
+The response includes the number of affected rows, the SQL statement and the identifier of the request.
+
+```json title="Response"
+{
+  "affected_rows": 2,
+  "filters": [],
+  "statement": "insert into rockhall.inductees (id, name) values (:id::int, :name::varchar)",
+  "id": 1
+}
+```
+
+### Returning
+
+The `returning` clause can be used to return the values of inserted, updated or deleted rows.
+This is useful for generated primary keys and other defaults, which are not set in the insert statement.
+Can be used with `insert`, `update` and `delete`.
+
+```json title="Insert a row"
+{
+    "q": "insert into rockhall.inductees (id, name) values (:id::int, :name::varchar) RETURNING id, name",
+    "params": { "id": 4, "name": "Aerosmith" },
+    "id": 1
+}
+```
+```json title="Response"
+{
+    "affected_rows": 1,
+    "returning": [{"id": 716547, "name": "Aerosmith"}],
+    "filters": [],
+    "statement": "insert into rockhall.inductees (id, name) values (:id::int, :name::varchar)",
+    "id": 1
+}
+```
+
 ## Select
 
-<Tabs>
-  <TabItem value="http" label="HTTP" default>
+The `select` statement can be used to retrieve rows from a table.
 
-    ```http title="Select rows with parameters"
-    POST http://localhost:8080/api/v4/sql HTTP/1.1
-    Content-Type: application/json
-    Accept: application/json
-    Authorization: Bearer abc123
+```json title="Select rows with parameters"
+{
+    "q": "select id, name from rockhall.inductees where id = :id::int",
+    "params": { "id": 4 },
+    "id": "1"
+}
+```
+Result objects include a `schema` section describing each returned column and a `data` array with the actual rows.
 
+```json title="Response"
+{
+    "schema": {
+      "id": { "type": "int4", "array": false },
+      "name": { "type": "varchar", "array": false }
+    },
+    "data": [
+      { "id": 4, "name": "Aerosmith" }
+    ],
+    "filters": [],
+    "statement": "select id, name from rockhall.inductees where id = :id::int",
+    "id": "1"
+}
+```
+
+### Output formats
+
+
+## Execute multiple statements
+
+You can run multiple statements like this:
+
+```json title="Run multiple statements"
+
+[
     {
-      "q": "select id, name from my_schema.my_table where id = :id::int",
-      "params": { "id": 1 },
-      "id": "1"
-    }
-    ```
-
-    ```json title="Response"
+        "q": "update rockhall.inductees set name = :name::varchar where id = :id::int",
+        "params": { "id": 2, "name": "Alice Cooper" },
+        "id": 1
+    },
     {
-      "schema": {
-        "id": { "type": "int4", "array": false },
-        "name": { "type": "varchar", "array": false }
-      },
-      "data": [
-        { "id": 1, "name": "Martin" }
-      ]
+        "q": "delete from rockhall.inductees where id = :id::int RETURNING name",
+        "params": { "id": 1 },
+        "id": 2
     }
-    ```
+]
+```
+This will run both statements in the same transaction block,
+meaning both transactions must succeed or nothing will happen.
+The response will include the results of both statements in an array.
 
-  </TabItem>
-  <TabItem value="cli" label="CLI">
+## Error Handling
 
-    ```bash title="Select rows"
-    echo "select id, name from my_schema.my_table where id = 1" | centia sql
-    ```
+If an error occurs, the response will include an error message and the SQLSTATE code:
 
-  </TabItem>
-</Tabs>
-
-## Insert
-
-<Tabs>
-  <TabItem value="http" label="HTTP" default>
-
-    ```http title="Insert a row and return values"
-    POST http://localhost:8080/api/v4/sql HTTP/1.1
-    Content-Type: application/json
-    Accept: application/json
-    Authorization: Bearer abc123
-
-    {
-      "q": "insert into my_schema.my_table (id, name) values (:id::int, :name::varchar) returning id, name",
-      "params": { "id": 2, "name": "Alice" }
-    }
-    ```
-
-    ```json title="Response"
-    {
-      "schema": {
-        "id": { "type": "int4", "array": false },
-        "name": { "type": "varchar", "array": false }
-      },
-      "data": [
-        { "id": 2, "name": "Alice" }
-      ]
-    }
-    ```
-
-  </TabItem>
-  <TabItem value="cli" label="CLI">
-
-    ```bash title="Insert a row"
-    echo "insert into my_schema.my_table (id, name) values (2, 'Alice') returning id, name" | centia sql
-    ```
-
-  </TabItem>
-</Tabs>
-
-## Update
-
-<Tabs>
-  <TabItem value="http" label="HTTP" default>
-
-    ```http title="Update a row and return the changed values"
-    POST http://localhost:8080/api/v4/sql HTTP/1.1
-    Content-Type: application/json
-    Accept: application/json
-    Authorization: Bearer abc123
-
-    {
-      "q": "update my_schema.my_table set name = :name::varchar where id = :id::int returning id, name",
-      "params": { "id": 2, "name": "Alice Cooper" }
-    }
-    ```
-
-    ```json title="Response"
-    {
-      "schema": {
-        "id": { "type": "int4", "array": false },
-        "name": { "type": "varchar", "array": false }
-      },
-      "data": [
-        { "id": 2, "name": "Alice Cooper" }
-      ]
-    }
-    ```
-
-  </TabItem>
-  <TabItem value="cli" label="CLI">
-
-    ```bash title="Update a row"
-    echo "update my_schema.my_table set name = 'Alice Cooper' where id = 2 returning id, name" | centia sql
-    ```
-
-  </TabItem>
-</Tabs>
-
-## Delete
-
-<Tabs>
-  <TabItem value="http" label="HTTP" default>
-
-    ```http title="Delete a row and return the id"
-    POST http://localhost:8080/api/v4/sql HTTP/1.1
-    Content-Type: application/json
-    Accept: application/json
-    Authorization: Bearer abc123
-
-    {
-      "q": "delete from my_schema.my_table where id = :id::int returning id",
-      "params": { "id": 2 }
-    }
-    ```
-
-    ```json title="Response"
-    {
-      "schema": {
-        "id": { "type": "int4", "array": false }
-      },
-      "data": [
-        { "id": 2 }
-      ]
-    }
-    ```
-
-  </TabItem>
-  <TabItem value="cli" label="CLI">
-
-    ```bash title="Delete a row"
-    echo "delete from my_schema.my_table where id = 2 returning id" | centia sql
-    ```
-
-  </TabItem>
-</Tabs>
+```json
+{
+    "success": false,
+    "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: \"1a\"",
+    "code": 500,
+    "errorCode": "22P02"
+}
+```
 
 ## Notes
 
-- Always use parameters (e.g., `:id`) and explicit casts (`::type`) to ensure correct typing and protect against SQL injection.
-- Result objects include a `schema` section describing each returned column and a `data` array with the actual rows.
+- Use parameters (e.g., `:id`) and explicit casts (`::type`) to ensure correct typing and protect against SQL injection.
 - Access may be limited or denied by configured [Rules](./rules). Refer to [Types](./types) for handling complex types and formatting.
+
+## CLI
+
+You can also use the `centia sql` command to execute statement strings.
+
+```bash title="Insert a row"
+echo "insert into rockhall.inductees (id, name) values (4, 'Aerosmith') returning id, name" | centia sql
+```

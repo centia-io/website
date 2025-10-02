@@ -13,6 +13,36 @@ up by readers are collected in an alphabetic index at the end of the book. The i
 relatively quickly and flip to the appropriate page(s), rather than having to read the entire book to find the material
 of interest.
 
+
+## Add index
+
+An index can be of either type btree, brin, gin, gist or hash.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Create an index"
+        POST https://api.centia.io/api/v4/schemas/rockhall/tables/inductees/indexes HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "name": "inductees-id-btree",
+            "columns": ["id"],
+            "method": "btree"
+        }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash
+        centia index add "rockhall" "inductees" "id" btree "inductees-id-btree"
+        ```
+
+    </TabItem>
+</Tabs>
+
 ## Get index
 
 You can either get a single index or a collection of indexes.
@@ -21,13 +51,13 @@ You can either get a single index or a collection of indexes.
     <TabItem value="http" label="HTTP" default>
 
         ```http title="All indexes for a table"
-        GET https://api.centia.io/api/v4/schemas/myschema/tables/mytable/indexes HTTP/1.1
+        GET https://api.centia.io/api/v4/schemas/rockhall/tables/inductees/indexes HTTP/1.1
         Accept: application/json; charset=utf-8
         Authorization: Bearer abc123
         ```
 
         ```http title="Specific index by name"
-        GET https://api.centia.io/api/v4/schemas/myschema/tables/mytable/indexes/my-btree-index-on-id HTTP/1.1
+        GET https://api.centia.io/api/v4/schemas/rockhall/tables/inductees/indexes/my-btree-index-on-id HTTP/1.1
         Accept: application/json; charset=utf-8
         Authorization: Bearer abc123
         ```
@@ -36,7 +66,7 @@ You can either get a single index or a collection of indexes.
     <TabItem value="cli" label="CLI">
 
         ```bash
-        centia index get "myschema" "mytable" "btree-on-id"
+        centia index get "rockhall" "inductees" "btree-on-id"
         ```
 
     </TabItem>
@@ -52,49 +82,20 @@ An index object looks like this.
 }
 ```
 
-## Add index
-
-An index can be of either type btree, brin, gin, gist or hash.
-
-<Tabs>
-    <TabItem value="http" label="HTTP" default>
-
-        ```http title="Create an index"
-        POST https://api.centia.io/api/v4/schemas/myschema/tables/mytable/indexes HTTP/1.1
-        Content-Type: application/json
-        Authorization: Bearer abc123
-
-        {
-            "name": "my-btree-index-on-id",
-            "columns": ["id"],
-            "method": "btree"
-        }
-        ```
-
-    </TabItem>
-    <TabItem value="cli" label="CLI">
-
-        ```bash
-        centia index add "myschema" "mytable" "id" btree ""my-btree-index-on-id""
-        ```
-
-    </TabItem>
-</Tabs>
-
 ## Delete index
 
 <Tabs>
     <TabItem value="http" label="HTTP" default>
 
         ```http title="Delete index by name"
-        DELETE https://api.centia.io/api/v4/schemas/myschema/tables/mytable/indexes/my-btree-index-on-id HTTP/1.1
+        DELETE https://api.centia.io/api/v4/schemas/rockhall/tables/inductees/indexes/inductees-id-btree HTTP/1.1
         ```
 
     </TabItem>
     <TabItem value="cli" label="CLI">
 
         ```bash
-        centia index drop "myschema" "mytable" "id" "my-btree-index-on-id"
+        centia index drop "rockhall" "inductees" "id" "inductees-id-btree"
         ```
 
     </TabItem>
