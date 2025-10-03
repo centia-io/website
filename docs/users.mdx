@@ -23,8 +23,8 @@ Sub-users are users for your API. While you can use your super-user for single u
 
         {
             "name": "alx",
-            "email": "alx@awesome.com",
-            "password": "1! Paradise City"
+            "email": "alx@gunsnroses.com",
+            "password": "Paradise_City!%Rck1987"
         }
         ```
         ```http title="Create multiple sub-users"
@@ -36,13 +36,28 @@ Sub-users are users for your API. While you can use your super-user for single u
             "users": [
                 {
                     "name": "alx",
-                    "email": "alx@awesome.com",
-                    "password": "1! Paradise City"
+                    "email": "alx@gunsnroses.com",
+                    "password": "Paradise_City!%Rck1987"
                 },
                 {
                     "name": "slash",
-                    "email": "slash@awesome.com",
-                    "password": "1! November Rain"
+                    "email": "slash@gunsnroses.com",
+                    "password": "November_Rain!%Pno1991"
+                },
+                {
+                    "name": "izzy",
+                    "email": "izzy@gunsnroses.com",
+                    "password": "KnockinOn_HeavensDoor!%GnR1990"
+                },
+                {
+                    "name": "duff",
+                    "email": "duff@gunsnroses.com",
+                    "password": "Welcome2_Jungle!%AxL1987"
+                },
+                {
+                    "name": "steven",
+                    "email": "steven@gunsnroses.com",
+                    "password": "SweetChild_oMine!%Gtr1987"
                 }
             ]
         }
@@ -99,7 +114,7 @@ It is not possible to update the collection of all sub-users. Only explicit give
         Authorization: Bearer abc123
 
         {
-            "user_group": "awesomeness"
+            "user_group": "gunsnroses"
         }
 
         ```
@@ -123,7 +138,7 @@ It is not possible to delete the collection of all sub-users. Only explicit give
     <TabItem value="http" label="HTTP" default>
 
         ```http title="Delete single sub-users"
-        DELETE https://api.centia.io/api/v4/users/alx,slash HTTP/1.1
+        DELETE https://api.centia.io/api/v4/users/izzy,steven HTTP/1.1
         Accept: application/json; charset=utf-8
         Authorization: Bearer abc123
         ```
@@ -132,7 +147,7 @@ It is not possible to delete the collection of all sub-users. Only explicit give
     <TabItem value="cli" label="CLI">
 
         ```bash
-        centia user drop "alx"
+        centia user drop "izzy"
         ```
 
     </TabItem>
