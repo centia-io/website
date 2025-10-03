@@ -129,7 +129,7 @@ How data becomes a PostGIS table
   - If the source lacks authority/code but has projection info, t_srs is used for the target table, and the geometry will be assigned/transformed accordingly.
   - If no projection info can be determined, s_srs is used as source SRID.
 - Attributes: Field types are inferred where possible (integer, numeric, text, boolean, timestamp). The optional timestamp property can add a created timestamp column.
-- Indexes: A standard GiST index on the geometry column is created by the platform. If you append, existing indexes are preserved; new indexes are not recreated unless needed.
+- Indices: A standard GiST index on the geometry column is created by the platform. If you append, existing indices are preserved; new indices are not recreated unless needed.
 - A primary key is added to the table named 'gid'.
 
 Multiple layers in one upload
