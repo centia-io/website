@@ -117,14 +117,6 @@ const config = {
                 label: 'Stack Overflow',
                 href: 'https://stackoverflow.com/questions/tagged/centia.io',
               },
-              {
-                label: 'Discord',
-                href: 'https://discordapp.com/invite/centia.io',
-              },
-              {
-                label: 'X',
-                href: 'https://x.com/centia.io',
-              },
             ],
           },
           {

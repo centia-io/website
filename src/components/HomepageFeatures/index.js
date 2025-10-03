@@ -8,7 +8,7 @@ const FeatureList = [
     Svg: require('@site/static/img/feature-sql.svg').default,
     description: (
       <>
-        Connect your Postgres and expose a secure, scalable SQL-over-HTTP API in minutes.
+        Backed by Postgres and exposes a secure, scalable SQL-over-HTTP.
       </>
     ),
   },
@@ -17,7 +17,7 @@ const FeatureList = [
     Svg: require('@site/static/img/feature-security.svg').default,
     description: (
       <>
-        OAuth2/OIDC, row-level security, and rate limiting baked in—ship with confidence.
+        OAuth2, row-level security, and rate limiting baked in — ship with confidence.
       </>
     ),
   },
@@ -26,7 +26,7 @@ const FeatureList = [
     Svg: require('@site/static/img/feature-dev.svg').default,
     description: (
       <>
-        Clean OpenAPI schema, intuitive SDKs, and a friendly console to manage your data.
+        Clean OpenAPI schema, intuitive SDKs, and a friendly CLI to manage your data.
       </>
     ),
   },
