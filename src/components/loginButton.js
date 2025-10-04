@@ -14,7 +14,7 @@ function LoginButton(props) {
     } else {
         options = {
             redirectUri: 'http://localhost:4000/console/',
-            clientId: 'centia',
+            clientId: 'gc2-cli',
             host: 'http://localhost:8080',
         }
     }

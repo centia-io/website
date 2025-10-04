@@ -19,13 +19,7 @@ export default function Home() {
                         <Link className="button button--primary button--lg" to="/docs/intro">
                             Read the Docs
                         </Link>
-                        <Link className="button button--secondary button--outline button--lg" to="/console">
-                            Open Console
-                        </Link>
                     </div>
-                    <p className="margin-top--sm">
-                        <a href="https://api.centia.io/swagger-ui/index.html">Explore the OpenAPI spec</a>
-                    </p>
                 </div>
                 <img className={styles.heroArt} src={useBaseUrl('/img/hero-illustration.svg')} alt=""
                      aria-hidden="true"/>

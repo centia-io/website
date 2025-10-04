@@ -8,8 +8,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # OAuth
-OAuth is an industry-standard protocol for authorization. It enables applications (clients) to obtain limited access to
-user accounts on Centia.io, without sharing the user’s credentials
+OAuth is an industry-standard protocol for authorization. It enables applications ([clients](./clients)) to
+obtain limited access to user accounts on Centia.io, without sharing the user’s credentials
 directly with the client. OAuth accomplishes this by providing a secure, delegated access flow that grants tokens to
 client applications.
 
@@ -19,7 +19,7 @@ Within Centia.io, we implement three main OAuth flows, each suited for different
 2. Authorization Code Flow
 3. Device Flow
 
-Each flow handles authentication and authorization in a different manner.
+Each flow handles authentication and authorization differently.
 Below is an outline of how to use each flow and when to choose one over another.
 
 ## Password Flow
@@ -55,12 +55,14 @@ Content-Type: application/json
 {
     "grant_type": "password",
     "username": "<USER_USERNAME>",
-    "password": "<USER_PASSWORD>"
+    "password": "<USER_PASSWORD>",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<CLIENT_SECRET>"
 }
 ```
 
-
-3. Receive token response: If the credentials are valid, the authorization server returns an access_token and optionally a refresh_token:
+3. Receive token response: If the credentials are valid, the authorization server returns
+an access_token and optionally a refresh_token:
 
 ```json
 {
@@ -75,6 +77,8 @@ Content-Type: application/json
 ```http
 Authorization: Bearer eyJhbGciOiJIUzI1...
 ```
+Notes:
+- `client_secret` is only required for confidential clients.
 
 ## Authorization Code Flow
 
@@ -85,8 +89,8 @@ applications (SPAs) that can securely handle client secrets on a server or use P
 Use cases:
 
 - Web or native applications that can securely manage client secrets or use PKCE for enhanced security.
-- Situations where you want to avoid collecting user credentials in the application and instead rely on a redirect to
-Centia.io login page.
+- Situations where you want to avoid collecting user credentials in the application and
+instead rely on a redirect to Centia.io login page.
 - Multi-tenant or third-party applications that must not handle user credentials directly.
 
 Security considerations:
@@ -95,6 +99,9 @@ Security considerations:
 to prevent authorization code interception.
 
 - All callbacks and communications must use https:// to protect tokens and credentials.
+
+Notes:
+- At the moment, PKCE is mandatory for both public and confidential clients in the Authorization Code Flow.
 
 ### Flow Steps
 
@@ -114,17 +121,17 @@ GET https://api.centia.io/auth?
 2. User authenticates: The user enters their credentials on the Centia.io login page.
 
 3. Centia.io returns code: If the user is authenticated and consents to the requested scopes, Centia.io
-redirects the user back to the specified redirect_uri with a short-lived authorization_code and the state string for
+redirects the user back to the specified redirect_uri with a short-lived `authorization_code` and the state string for
 the client to check:
 
 ```http
-https://your_site.com?code=67c2b....&state=49c9282cd61698....
+https://rockhall.io?code=67c2b....&state=49c9282cd61698....
 ```
 
 4. Exchange code for tokens: The client application sends a POST request to Centia.io token endpoint, including the
 authorization code and PKCE verifier:
 
-```http
+```http title="application/json"
 POST https://api.centia.io/api/v4/oauth
 Accept: application/json
 Content-Type: application/json
@@ -137,6 +144,20 @@ Content-Type: application/json
   "client_secret": "<CLIENT_SECRET>",
   "code_verifier": "<CODE_VERIFIER>"
 }
+```
+Or:
+
+```http title="application/x-www-form-urlencoded"
+POST https://api.centia.io/api/v4/oauth
+Cookie: XDEBUG_SESSION=XDEBUG_ECLIPSE
+Content-Type: application/x-www-form-urlencoded
+
+grant_type = authorization_code &
+code = <AUTH_CODE> &
+redirect_uri = <REDIRECT_URI>
+client_id = <CLIENT_ID> &
+client_secret = <CLIENT_SECRET> &
+code_verifier = <CODE_VERIFIER> &
 ```
 
 5. Receive token response: Centia.io returns an access_token, refresh_token and related metadata:
@@ -203,12 +224,14 @@ Content-Type: application/json
 ```
 
 Display instructions to the user: The device shows or speaks instructions to the user:
-User Code: AB12-CD34
-Verification URL: https://your-baas.com/device
-User authorizes: On a separate device (phone, laptop), the user navigates to https://your-baas.com/device, enters the
+- User Code: AB12-CD34
+- Verification URL: https://api.centia.io/device
+
+User authorizes: On a separate device (phone, laptop), the user navigates to https://api.centia.io/device, enters the
 user_code, and logs in. The user grants permission for the device to access their account.
-Device polls for token: The device repeatedly polls the token endpoint with the device_code and client_id at intervals
-specified by interval:
+
+Device polls for token: The device repeatedly polls the token endpoint with the `device_code` and `client_id` at intervals
+specified by the interval:
 
 ```http
 POST POST https://api.centia.io/api/v4/oauth
@@ -217,12 +240,16 @@ Content-Type: application/json
 {
     "grant_type": "device_code",
     "device_code": "<DEVICE_CODE>",
-    "client_id": "<DEVICE_CLIENT_ID>"
+    "client_id": "<DEVICE_CLIENT_ID>",
+    "client_secret": "<CLIENT_SECRET>"
 }
 ```
 
 Token issued: Once the user authorizes, Centia.io returns the access_token and optional refresh_token to the device.
 The device then uses the access_token to communicate with Centia.io.
+
+Notes:
+- `client_secret` is only required for confidential clients.
 
 ## Token Lifecycles and Refresh Tokens
 
@@ -244,6 +271,9 @@ Content-Type: application/json
 ```
 
 Response: Returns a new access_token (and a new refresh_token), extending the session without requiring the user to log in again.
+
+Notes:
+- `client_secret` is only required for confidential clients.
 
 ## Choosing the Right Flow
 
@@ -276,15 +306,11 @@ Best for: IoT, smart devices, or other specialized hardware.
 
 Each of these flows is fully supported by our Centia.io. In practice, you will:
 
-Register your client with Centia.io Client API to obtain a client_id and client_secret.
-Configure OAuth scopes and redirect URIs as needed for each application.
-Integrate the flow most appropriate for your application’s user experience and security requirements.
-Handle tokens securely on the client side and refresh them when needed to maintain user sessions.
-
-If you have any questions or need assistance choosing the right flow for your use case, please refer to our Best Practices guide or contact our support team.
-
-We hope this documentation helps you integrate OAuth smoothly with Centia.io. By selecting the correct flow and
-following recommended security practices, you can provide a secure and seamless authentication experience for your users.
+- Register your client with Centia.io [Client API](./clients) to obtain a client_id and client_secret.
+- Configure redirect URIs as needed for each application.
+- Integrate the flow most appropriate for your application’s user experience and security requirements.
+See [SDK](./sdk)
+- Handle tokens securely on the client side and refresh them when needed to maintain user sessions.
 
 
 
