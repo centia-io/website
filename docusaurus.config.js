@@ -16,7 +16,7 @@ const config = {
   favicon: 'img/centia-logo.svg',
 
   // Set the production url of your site here
-  url: 'https://centia.netlify.app',
+  url: 'https://centia.io',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
