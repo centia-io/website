@@ -127,6 +127,14 @@ const config = {
                 href: 'https://github.com/centia-io/',
               },
             ],
+          }, {
+            title: 'Support',
+            items: [
+              {
+                label: 'E-mail',
+                href: 'mailto:info@mapcentia.com',
+              },
+            ],
           },
         ],
         copyright: `Copyright © ${new Date().getFullYear()} Centia.io`,
