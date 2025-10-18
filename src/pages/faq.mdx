@@ -1,0 +1,100 @@
+# Frequently asked questions
+
+Welcome! This page answers common questions about Centia.io and points you to the right docs to go deeper.
+
+<details>
+  <summary>What is Centia.io?</summary>
+  <div>
+    Centia.io is a Backend as a Service (BaaS) that provides data, auth, realtime, file storage, and developer tooling so you can focus on shipping your app. Start with the data model you define, connect with an SDK, and add realtime where you need it.
+  </div>
+</details>
+
+<details>
+  <summary>How do I get started?</summary>
+  <div>
+    1) Sign in and create a backend in the Console: <a href="/console">/console</a><br/>
+    2) Follow the Getting started guide to model your first schema and table: <a href="/docs/start">/docs/start</a>
+  </div>
+</details>
+
+<details>
+  <summary>How do I model my data?</summary>
+  <div>
+    Use the CLI to define schemas, tables, columns, and constraints. For example:
+    <pre><code>centia schema add "app"
+centia table add "app" "users"
+centia column add "app" "users" "id" int
+centia constraint add "app" "users" "id" primary</code></pre>
+    See the full walkthrough: <a href="/docs/start">/docs/start</a>
+  </div>
+</details>
+
+<details>
+  <summary>How do I read and write data from my app?</summary>
+  <div>
+    Use the official SDKs to connect from web or server code: <a href="/docs/sdk">/docs/sdk</a>. You can also issue SQL via the CLI during development.
+  </div>
+</details>
+
+<details>
+  <summary>Does Centia support realtime updates?</summary>
+  <div>
+    Yes. Subscribe to changes and build reactive UIs (chat, live dashboards, collaborative features). Learn more: <a href="/docs/realtime">/docs/realtime</a>
+  </div>
+</details>
+
+<details>
+  <summary>How does authentication work?</summary>
+  <div>
+    Centia supports OAuth so you can authenticate users and integrate identity providers. Overview: <a href="/docs/oauth">/docs/oauth</a>
+  </div>
+</details>
+
+<details>
+  <summary>Can I store and serve files?</summary>
+  <div>
+    Yes. Use Objects to store and serve files alongside your data. Docs: <a href="/docs/objects">/docs/objects</a>
+  </div>
+</details>
+
+<details>
+  <summary>Which platforms and clients are supported?</summary>
+  <div>
+    See the SDKs overview and available clients here: <a href="/docs/sdk">/docs/sdk</a> and <a href="/docs/clients">/docs/clients</a>
+  </div>
+</details>
+
+<details>
+  <summary>Is Centia open source or can I contribute?</summary>
+  <div>
+    Centia focuses on open, developer‑first tooling and familiar SQL workflows. Learn more on the Open source page: <a href="/docs/opensource">/docs/opensource</a>
+  </div>
+</details>
+
+<details>
+  <summary>How is Centia different from other BaaS platforms?</summary>
+  <div>
+    Centia lets you model data explicitly (schemas, tables, columns) and query with standard SQL, adds realtime where you need it, and provides OAuth and file storage out of the box. Check the Intro for a quick overview: <a href="/docs/intro">/docs/intro</a>
+  </div>
+</details>
+
+<details>
+  <summary>Can I migrate in or out of Centia?</summary>
+  <div>
+    Your data model is defined with familiar SQL concepts, and you can interact via SQL and SDKs. This makes it straightforward to import seed data during setup and to export data later using the CLI and SQL queries.
+  </div>
+</details>
+
+<details>
+  <summary>Are there limits, quotas, or pricing tiers?</summary>
+  <div>
+    Usage limits and billing may vary over time. Check the Console for current quotas and plan details for your backend: <a href="/console">/console</a>
+  </div>
+</details>
+
+<details>
+  <summary>Where can I ask questions or get help?</summary>
+  <div>
+    Start with the docs linked above. If you’re blocked, use the help options in the Console and keep an eye on the Open source page for ways to file issues or contribute: <a href="/docs/opensource">/docs/opensource</a>
+  </div>
+</details>

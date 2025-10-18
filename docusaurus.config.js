@@ -85,6 +85,7 @@ const config = {
         },
         items: [
           {to: 'console', label: 'Console', position: 'left'},
+          {to: 'faq', label: 'FAQ', position: 'left'},
           {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',

@@ -1,0 +1,73 @@
+---
+sidebar_position: 15
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Getting started
+
+Get started by [sign up and create a new basebase back-end](/console)
+
+## Install the CLI
+
+<Tabs>
+    <TabItem value="npm" label="npm" default>
+        ```bash
+        npm install @centia-io/cli --global
+        ```
+    </TabItem>
+    <TabItem value="yarn" label="Yarn">
+        ```bash
+        yarn global add @centia-io/cli
+        ```
+    </TabItem>
+    <TabItem value="pnpm" label="pnpm">
+        ```bash
+        pnpm add @centia-io/cli --global
+        ```
+    </TabItem>
+</Tabs>
+
+## Use the CLI
+
+Start by logging in to the back-end:
+```bash
+centia login
+```
+
+Create a new schema for your tables:
+```bash
+centia schema add "rollhall"
+```
+
+Create a new table in the schema:
+```bash
+centia table add "rollhall" "inductees"
+```
+
+Add columns in your table:
+```bash
+centia column add "rollhall" "inductees" "id" int
+centia column add "rollhall" "inductees" "name" varchar
+```
+
+And maybe you want to add a primary key to your id column:
+```bash
+centia constraint add "rollhall" "inductees" "id" primary
+```
+
+So now your table is ready for insert of data:
+```bash
+echo "INSERT into rollhall.inductees values(1, 'Guns n’ Roses')" | centia sql
+```
+
+And run queries on your table:
+```bash
+echo "select * from rollhall.inductees" | centia sql
+```
+
+
+
+
+
