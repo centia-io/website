@@ -12,7 +12,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 const config = {
 
   title: 'Centia.io',
-  tagline: 'Very simple Backend as a Service',
+  tagline: 'The open PostgreSQL/PostGIS backend for developers who love control',
   favicon: 'img/centia-logo.svg',
 
   // Set the production url of your site here

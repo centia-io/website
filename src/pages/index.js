@@ -49,7 +49,7 @@ export default function Home() {
                         <div className="col col--6">
                             <h2>Wrap your SQL statements inside JSON-RPC methods</h2>
                             <p>
-                                Wrap SQL statements inside JSON-RPC methods along with optional instructions on how to
+                                Create JSON-RPC methods along with optional instructions on how to
                                 interpret and format the data types.
                             </p>
                         </div>
