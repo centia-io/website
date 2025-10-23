@@ -153,3 +153,23 @@ It is not possible to delete the collection of all sub-users. Only explicit give
     </TabItem>
 </Tabs>
 
+## Signup (Browser – Create a new user)
+
+Centia.io supports signup via the browser. From your app, you can redirect the user to the signup page:
+
+```
+https://api.centia.io/signup?client_id=abc123&parentdb=mydb&redirect_uri=https://myapp.com/login
+```
+
+Parameters:
+- client_id: OAuth client id configured in Centia.io
+- parentdb: The parent/tenant database under which the new user should be created
+- redirect_uri: URL in your app to return to after sign‑up
+
+The SDK has a [helper function](sdk#signup-browser--create-a-new-user) to redirect the user to the signup page.
+
+Notes:
+- After the user completes sign‑up and is redirected back to your app, start your normal sign‑in flow (e.g., CodeFlow. A session is started when the user signed up, so the user will be signed in automatically in the flow.)
+- Client property `allow_signup` must be set to `true` for the used OAuth client.
+- Client property `social_signup` must be set to `true` for the user can sign up with social login.
+
