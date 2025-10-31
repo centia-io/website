@@ -92,7 +92,7 @@ codeFlow.redirectHandle().then((signedIn) => {
 
 // Start sign-in when user clicks Login
 function onLoginClick() {
-  codeFlow.signIn(); // Redirects to GC2 auth page
+  codeFlow.signIn(); // Redirects to Centia.io auth page
 }
 
 // Sign out (clears tokens/options and redirects to signout endpoint)
@@ -171,7 +171,7 @@ Notes:
 
 ## SQL
 
-Execute parameterized SQL against GC2.
+Execute parameterized SQL against Centia.io.
 
 - Class: `new Sql()`
 - Method: `exec(request: SqlRequest): Promise<SQLResponse>`
@@ -229,7 +229,7 @@ const res = await sql.exec({ q: "...", params: payload }) as PgTypes.SQLResponse
 
 ## RPC
 
-Call JSON‑RPC methods exposed by GC2.
+Call JSON‑RPC methods exposed by Centia.io.
 
 - Class: `new Rpc()`
 - Method: `call(request: RpcRequest): Promise<RpcResponse>`
@@ -314,6 +314,78 @@ console.log(rows); // typed row array
 Notes:
 - `createApi<T>()` relies on naming conventions: the property name is the JSON‑RPC `method` name.
 - Each call returns `result.data` from the RPC response (array of rows).
+
+### Get JSON-RPC TypeScript interfaces
+
+Instead of defining the interfaces yourself as shown above, you can use the API `/api/v4/interfaces` helper to get the interfaces for all RPC-JSON methods.
+
+1) Defined your RPC-JSON method. Input and output types are inferred from an actual request/response.
+
+Consider this method definition:
+
+```json
+{
+  "q": "select :x as unknown",
+  "method": "getX"
+}
+```
+The values of `x` can not be inferred from the definition. So requesting `/api/v4/interfaces` will return:
+
+```ts
+export interface Api {
+    getX(params: Record<string, unknown>): Promise<Record<string, unknown>>;
+}
+```
+
+2) You will need to 'cast' the field 'x' to the correct type. This is not necessary for real columns in tables, but for the example above, you can cast the field to `int`
+
+```json
+{
+  "q": "select :x::int as my_int",
+  "method": "getX"
+}
+```
+
+3) Dry-run the request to set the types. Types are only inferred for dry-run requests. This will cache the types:
+
+```http request
+POST https://api.centia.io/api/v4/call
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer {{token}}
+X-Dry-Run: true
+
+{
+  "jsonrpc": "2.0",
+  "method": "getX",
+  "params":{ "x": 1 },
+  "id": 1"
+}
+```
+And `/api/v4/interfaces` will know return a typed interface:
+
+```ts
+export interface Api {
+    getX(params: { x: number; }): Promise<{ my_int: number; }[]>;
+}
+```
+
+This is ready for import and use in your application:
+
+```ts title="api.ts"
+export interface Api {
+    getX(params: { x: number; }): Promise<{ my_int: number; }[]>
+}
+```
+
+```ts title="main.ts"
+import { createApi } from "@centia-io/sdk"
+import type { Api } from "./api"
+
+const api = createApi<Api>()
+const res = await api.getX({ x: 1 })
+console.log(res)
+```
 
 ## Error handling
 
