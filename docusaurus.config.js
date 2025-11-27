@@ -20,6 +20,8 @@ const config = {
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: '/',
+  // Avoid duplicate content from both with/without trailing slash
+  trailingSlash: false,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -64,6 +66,12 @@ const config = {
           onInlineAuthors: 'warn',
           onUntruncatedBlogPosts: 'warn',
         },
+        sitemap: {
+          changefreq: 'weekly',
+          priority: 0.6,
+          filename: 'sitemap.xml',
+          ignorePatterns: ['/tags/**', '/__docusaurus/**'],
+        },
         theme: {
           customCss: './src/css/custom.css',
         },
@@ -75,7 +83,14 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       // Replace with your project's social card
-      image: 'img/docusaurus-social-card.jpg',
+      image: 'img/centia-logo.svg',
+      metadata: [
+        {name: 'description', content: 'Centia.io is a developer-first PostgreSQL/PostGIS backend with JSON-RPC, realtime, OAuth, and a CLI. Build data-heavy apps with full control.'},
+        {name: 'keywords', content: 'Centia, PostgreSQL, PostGIS, backend, BaaS, JSON-RPC, realtime, OAuth, SQL, CLI'},
+        {property: 'og:type', content: 'website'},
+        {property: 'og:site_name', content: 'Centia.io'},
+        {name: 'twitter:card', content: 'summary_large_image'},
+      ],
       navbar: {
         title: 'Centia.io',
         logo: {
