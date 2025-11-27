@@ -45,8 +45,8 @@ export default function Home() {
                         </Link>
                     </div>
                 </div>
-                <img className={styles.heroArt} src={useBaseUrl('/img/hero-illustration.svg')} alt="Centia.io backend platform illustration"
-                     />
+                <img className={styles.heroArt} src={useBaseUrl('/img/hero-illustration.svg')} alt=""
+                     aria-hidden="true"/>
             </header>
 
             <main>
