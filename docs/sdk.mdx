@@ -252,79 +252,26 @@ const schema =
             {
                 "name": "albums",
                 "columns": [
-                    {
-                        "name": "album_id",
-                        "_typname": "uuid",
-                        "_is_array": false,
-                        "is_nullable": false
-                    },
-                    {
-                        "name": "band_id",
-                        "_typname": "uuid",
-                        "_is_array": false,
-                        "is_nullable": false
-                    },
-                    {
-                        "name": "title",
-                        "_typname": "text",
-                        "_is_array": false,
-                        "is_nullable": false
-                    },
-                    {
-                        "name": "release_date",
-                        "_typname": "date",
-                        "_is_array": false,
-                        "is_nullable": true
-                    }
-                    {
-                        "name": "critic_score",
-                        "_typname": "int2",
-                        "_is_array": false,
-                        "is_nullable": true
-                    }
+                    {"name": "album_id", "_typname": "uuid", "_is_array": false, "is_nullable": false},
+                    {"name": "band_id", "_typname": "uuid", "_is_array": false, "is_nullable": false},
+                    {"name": "title", "_typname": "text", "_is_array": false, "is_nullable": false},
+                    {"name": "release_date", "_typname": "date", "_is_array": false, "is_nullable": true},
+                    {"name": "critic_score", "_typname": "int2", "_is_array": false, "is_nullable": true}
                 ],
                 "constraints": [
-                    {
-                        "name": "albums_pkey",
-                        "constraint": "primary",
-                        "columns": [
-                            "album_id"
-                        ]
-                    },
-                    {
-                        "name": "fk_albums_band",
-                        "constraint": "foreign",
-                        "columns": [
-                            "band_id"
-                        ],
-                        "referenced_table": "bands",
-                        "referenced_columns": [
-                            "band_id"
-                        ]
-                    }
+                    {"name": "albums_pkey", "constraint": "primary", "columns": ["album_id"]},
+                    {"name": "fk_albums_band", "constraint": "foreign", "columns": ["band_id"], "referenced_table": "bands", "referenced_columns": ["band_id"]}
                 ]
             },
             {
                 "name": "bands",
                 "columns": [
-                    {
-                        "name": "band_id",
-                        "_typname": "uuid",
-                        "_is_array": false,
-                        "is_nullable": false
-                    },
-                    {
-                        "name": "name",
-                        "_typname": "text",
-                        "_is_array": false,
-                        "is_nullable": false
-                    },
-                    {
-                        "name": "subgenre",
-                        "_typname": "rock_subgenre",
-                        "_is_array": false,
-                        "is_nullable": false
-                    }
+                    {"name": "band_id", "_typname": "uuid", "_is_array": false, "is_nullable": false},
+                    {"name": "name", "_typname": "text", "_is_array": false, "is_nullable": false},
+                    {"name": "subgenre", "_typname": "rock_subgenre", "_is_array": false, "is_nullable": false}
+                ],
+                "constraints": [
+                    {"name": "bands_pkey", "constraint": "primary", "columns": ["band_id"]},
                 ]
             }
         ]
