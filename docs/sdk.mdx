@@ -239,65 +239,141 @@ Build strongly typed SQL requests from a DB schema so you don't write raw SQL.
 Example:
 ```ts
 import { createSqlBuilder, Sql } from "@centia-io/sdk";
-import type { DBSchema } from "@centia-io/sdk";
+import type { DBSchema, RowOfSelect } from "@centia-io/sdk";
 
 // Minimal schema.
 // Don't write this by hand.
 // You can get the schema from the Sql endpoint: https://api.centia.io/api/v4/sql/schema
 // or use the CLI tool: centia schema get public --raw
-const schema = {
-  name: "public",
-  tables: [
+const schema =
     {
-      name: "items",
-      columns: [
-        { name: "id", _typname: "int4", _is_array: false, is_nullable: false },
-        { name: "name", _typname: "varchar", _is_array: false, is_nullable: true },
-        { name: "type", _typname: "int4", _is_array: false, is_nullable: true }
-      ]
-    }
-  ]
-} as const satisfies DBSchema;
+        "name": "public",
+        "tables": [
+            {
+                "name": "albums",
+                "columns": [
+                    {
+                        "name": "album_id",
+                        "_typname": "uuid",
+                        "_is_array": false,
+                        "is_nullable": false
+                    },
+                    {
+                        "name": "band_id",
+                        "_typname": "uuid",
+                        "_is_array": false,
+                        "is_nullable": false
+                    },
+                    {
+                        "name": "title",
+                        "_typname": "text",
+                        "_is_array": false,
+                        "is_nullable": false
+                    },
+                    {
+                        "name": "release_date",
+                        "_typname": "date",
+                        "_is_array": false,
+                        "is_nullable": true
+                    }
+                    {
+                        "name": "critic_score",
+                        "_typname": "int2",
+                        "_is_array": false,
+                        "is_nullable": true
+                    }
+                ],
+                "constraints": [
+                    {
+                        "name": "albums_pkey",
+                        "constraint": "primary",
+                        "columns": [
+                            "album_id"
+                        ]
+                    },
+                    {
+                        "name": "fk_albums_band",
+                        "constraint": "foreign",
+                        "columns": [
+                            "band_id"
+                        ],
+                        "referenced_table": "bands",
+                        "referenced_columns": [
+                            "band_id"
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "bands",
+                "columns": [
+                    {
+                        "name": "band_id",
+                        "_typname": "uuid",
+                        "_is_array": false,
+                        "is_nullable": false
+                    },
+                    {
+                        "name": "name",
+                        "_typname": "text",
+                        "_is_array": false,
+                        "is_nullable": false
+                    },
+                    {
+                        "name": "subgenre",
+                        "_typname": "rock_subgenre",
+                        "_is_array": false,
+                        "is_nullable": false
+                    }
+                ]
+            }
+        ]
+    } as const satisfies DBSchema;
 
 const b = createSqlBuilder(schema);
 
 // SELECT with where/order/limit
-const selectReq = b.table("items")
-  .select(["id", "name"]) // or omit to select all: .select()
-  .andWhere({ type: [1, 2, 3] }) // => "type" = ANY(:param)
-  .orderBy([["id","desc"]])
+const selectReq = b.table("bands")
+  .select(["name", "subgenre"]) // or omit to select all: .select()
+  .andWhere({ band_id: [1, 2, 3] }) // => "type" = ANY(:param)
+  .orderBy([["name","desc"]])
   .limit(10)
-  .toSql();
+
+// SELECT with join
+const selectReq = b.table("bands")
+    .select(["name", "subgenre"])
+    .join("albums")
+    .selectFrom("albums", ["title", "critic_score", "release_date"])
+    .andWhereOp("name", "=", "Guns n’ Roses")
+
+// If you need the type of the row, use the helper RowOfSelect
+type Row =  RowOfSelect<typeof selectReq>
 
 const sql = new Sql();
-const rows = (await sql.exec(selectReq)).data;
+const rows: Row[] = (await sql.exec(selectReq.toSql())).data;
 
 // INSERT
-const insertReq = b.table("items")
-  .insert({ id: 10, name: "Thing", type: 1 })
+const insertReq = b.table("albums")
+  .insert({ band_id: 1, title: "Appetite For Destruction", release_date: "1987-07-21." })
   .returning(["id"])
-  .toSql();
-await sql.exec(insertReq);
+await sql.exec(insertReq.toSql());
 
 // UPDATE
-const updateReq = b.table("items")
-  .update({ name: "Updated" })
-  .where({ id: 10 })
-  .returning(["id","name"])
-  .toSql();
-await sql.exec(updateReq);
+const updateReq = b.table("albums")
+  .update({ critic_score: 10 })
+  .where({ album_id: 10 })
+  .returning(["title"])
+await sql.exec(updateReq.toSql());
 
 // DELETE
-const deleteReq = b.table("items")
+const deleteReq = b.table("albums")
   .delete()
-  .where({ id: 10 })
-  .toSql();
-await sql.exec(deleteReq);
+  .where({ album_id: 11 })
+await sql.exec(deleteReq.toSql());
 ```
 
 Notes:
-- The builder automatically adds `type_hints` for array parameters (e.g., `int4[]`), as arrays are not inferred by default by the server.
-- You can pass the same `SqlRequest` object to `Sql.exec`.
+- The builder automatically adds `type_hints` for all parameters (e.g., `int4[]`).
 
 ## RPC
 
@@ -356,32 +432,27 @@ import type { PgTypes } from "@centia-io/sdk";
 // Define the shape of your RPC methods and return types
 // Don't write this by hand. Get the interfaces from /api/v4/interfaces
 interface MyApi {
-  typeTest(params: {
-    a: number;
-    b: Pgtypes.Varchar;
-    c: PgTypes.NumericString;
-    d: PgTypes.PgArray<Pgtypes.Varchar>;
-    e: PgTypes.JsonValue;
+  getBandById(params: {
+    band_id: number;
   }): Promise<Array<{
-    a: number;
-    b: Pgtypes.Varchar;
-    c: PgTypes.NumericString;
-    d: PgTypes.PgArray<Pgtypes.Varchar>;
-    e: PgTypes.JsonValue;
+    name: Pgtypes.Varchar;
+    subgenre: Pgtypes.Varchar;
+    albums: PgTypes.PgArray<Pgtypes.Varchar>;
   }>>;
 }
 
+// Create the API proxy
 const api = createApi<MyApi>();
 
-const rows = await api.typeTest({
-  a: 1,
-  b: "Hello world",
-  c: "3.4",
-  d: ["Hello", "world"],
-  e: { "x": [1,2,3,4,5,6,7,8,9,10] }
+// If you need the type of the result, use the helper RowOfApiMethod
+type Band = RowOfApiMethod<Api, "getBandById">
+
+// Call the method
+const bands: Band[] = await api.getAlbumsByBandId({
+  band_id: 1
 });
 
-console.log(rows); // typed row array
+console.log(bands); // typed row array
 ```
 
 Notes:
