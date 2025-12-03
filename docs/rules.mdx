@@ -36,15 +36,16 @@ Rules with lower `priority` are matched first.
 
 SQL statements with multiple tables (like JOIN, UNION, WITH or sub-queries) can match multiple rules. For a such statement to run all matched rules must either `allow` or `limit`.
 
-> When using rules, it is a good idea to add a "stop block" rule, so unmatched statements don't go through. A "stop block" rule should have the highest `priority` of all rules:
+:::note
+When using rules, it is a good idea to add a "stop block" rule, so unmatched statements don't go through. A "stop block" rule should have the highest `priority` of all rules:
 ```json
 {
   "priority": 1000,
   "access": "deny"
 }
 ```
-> This stops any statement, which are not allowed or limited in prior matches rules.
-
+This stops any statement, which are not allowed or limited in prior matches rules.
+:::
 
 ## Create a new rule
 

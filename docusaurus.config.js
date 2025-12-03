@@ -12,7 +12,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 const config = {
 
     title: 'Centia.io',
-    tagline: 'PostgreSQL/PostGIS backend for developers who love control',
+    tagline: 'Backend for developers who love control',
     favicon: 'img/centia-logo.svg',
 
     // Set the production url of your site here
@@ -36,20 +36,18 @@ const config = {
     // may want to replace "en" with "zh-Hans".
     i18n: {
         defaultLocale: 'en',
-        locales: ['en', 'da-DK'],
+        locales: ['en'],
     },
 
     presets: [
         [
-            'classic',
-            /** @type {import('@docusaurus/preset-classic').Options} */
+            '@docusaurus/preset-classic',
             ({
                 docs: {
                     sidebarPath: './sidebars.js',
                     // Please change this to your repo.
                     // Remove this to remove the "edit this page" links.
-                    editUrl:
-                        'https://github.com/centia-io/website/tree/main/',
+                    editUrl: 'https://github.com/centia-io/website/tree/main/',
                 },
                 blog: {
                     showReadingTime: true,
@@ -162,7 +160,7 @@ const config = {
             },
             prism: {
                 theme: prismThemes.github,
-                darkTheme: prismThemes.dracula,
+                darkTheme: prismThemes.palenight,
                 additionalLanguages: ['bash', 'diff', 'json', 'powershell', 'http']
             },
         },

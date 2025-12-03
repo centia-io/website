@@ -84,9 +84,11 @@ When a batch is flushed, a message is sent to the clients:
 }
 ```
 
-Important:
-- The server broadcasts to all clients connected to that database, without further per‑table filtering at send time. If you need additional client‑side filtering, filter messages on the client.
+:::note
+The server broadcasts to all clients connected to that database, without further per‑table filtering at send time. If you need additional client‑side filtering, filter messages on the client.
 
+Centia.io will soon support `shapes`, which will allow you to filter events based on the shape of the data.
+:::
 
 ## Client examples
 

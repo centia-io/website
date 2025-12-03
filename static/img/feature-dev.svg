@@ -1,22 +1,87 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="160" height="120" viewBox="0 0 160 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
-  <title id="title">Developer Friendly</title>
-  <desc id="desc">Code brackets and a small gear</desc>
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#6a11cb"/>
-      <stop offset="100%" stop-color="#2575fc"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="160"
+   height="120"
+   viewBox="0 0 160 120"
+   role="img"
+   aria-labelledby="title desc"
+   version="1.1"
+   id="svg6"
+   sodipodi:docname="feature-dev.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview6"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="15.125"
+     inkscape:cx="80"
+     inkscape:cy="60"
+     inkscape:window-width="5120"
+     inkscape:window-height="2054"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg6" />
+  <title
+     id="title">Developer Friendly</title>
+  <desc
+     id="desc">Code brackets and a small gear</desc>
+  <defs
+     id="defs2">
+    <linearGradient
+       id="g"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="1">
+      <stop
+         offset="0%"
+         stop-color="#6a11cb"
+         id="stop1" />
+      <stop
+         offset="100%"
+         stop-color="#2575fc"
+         id="stop2" />
     </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#g"
+       id="linearGradient6"
+       x1="43.531187"
+       y1="22.771071"
+       x2="82.066846"
+       y2="61.30673"
+       gradientTransform="scale(0.70064835,1.4272495)"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#g"
+       id="linearGradient7"
+       x1="146.29307"
+       y1="22.771071"
+       x2="184.82873"
+       y2="61.30673"
+       gradientTransform="scale(0.70064835,1.4272495)"
+       gradientUnits="userSpaceOnUse" />
   </defs>
-  <g fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M56 34L32 60l24 26" stroke="url(#g)"/>
-    <path d="M104 34l24 26-24 26" stroke="url(#g)"/>
-    <circle cx="80" cy="60" r="16" stroke="#94b1ff"/>
-    <g transform="translate(80 60)">
-      <circle r="4" fill="#94b1ff"/>
-      <g stroke="#94b1ff" stroke-width="2">
-        <path d="M0-9v-4M0 9v4M-9 0h-4M9 0h4M-6.4-6.4l-2.8-2.8M6.4-6.4l2.8-2.8M-6.4 6.4l-2.8 2.8M6.4 6.4l2.8 2.8"/>
-      </g>
-    </g>
-  </g>
+  <path
+     d="M 56,34 32,60 56,86"
+     stroke="url(#g)"
+     id="path2"
+     style="fill:none;stroke:url(#linearGradient6);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" />
+  <path
+     d="m 104,34 24,26 -24,26"
+     stroke="url(#g)"
+     id="path3"
+     style="fill:none;stroke:url(#linearGradient7);stroke-width:3;stroke-linecap:round;stroke-linejoin:round" />
 </svg>

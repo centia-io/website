@@ -77,8 +77,10 @@ an access_token and optionally a refresh_token:
 ```http
 Authorization: Bearer eyJhbGciOiJIUzI1...
 ```
-Notes:
-- `client_secret` is only required for confidential clients.
+
+:::note
+`client_secret` is only required for confidential clients.
+:::
 
 ## Authorization Code Flow
 
@@ -100,8 +102,9 @@ to prevent authorization code interception.
 
 - All callbacks and communications must use https:// to protect tokens and credentials.
 
-Notes:
-- At the moment, PKCE is mandatory for both public and confidential clients in the Authorization Code Flow.
+:::note
+At the moment, PKCE is mandatory for both public and confidential clients in the Authorization Code Flow.
+:::
 
 ### Flow Steps
 
@@ -149,7 +152,6 @@ Or:
 
 ```http title="application/x-www-form-urlencoded"
 POST https://api.centia.io/api/v4/oauth
-Cookie: XDEBUG_SESSION=XDEBUG_ECLIPSE
 Content-Type: application/x-www-form-urlencoded
 
 grant_type = authorization_code &
@@ -248,8 +250,9 @@ Content-Type: application/json
 Token issued: Once the user authorizes, Centia.io returns the access_token and optional refresh_token to the device.
 The device then uses the access_token to communicate with Centia.io.
 
-Notes:
-- `client_secret` is only required for confidential clients.
+:::note
+`client_secret` is only required for confidential clients.
+:::
 
 ## Token Lifecycles and Refresh Tokens
 
@@ -272,8 +275,9 @@ Content-Type: application/json
 
 Response: Returns a new access_token (and a new refresh_token), extending the session without requiring the user to log in again.
 
-Notes:
-- `client_secret` is only required for confidential clients.
+:::note
+`client_secret` is only required for confidential clients.
+:::
 
 ## Choosing the Right Flow
 
