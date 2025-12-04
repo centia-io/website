@@ -11,7 +11,7 @@ sidebar_position: 85
 
 The realtime system exposes a lightweight HTTP/WebSocket:
 
-- A WebSocket endpoint for authenticated clients: `ws://event.centia.io/`
+- A WebSocket endpoint for authenticated clients: `wss://event.centia.io/`
 - Accepts a JWT token and (for sub‑users) a list of relations they need events from.
 - Broadcasts batched event notifications to all connected clients that match relations they listen to.
 - A simple health endpoint: `/ping` → `pong`.
@@ -94,11 +94,11 @@ Centia.io will soon support `shapes`, which will allow you to filter events base
 
 JavaScript (browser):
 
-```html
+```html title="index.html"
 <script>
   const token = "<your-jwt>";
-  const rel = "public.parcels,public.addresses"; // required for sub-users
-  const ws = new WebSocket(`ws://localhost:8088/broadcast?token=${encodeURIComponent(token)}&rel=${encodeURIComponent(rel)}`);
+  const rel = "public.parcels,public.addresses";
+  const ws = new WebSocket(`wss://event.centia.io/?token=${encodeURIComponent(token)}&rel=${encodeURIComponent(rel)}`);
 
   ws.onopen = () => {
     console.log("connected");
@@ -121,10 +121,10 @@ JavaScript (browser):
 
 Node (ws):
 
-```js
+```js title="index.js"
 import WebSocket from 'ws';
 const token = process.env.CENTIA_TOKEN;
-const ws = new WebSocket(`ws://localhost:8088/broadcast?token=${encodeURIComponent(token)}`);
+const ws = new WebSocket(`wss://event.centia.io/?token=${encodeURIComponent(token)}`);
 ws.on('open', () => ws.send('SELECT 42 AS answer'));
 ws.on('message', (data) => console.log(JSON.parse(data.toString())));
 ```
