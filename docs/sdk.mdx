@@ -398,7 +398,7 @@ const api = createApi<MyApi>();
 type Band = RowOfApiMethod<Api, "getBandById">
 
 // Call the method
-const bands: Band[] = await api.getAlbumsByBandId({
+const bands: Band[] = await api.getBandById({
   band_id: 1
 });
 

@@ -1,0 +1,181 @@
+---
+title: GraphQL
+description: The GraphQL API provides a flexible way to query and manipulate data using a dynamic schema based on your database tables.
+sidebar_position: 62
+---
+
+# GraphQL
+
+The GraphQL API allows you to query and manipulate your database data using a dynamically generated schema. Each table in your schema is automatically mapped to GraphQL types, queries, and mutations.
+
+## Endpoint and Authentication
+
+The GraphQL endpoint is schema-specific (see [Schemas](/docs/schema/schemas) for more information):
+
+`POST https://api.centia.io/api/graphql/schema/{schema_name}`
+
+Authentication is handled via a Bearer token in the `Authorization` header (see [OAuth](/docs/oauth) for more information).
+
+```http request
+POST https://api.centia.io/api/graphql/schema/public
+Authorization: Bearer <your_token>
+Content-Type: application/json
+
+{
+  "query": "query { ... }"
+}
+```
+
+:::info
+The GraphQL API can currently only be used in http context. Websockets will be supported soon.
+:::
+
+## Introspection
+
+You can use standard GraphQL introspection to explore the available types and fields. This is useful for tools like GraphiQL or Apollo Studio.
+
+```graphql
+query {
+  __schema {
+    types {
+      name
+    }
+  }
+}
+```
+
+## Queries
+
+For every table in your database, the API provides a query field named `get[TableName]` (in camelCase).
+
+### Basic Query
+
+To fetch records from a table named `artists`:
+
+```http request title="Request, basic query"
+POST https://api.centia.io/api/graphql/schema/public
+Content-Type: application/json
+Authorization: Bearer <your_token>
+
+{
+  "query": "query { getArtists { artist_id legal_name } }"
+}
+```
+
+### Filtering
+
+The `where` argument supports complex filtering using logical and comparison operators. Simple equality filters are also supported.
+
+**Simple Equality:**
+```graphql
+{ getArtists(where: { artist_id: 1 }) { legal_name } }
+```
+
+**Supported Operators:**
+- `eq`: Equal
+- `neq`: Not equal
+- `gt`: Greater than
+- `gte`: Greater than or equal
+- `lt`: Less than
+- `lte`: Less than or equal
+- `in`: Included in array
+- `like`: Case-sensitive pattern match
+- `ilike`: Case-insensitive pattern match
+
+**Logical Operators:**
+- `and`: Logical AND
+- `or`: Logical OR
+- `not`: Logical NOT
+
+```http request title="Request, filtered query"
+POST https://api.centia.io/api/graphql/schema/public
+Content-Type: application/json
+Authorization: Bearer <your_token>
+
+{
+  "query": "query { getArtists(where: { and: [ { legal_name: { ilike: \"%Linus%\" } }, { instrument: { eq: \"guitar\" } } ] }) { legal_name instrument } }"
+}
+```
+
+### Pagination
+
+Use `limit` and `offset` for pagination.
+
+```http request title="Request, pagination"
+POST https://api.centia.io/api/graphql/schema/public
+Content-Type: application/json
+Authorization: Bearer <your_token>
+
+{
+  "query": "query { getArtists(limit: 10, offset: 20) { artist_id legal_name } }"
+}
+```
+
+### Relationships
+
+If there are foreign key constraints between tables, the GraphQL API automatically exposes them as nested fields.
+
+```http request title="Request, relationships"
+POST https://api.centia.io/api/graphql/schema/public
+Content-Type: application/json
+Authorization: Bearer <your_token>
+
+{
+  "query": "query { getAlbums { title bands { name subgenre } } }"
+}
+```
+
+## Mutations
+
+The API provides `insert`, `update`, and `delete` mutations for each table.
+
+### Insert
+
+Use `insert[TableName]` to add new records. You can provide a single record via `data` or multiple records via `objects`.
+
+```http request title="Request, insert mutation"
+POST https://api.centia.io/api/graphql/schema/public
+Content-Type: application/json
+Authorization: Bearer <your_token>
+
+{
+  "query": "mutation { insertArtists(objects: [{ legal_name: \"John Doe\", instrument: \"Piano\" }]) { artist_id legal_name } }"
+}
+```
+
+### Update
+
+Use `update[TableName]` to modify existing records. Use the `where` argument to specify which records to update and `data` for the new values.
+
+```http request title="Request, update mutation"
+POST https://api.centia.io/api/graphql/schema/public
+Content-Type: application/json
+Authorization: Bearer <your_token>
+
+{
+  "query": "mutation { updateArtists(where: { artist_id: { eq: 1 } }, data: { instrument: \"Electric Guitar\" }) { artist_id instrument } }"
+}
+```
+
+### Delete
+
+Use `delete[TableName]` to remove records.
+
+```http request title="Request, delete mutation"
+POST https://api.centia.io/api/graphql/schema/public
+Content-Type: application/json
+Authorization: Bearer <your_token>
+
+{
+  "query": "mutation { deleteArtists(where: { artist_id: { eq: 1 } }) { artist_id } }"
+}
+```
+
+## Data Types
+
+The GraphQL API supports various PostgreSQL data types, mapping them to appropriate GraphQL types:
+
+- **Scalars**: `integer`, `float`, `boolean`, `string`, `JSON`.
+- **Geometric Types**: `Point`, `Line`, `Lseg`, `Box`, `Circle`, `Path`, `Polygon`.
+- **Range Types**: `Int4range`, `Int8range`, `Numrange`, `Tsrange`, `Tstzrange`, `Daterange`.
+- **Arrays**: Any type can be returned as a list (e.g., `[String]`, `[Int]`).
