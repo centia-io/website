@@ -175,7 +175,66 @@ Authorization: Bearer <your_token>
 
 The GraphQL API supports various PostgreSQL data types, mapping them to appropriate GraphQL types:
 
-- **Scalars**: `integer`, `float`, `boolean`, `string`, `JSON`.
+- **Scalars**: `integer`, `float`, `boolean`, `string`, `JSON` , `ID`, `Date`, `Time`, `DateTime`.
 - **Geometric Types**: `Point`, `Line`, `Lseg`, `Box`, `Circle`, `Path`, `Polygon`.
 - **Range Types**: `Int4range`, `Int8range`, `Numrange`, `Tsrange`, `Tstzrange`, `Daterange`.
 - **Arrays**: Any type can be returned as a list (e.g., `[String]`, `[Int]`).
+
+Any complex types can be used as input arguments for mutations. Type hints are not required because the schemas are
+dynamically generated from the database relations.
+
+Se also [Types](/docs/types).
+
+Consider a generated schema like this:
+
+```graphql title="Schema"
+type Tours {
+  id: ID!
+  artist_name: String!
+  tour_name: String!
+  from_to: Daterange!
+}
+
+type Daterange {
+  lower: String
+  upper: String
+  lowerInclusive: Boolean
+  upperInclusive: Boolean
+}
+
+type Mutation {
+  insertTours(data: JSON, objects: [JSON]): [Tours]
+  updateTours(id: ID, where: JSON, data: JSON): [Tours]
+  deleteTours(id: ID, where: JSON): [Tours]
+}
+
+```
+When you can insert a new tour using the following mutation. The Datetime field is represented as JSON:
+
+```graphql title="Operation"
+mutation InsertTours($data: JSON) {
+  insertTours(data: $data) {
+    id
+    from_to {
+      lower
+      upper
+    }
+  }
+}
+```
+```json title="variables"
+{
+  "data": {
+    "artist_name": "Guns n’ Roses",
+    "tour_name": "Europe: Summer 2026",
+    "from_to": {
+      "lower": "2010-04-06",
+      "upper": "2011-03-07",
+      "lowerInclusive": true,
+      "upperInclusive": true
+    }
+  }
+}
+```
+
+
