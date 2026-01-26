@@ -4,11 +4,11 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Instant SQL API',
+    title: 'Instant SQL and GraphQL API',
     Svg: require('@site/static/img/feature-sql.svg').default,
     description: (
       <>
-        Backed by Postgres and exposes a secure, scalable SQL-over-HTTP.
+        Backed by Postgres and exposes a secure SQL and GraphQL API over http.
       </>
     ),
   },
@@ -17,7 +17,7 @@ const FeatureList = [
     Svg: require('@site/static/img/feature-security.svg').default,
     description: (
       <>
-        OAuth2, row-level security, and rate limiting baked in — ship with confidence.
+        OAuth2, rule based security, and rate limiting baked in — ship with confidence.
       </>
     ),
   },
