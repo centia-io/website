@@ -195,9 +195,15 @@ type Tours {
   from_to: Daterange!
 }
 
+"""
+Date is accepted in almost any reasonable format, including ISO 8601, SQL-compatible, traditional POSTGRES, and others.
+"""
+scalar Date
+
+"""Range type for daterange, with lower and upper bounds of type Date."""
 type Daterange {
-  lower: String
-  upper: String
+  lower: Date
+  upper: Date
   lowerInclusive: Boolean
   upperInclusive: Boolean
 }
