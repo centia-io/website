@@ -1,0 +1,140 @@
+---
+description: A sequence is a database object that generates a sequence of integers.
+sidebar_position: 60
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Sequences
+
+A sequence is a database object that generates a sequence of integers, often used for auto-incrementing primary key columns.
+
+## Add sequence
+
+A new sequence can be created by providing at least a name.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Create new sequence"
+        POST https://api.centia.io/api/v4/schemas/rockhall/sequences HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "name": "my_sequence",
+            "data_type": "bigint",
+            "increment_by": 1,
+            "min_value": 1,
+            "max_value": 9223372036854775807,
+            "start_value": 1,
+            "cache_size": 1
+        }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash
+        centia sequence add "rockhall" "my_sequence"
+        ```
+
+    </TabItem>
+</Tabs>
+
+### Properties
+
+- `name` (string, required): The name of the sequence.
+- `data_type` (string): The data type of the sequence. Valid types are `smallint`, `integer`, and `bigint`. Default is `bigint`.
+- `increment_by` (integer): Specifies which value is added to the current sequence value to create a new value. A positive value will make an ascending sequence, a negative one a descending sequence. Default is 1.
+- `min_value` (integer): Determines the minimum value a sequence can generate.
+- `max_value` (integer): Determines the maximum value for the sequence.
+- `start_value` (integer): The initial value of the sequence.
+- `cache_size` (integer): Specifies how many sequence numbers should be preallocated and stored in memory for faster access. Default is 1.
+- `owned_by` (string): Associates the sequence with a specific table column, so that if that column (or its whole table) is deleted, the sequence will be automatically deleted as well. The format is `schema.table.column`.
+
+
+## Get sequence
+
+You can either get a single sequence or a collection of sequences.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="All sequences"
+        GET https://api.centia.io/api/v4/schemas/rockhall/sequences HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="Specific sequence"
+        GET https://api.centia.io/api/v4/schemas/rockhall/sequences/my_sequence HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="Multiple sequences"
+        GET https://api.centia.io/api/v4/schemas/rockhall/sequences/my_sequence,another_sequence HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash
+        centia sequence get "rockhall" "my_sequence"
+        ```
+
+    </TabItem>
+</Tabs>
+
+A sequence object looks like this:
+
+```json
+{
+  "name": "my_sequence",
+  "data_type": "bigint",
+  "increment_by": 1,
+  "min_value": 1,
+  "max_value": 9223372036854775807,
+  "start_value": 1,
+  "cache_size": 1,
+  "owned_by": "public.my_table.id"
+}
+```
+
+## Update sequence
+
+You can update a sequence by using the `PATCH` method.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+        ```http
+        PATCH https://api.centia.io/api/v4/schemas/rockhall/sequences/my_sequence HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "increment_by": 2
+        }
+        ```
+    </TabItem>
+</Tabs>
+
+## Delete sequence
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+        ```http
+        DELETE https://api.centia.io/api/v4/schemas/rockhall/sequences/my_sequence HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+        ```bash
+        centia sequence drop "rockhall" "my_sequence"
+        ```
+    </TabItem>
+</Tabs>
