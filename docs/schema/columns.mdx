@@ -29,7 +29,7 @@ You can either get a single column or a collection of columns.
         ```
 
         ```http title="Specific column"
-        GET https://api.centia.io/api/v4/schemas/rockhall/tables/inductees/colums/id HTTP/1.1
+        GET https://api.centia.io/api/v4/schemas/rockhall/tables/inductees/columns/id HTTP/1.1
         Accept: application/json; charset=utf-8
         Authorization: Bearer abc123
         ```
@@ -54,6 +54,7 @@ If submitted in a POST or PATCH they will be ignored.
   "is_nullable": false,
   "default_value": null,
   "comment": null,
+  "identity_generation": null,
   "_num": 1,
   "_full_type": "integer",
   "_typname": "int4",
@@ -72,6 +73,14 @@ If submitted in a POST or PATCH they will be ignored.
   "_checks": null
 }
 ```
+
+- **name**: Name of the column.
+- **type**: The type of the column, such as `varchar`, `integer`, `boolean`, etc.
+- **is_nullable**: If `true`, the column can be set to `null`.
+- **default_value**: The column is set to the default value if no value is provided.
+- **comment**: A comment or description for the column.
+- **identity_generation**: An identity column is a special column generated automatically from an implicit sequence. It can be used to generate key values. Possible values are `always` or `by default`.
+
 
 ## Add column
 
@@ -95,7 +104,7 @@ If submitted in a POST or PATCH they will be ignored.
 
         {
             "columns": [
-                { "name": "id", "type": "integer"}
+                { "name": "id", "type": "integer"},
                 { "name": "name", "type": "varchar(50)"}
             ]
         }
@@ -125,8 +134,8 @@ You can change name, type, default and nullable of a column or collection of col
         {
             "name": "name2",
             "type": "varchar(100)",
-            "default": "Empty",
-            "nullable": false
+            "default_value": "Empty",
+            "is_nullable": false
         }
         ```
     </TabItem>
