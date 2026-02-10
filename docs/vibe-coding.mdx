@@ -1,0 +1,66 @@
+---
+title: Vibe Coding
+description: Learn how to use Centia.io with Vibe Coding.
+sidebar_position: 17
+---
+
+# Vibe Coding with Centia.io
+
+Vibe coding is a modern approach to software development where developers use AI agents to build applications through natural language and high-level abstractions. Centia.io is built to be the perfect backend for this workflow, providing the tools and interfaces AI agents need to be productive.
+
+## What is Vibe Coding?
+
+Vibe coding isn't about writing every line of code yourself. It's about:
+- **Natural Language First**: Describing what you want to build and letting AI agents handle the implementation details.
+- **Agent-Centric Workflow**: Using tools like Claude Code, Junie, or Windsurf that can "understand" your project and make changes.
+- **High-Level Abstractions**: Focusing on the "what" and "why" while the AI handles the "how".
+
+## The @Centia-io/mcp Server
+
+Centia.io provides a dedicated **Model Context Protocol (MCP)** server that allows AI agents to interact directly with your Centia.io backend. By connecting an AI agent to the `@Centia.io/mcp-server` server, you give it the ability to:
+
+- **Manage Schemas**: Create and modify tables, columns, indexes, and constraints.
+- **Execute SQL**: Run queries and mutations directly against your database.
+- **Handle Auth**: Manage users, rules, and OAuth clients.
+- **Introspect**: Allow the agent to explore your database structure to better understand your data.
+
+An AI agent can build an app from scratch with the necessary data models and authentication logic.
+
+### Installing the MCP Server
+
+You can add the Centia.io MCP server to your AI agent (like Claude Desktop or Junie) using the following configuration:
+
+```json
+{
+  "mcpServers": {
+    "Centia.io": {
+      "command": "npx",
+      "args": ["-y", "@Centia.io/mcp-server"],
+      "env": {
+        "CENTIA_HOST": "https://api.Centia.io.io",
+        "CENTIA_ACCESS_TOKEN": "your-access-token"
+      }
+    }
+  }
+}
+```
+
+:::info
+The env variable CENTIA_HOST is not required if you are using the Centia.io Cloud.
+:::
+
+## Agent Guide (AGENT.md)
+
+To ensure AI agents work effectively with Centia.io, we maintain a comprehensive **Agent Guide**. This guide contains "Prime Directives" and "Hard Rules" that help agents choose the right tools for the job, whether it's using the SDK for runtime code or MCP tools for provisioning.
+
+You can find the full guide in the [AGENT.md](https://github.com/Centia.io-io/mcp-server/blob/master/AGENT.md) file in our repositories.
+
+### Key Takeaways for Agents
+
+When an agent is working in a Vibe Coding environment with Centia.io, it follows these priorities:
+
+1. **Centia.io MCP tools**: For schema changes and provisioning.
+2. **@Centia.io-io/sdk**: For application runtime logic.
+3. **OpenAPI**: For direct HTTP calls when needed.
+
+By providing these clear instructions, Centia.io ensures that "Vibe Coders" can build robust, production-ready backends with minimal friction.
