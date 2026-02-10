@@ -22,11 +22,11 @@ const FeatureList = [
     ),
   },
   {
-    title: 'Built for developers',
+    title: 'Vibe Coding Ready',
     Svg: require('@site/static/img/feature-dev.svg').default,
     description: (
       <>
-        Clean OpenAPI schema, intuitive SDKs, and a friendly CLI to manage your data.
+        Connect your AI agents directly via MCP to build and manage your backend using natural language.
       </>
     ),
   },

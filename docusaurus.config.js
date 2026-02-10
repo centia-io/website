@@ -12,7 +12,7 @@ import {themes as prismThemes} from 'prism-react-renderer';
 const config = {
 
     title: 'Centia.io',
-    tagline: 'Backend for developers who love control',
+    tagline: 'The AI-Native Backend for Vibe Coding',
     favicon: 'img/centia-logo.svg',
 
     // Set the production url of your site here
@@ -84,7 +84,7 @@ const config = {
             metadata: [
                 {
                     name: 'description',
-                    content: 'Centia.io is a developer-first PostgreSQL/PostGIS backend with JSON-RPC, realtime, OAuth, and a CLI. Build data-heavy apps with full control.'
+                    content: 'Centia.io is the AI-native PostgreSQL/PostGIS backend for Vibe Coding — with JSON-RPC, realtime, OAuth, SDK, and an MCP server for agents.'
                 },
                 {
                     name: 'keywords',

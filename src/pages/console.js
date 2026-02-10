@@ -34,9 +34,9 @@ export default function Home() {
                             </div>
                             <div className="col col--3">
                                 <div className="card">
-                                    <div className="card__header"><h3>SDK</h3></div>
-                                    <div className="card__body">Connect your app and read/write data.</div>
-                                    <div className="card__footer"><Link className="button button--sm button--primary" to="/docs/sdk">Browse SDK</Link></div>
+                                    <div className="card__header"><h3>Vibe coding</h3></div>
+                                    <div className="card__body">Connect your AI agents directly via MCP to start building</div>
+                                    <div className="card__footer"><Link className="button button--sm button--primary" to="/docs/sdk">Get started.</Link></div>
                                 </div>
                             </div>
                             <div className="col col--3">
