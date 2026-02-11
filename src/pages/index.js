@@ -41,11 +41,8 @@ export default function Home() {
                     <h1 className="hero__title">{siteConfig.title}</h1>
                     <p className="hero__subtitle">{siteConfig.tagline}</p>
                     <div className={styles.ctaButtons}>
-                        <Link className="button button--primary button--lg" to="/docs/vibe-coding">
-                            Start Vibe Coding
-                        </Link>
                         <Link className="button button--primary button--lg" to="/console">
-                            Open Console
+                            Get started
                         </Link>
                         <Link className="button button--primary button--lg" to="/docs/intro">
                             Read the Docs
