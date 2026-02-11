@@ -176,7 +176,7 @@ function onSignUpClick() {
 Execute parameterized SQL against Centia.io. See [SQL](/docs/statement) for more details about the SQL API.
 
 - Class: `new Sql()`
-- Method: `exec(request: SqlRequest): Promise<SQLResponse>`
+- Method: `exec(request: SqlRequest): Promise<SqlResponse>`
 - Endpoint: `POST https://api.centia.io/api/v4/sql`
 
 Types (simplified):
@@ -185,7 +185,7 @@ Types (simplified):
     - `params?`: object with values for placeholders
     - `type_hints?`: optional explicit type hints
     - `type_formats?`: optional per-column format strings
-- `SQLResponse` has:
+- `SqlResponse` has:
     - `schema`: a map of column name -> `{ type: string, array: boolean }`
     - `data`: an array of rows (records)
 
@@ -225,8 +225,8 @@ interface Row extends PgTypes.DataRow {
   e: PgTypes.JsonValue;
 }
 
-// res: PgTypes.SQLResponse<Row>
-const res = await sql.exec({ q: "...", params: payload }) as PgTypes.SQLResponse<Row>;
+// res: PgTypes.SqlResponse<Row>
+const res = await sql.exec({ q: "...", params: payload }) as PgTypes.SqlResponse<Row>;
 ```
 
 ### SQL Builder
@@ -481,6 +481,65 @@ const api = createApi<Api>()
 const res = await api.getX({ x: 1 })
 console.log(res)
 ```
+
+## GraphQL
+
+Execute GraphQL queries and mutations against Centia.io. See [GraphQL](/docs/graphql) for more details about the GraphQL API.
+
+- Class: `new Gql(schema: string)`
+- Method: `query(request: GqlRequest): Promise<GqlResponse>`
+- Endpoint: `POST https://api.centia.io/api/graphql/schema/{schema}`
+
+Types (simplified):
+- `GqlRequest` has `query`, optional `variables` and `operationName`
+- `GqlResponse` has `data` and optional `errors`
+
+```ts title="GraphQL query"
+import { Gql, type GqlRequest, type GqlResponse } from "@centia-io/sdk"
+
+const query = `
+query  {
+  getBands {
+    band_id
+    name
+    subgenre
+  }
+}
+`
+const req: GqlRequest = {query}
+const gql = new Gql('public') // Which schema to use
+const res:GqlResponse = await gql.request(req)
+console.log(res)
+```
+
+```ts title="GraphQL mutation"
+import { Gql, type GqlRequest, type GqlResponse } from "@centia-io/sdk"
+
+const query = `
+mutation UpdateBands($where: JSON, $data: JSON ) {
+  updateBands(where: $where, data: $data) {
+    band_id
+    name
+    website
+  }
+}
+`
+const variables = {
+    "where": {
+        "name": {
+            "eq": "The Segfaults"
+        }
+    },
+    "data": {
+        "website": "https://segfaults.example",
+    }
+}
+const req: GqlRequest = {query, variables}
+const gql = new Gql('public') // Which schema to use
+const res: GqlResponse = await gql.request(req)
+console.log(res)
+```
+
 
 ## Error handling
 
