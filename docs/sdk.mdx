@@ -441,14 +441,13 @@ export interface Api {
 }
 ```
 
-3) Dry-run the request to set the types. Types are only inferred for dry-run requests. This will cache the types:
+3) Dry run the request to set the types. Types are only inferred for dry run calls. This will cache the types on the server:
 
 ```http request
-POST https://api.centia.io/api/v4/call
+POST https://api.centia.io/api/v4/call/dry
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer {{token}}
-X-Dry-Run: true
 
 {
   "jsonrpc": "2.0",
