@@ -38,8 +38,8 @@ You can add the Centia.io MCP server to your AI agent (like Claude Desktop or Ju
       "command": "npx",
       "args": ["-y", "@centia-io/mcp-server"],
       "env": {
-        "CENTIA_HOST": "https://api.Centia.io.io",
-        "CENTIA_ACCESS_TOKEN": "your-access-token"
+        "API_TOKEN": "your-access-token",
+        "API_BASE_URL": "https://api.Centia.io.io"
       }
     }
   }
@@ -47,7 +47,7 @@ You can add the Centia.io MCP server to your AI agent (like Claude Desktop or Ju
 ```
 
 :::info
-The env variable CENTIA_HOST is not required if you are using the Centia.io Cloud.
+The env variable API_BASE_URL is not required if you are using the Centia.io Cloud. Only required if you are using self-hosted.
 
 Get your access token from the [The console](/console).
 :::
