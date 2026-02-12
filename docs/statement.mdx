@@ -18,6 +18,7 @@ Send an HTTP POST to the SQL endpoint with a JSON body:
 - `params`: an object with values for each named parameter.
 - `type_hints` (optional): help the server parse complex types.
 - `type_formats` (optional): control formatting for date/time outputs.
+- `output_format` (optional): control the output format of the result.
 - `id` (optional): a unique identifier for the request. The server will return the same identifier in the response.
 Useful for tracking requests in a websocket context. If omitted:
   - In REST context: The server will generate a random UUID in the response.
@@ -172,6 +173,29 @@ Result objects include a `schema` section describing each returned column and a 
 
 ### Output formats
 
+The output formats can be specified using the `output_format` parameter.
+
+Following output formats are supported:
+- `json` (default)
+- `geojson` The GeoJSON format is a geospatial data interchange format based on JSON. https://geojson.org/
+- `ndjson` Newline delimited JSON streaming format.
+- `csv` Comma separated values.
+- `ccsv` Comma separated values streaming format.
+- `excel` Excel spreadsheet.
+- `ogr/[formart]` GDAL/ogr supported vector formats (e.g. `ogr/ESRI Shapefile`, `ogr/GPKG`, `ogr/GML`),
+
+The format for the default JSON output format is:
+```json
+{
+  "schema": {...},
+  "data": [{...}]
+}
+```
+The streaming formats (ndjson and ccsv) are newline delimited text that can be piped into other tools.
+This makes it possible to stream huge result sets without having to load them into memory.
+
+Other output formats have a row limit of 100.000 rows and are delivered as a single chunk,
+which ensures a complete dataset.
 
 ## Execute multiple statements
 
