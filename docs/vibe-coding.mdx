@@ -15,9 +15,10 @@ Vibe coding isn't about writing every line of code yourself. It's about:
 - **Agent-Centric Workflow**: Using tools like Claude Code, Junie, or Windsurf that can "understand" your project and make changes.
 - **High-Level Abstractions**: Focusing on the "what" and "why" while the AI handles the "how".
 
-## The @Centia-io/mcp Server
+## The @centia-io/mcp Server
 
-Centia.io provides a dedicated **Model Context Protocol (MCP)** server that allows AI agents to interact directly with your Centia.io backend. By connecting an AI agent to the `@Centia.io/mcp-server` server, you give it the ability to:
+Centia.io provides a dedicated **Model Context Protocol (MCP)** server that allows AI agents to interact directly with
+your Centia.io backend. By connecting an AI agent to the `@centia-io/mcp-server` server, you give it the ability to:
 
 - **Manage Schemas**: Create and modify tables, columns, indexes, and constraints.
 - **Execute SQL**: Run queries and mutations directly against your database.
@@ -33,9 +34,9 @@ You can add the Centia.io MCP server to your AI agent (like Claude Desktop or Ju
 ```json
 {
   "mcpServers": {
-    "Centia.io": {
+    "centia-io": {
       "command": "npx",
-      "args": ["-y", "@Centia.io/mcp-server"],
+      "args": ["-y", "@centia-io/mcp-server"],
       "env": {
         "CENTIA_HOST": "https://api.Centia.io.io",
         "CENTIA_ACCESS_TOKEN": "your-access-token"
