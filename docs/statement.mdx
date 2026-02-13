@@ -150,10 +150,22 @@ In a `select` statement the `params` must be a single object not an array of obj
 ```json title="Select rows with parameters"
 {
     "q": "select id, name from rockhall.inductees where id = :id::int",
+    "params": [{ "id": 4 }],
+    "id": "1"
+}
+```
+
+```json title="Select rows with parameters as object"
+{
+    "q": "select id, name from rockhall.inductees where id = :id::int",
     "params": { "id": 4 },
     "id": "1"
 }
 ```
+:::note
+Array of parameters can only have one set of parameters. 2nd parameter set will throw an error.
+:::
+
 Result objects include a `schema` section describing each returned column and a `data` array with the actual rows.
 
 ```json title="Response"
