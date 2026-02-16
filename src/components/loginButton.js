@@ -1,7 +1,8 @@
 import {CodeFlow} from '@mapcentia/gc2-js-client'
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 
 function LoginButton(props) {
+    const {auth, setAuth} = props.status;
 
     let options;
 
@@ -19,28 +20,38 @@ function LoginButton(props) {
         }
     }
 
-    const codeFlow = new CodeFlow(options)
+    const codeFlow = useMemo(() => {
+        if (typeof window === 'undefined') {
+            return null;
+        }
+        return new CodeFlow(options)
+    }, [options.clientId, options.host, options.redirectUri])
+
     const signInHandler = (e) => {
+        if (!codeFlow) return;
         codeFlow.signIn()
     }
     const signOutHandler = (e) => {
-        props.status.setAuth(false)
+        if (!codeFlow) return;
+        setAuth(false)
         codeFlow.signOut()
     }
 
-    codeFlow.redirectHandle().then((isSignedIn) => {
-        props.status.setAuth(isSignedIn)
-    }).catch((err) => console.info(err))
-
     useEffect(() => {
-        let params = new URLSearchParams(document.location.search)
+        if (!codeFlow) return;
+
+        codeFlow.redirectHandle().then((isSignedIn) => {
+            setAuth(isSignedIn)
+        }).catch((err) => console.info(err))
+
+        let params = new URLSearchParams(window.location.search)
         let r = params.get("r")
         if (r !== null) {
             codeFlow.signIn()
         }
-    }, [])
+    }, [codeFlow, setAuth])
 
-    if (props.status.auth)
+    if (auth)
         return (
             <>
                 <button className="button button--outline button--primary" onClick={signOutHandler}>
