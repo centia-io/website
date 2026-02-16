@@ -4,29 +4,29 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Instant SQL and GraphQL API',
+    title: 'Choose Cloud or Self-Host',
     Svg: require('@site/static/img/feature-sql.svg').default,
     description: (
       <>
-        Backed by Postgres and exposes a secure SQL and GraphQL API over http.
+        Start in managed Centia Cloud in minutes, or self-host with Docker when compliance or data residency requires it.
       </>
     ),
   },
   {
-    title: 'Secure by default',
+    title: 'Production Security by Default',
     Svg: require('@site/static/img/feature-security.svg').default,
     description: (
       <>
-        OAuth2, rule based security, and rate limiting baked in — ship with confidence.
+        OAuth2, rule-based access, and rate limiting are built in so you can ship faster without re-building backend security.
       </>
     ),
   },
   {
-    title: 'Vibe Coding Ready',
+    title: 'Built for AI-Assisted Development',
     Svg: require('@site/static/img/feature-dev.svg').default,
     description: (
       <>
-        Connect your AI agents directly via MCP to build and manage your backend using natural language.
+        Connect agents through MCP to model schemas, run backend workflows, and iterate quickly from natural language prompts.
       </>
     ),
   },

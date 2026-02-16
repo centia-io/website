@@ -7,12 +7,14 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+const gaTrackingId = process.env.GA_TRACKING_ID;
+const hasGaTracking = Boolean(gaTrackingId);
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
 
     title: 'Centia.io',
-    tagline: 'The Postgres backend for developers who love control',
+    tagline: 'Managed Postgres backend in the cloud or self-hosted with Docker',
     favicon: 'img/centia-logo.svg',
 
     // Set the production url of your site here
@@ -64,6 +66,14 @@ const config = {
                     onInlineAuthors: 'warn',
                     onUntruncatedBlogPosts: 'warn',
                 },
+                ...(hasGaTracking
+                    ? {
+                        gtag: {
+                            trackingID: gaTrackingId,
+                            anonymizeIP: true,
+                        },
+                    }
+                    : {}),
                 sitemap: {
                     changefreq: 'weekly',
                     priority: 0.6,
@@ -84,11 +94,11 @@ const config = {
             metadata: [
                 {
                     name: 'description',
-                    content: 'Centia.io is the AI-native PostgreSQL/PostGIS backend for Vibe Coding — with JSON-RPC, realtime, OAuth, SDK, and an MCP server for agents.'
+                    content: 'Centia.io is a PostgreSQL/PostGIS backend platform. Launch fast in managed cloud or self-host with Docker. Includes OAuth, realtime APIs, SDKs, and MCP support for AI agents.'
                 },
                 {
                     name: 'keywords',
-                    content: 'Centia, PostgreSQL, PostGIS, backend, BaaS, JSON-RPC, realtime, OAuth, SQL, CLI'
+                    content: 'Centia.io, Postgres BaaS, PostgreSQL backend, self-hosted backend, managed backend, PostGIS, realtime API, OAuth2, SDK, MCP server'
                 },
                 {property: 'og:type', content: 'website'},
                 {property: 'og:site_name', content: 'Centia.io'},
