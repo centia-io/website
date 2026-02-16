@@ -9,15 +9,15 @@ import TabItem from '@theme/TabItem';
 
 # Privileges
 
-Centia.io has a simple privilege system, which enables the super-user to grant [sub-users](./users.mdx) read or write privileges to tables. Sub-users can grant privileges to tables in their own schemas.
+Centia.io has a simple privilege system that enables the super-user to grant [sub-users](./users.mdx) read or write privileges on tables. Sub-users can grant privileges on tables in their own schemas.
 
 ## Set privileges for a user on a table
 
-Implicit a sub-user has `none` privileges to any table, besides tables in own schema. The privilege on any table can explicitly be set to either `none`, `read` or `write` for a sub-user.
+By default, a sub-user has `none` privilege on tables outside their own schema. Privileges can be set explicitly to `none`, `read`, or `write`.
 
-- `none` the sub-user can't run any types of statements on the table.
-- `read` the sub-user can run `select` statements on the table.
-- `write` the sub-user can run `select`, `insert`, `update` and `delete` statements on the table.
+- `none`: The sub-user cannot run statements on the table.
+- `read`: The sub-user can run `select` statements on the table.
+- `write`: The sub-user can run `select`, `insert`, `update`, and `delete` statements on the table.
 
 <Tabs>
     <TabItem value="http" label="HTTP" default>

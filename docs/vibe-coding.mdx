@@ -39,7 +39,7 @@ You can add the Centia.io MCP server to your AI agent (like Claude Desktop or Ju
       "args": ["-y", "@centia-io/mcp-server"],
       "env": {
         "API_TOKEN": "your-access-token",
-        "API_BASE_URL": "https://api.Centia.io.io"
+        "API_BASE_URL": "https://api.centia.io"
       }
     }
   }
@@ -47,9 +47,9 @@ You can add the Centia.io MCP server to your AI agent (like Claude Desktop or Ju
 ```
 
 :::info
-The env variable API_BASE_URL is not required if you are using the Centia.io Cloud. Only required if you are using self-hosted.
+The `API_BASE_URL` environment variable is optional when using Centia Cloud. Set it when using a self-hosted deployment.
 
-Get your access token from the [The console](/console).
+Get your access token from the [console](/console).
 :::
 
 ## Agent Guide (AGENT.md)
@@ -58,7 +58,7 @@ To ensure AI agents work effectively with Centia.io, we maintain a comprehensive
 "Prime Directives" and "Hard Rules" that help agents choose the right tools for the job, whether it's using the SDK for
 runtime code or MCP tools for provisioning. Copy the AGENT.md file into your agent's root directory to get started.
 
-In Claude Code copy `AGENT.md` to `CLAUDE.md`, becaue Claude Code automatical reads the `CLAUDE.md` file.
+In Claude Code, copy `AGENT.md` to `CLAUDE.md`, because Claude Code automatically reads `CLAUDE.md`.
 
 You can find the full guide in the [AGENT.md](https://github.com/centia-io/mcp-server/blob/master/AGENT.md) file in our repositories.
 
@@ -67,7 +67,7 @@ You can find the full guide in the [AGENT.md](https://github.com/centia-io/mcp-s
 When an agent is working in a Vibe Coding environment with Centia.io, it follows these priorities:
 
 1. **Centia.io MCP tools**: For schema changes and provisioning.
-2. **@Centia.io-io/sdk**: For application runtime logic.
+2. **@centia-io/sdk**: For application runtime logic.
 3. **OpenAPI**: For direct HTTP calls when needed.
 
 By providing these clear instructions, Centia.io ensures that "Vibe Coders" can build robust, production-ready backends with minimal friction.

@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # SDK
 
-TypeScript/JavaScript client SDK for Centia-io. It provides:
+TypeScript/JavaScript client SDK for Centia.io. It provides:
 
 - Authentication helpers:
     - CodeFlow (OAuth 2.0 Authorization Code + PKCE) for browser apps
@@ -61,14 +61,14 @@ import type { RpcRequest, RpcResponse, PgTypes } from "@centia-io/sdk";
 
 The SDK handles token storage and refresh for you.
 - Tokens and minimal options are saved to `localStorage` in browsers. In non‑browser environments, an in‑memory store is used for the lifetime of the process.
-- Authorization headers are added automatically for Sql/Rpc requests.
+- Authorization headers are added automatically for SQL/RPC requests.
 
 ### CodeFlow (Browser, OAuth 2.0 Authorization Code + PKCE)
 
-Use this flow in browser applications where you can redirect the user to the Centia-io login page.
+Use this flow in browser applications where you can redirect the user to the Centia.io login page.
 
 Required options:
-- `host`: Base URL of your Centia-io instance, e.g. `https://api.centia.io`
+- `host`: Base URL of your Centia.io instance, e.g. `https://api.centia.io`
 - `clientId`: OAuth client id configured in Centia.io
 - `redirectUri`: The URL in your app that handles the redirect back from Centia.io (must be whitelisted)
 - `scope` (optional): Not in use yet, but will be used to request additional permissions from the user.
@@ -126,11 +126,11 @@ const flow = new PasswordFlow({
   clientId: "your-client-id",
   username: "your-username",
   password: "your-password",
-  database: "parent-database" // The database to connect to. If superuser, this is the sam as username.
+  database: "parent-database" // The database to connect to. If superuser, this is the same as username.
 });
 
 await flow.signIn();
-// Tokens are now stored; subsequent Sql/Rpc calls will include Authorization header.
+// Tokens are now stored; subsequent SQL/RPC calls include the Authorization header.
 
 // ... your code ...
 
@@ -166,9 +166,9 @@ function onSignUpClick() {
 ```
 
 :::note
-- After the user completes sign‑up and is redirected back to your app, start your normal sign‑in flow (e.g., CodeFlow. A session is started when the user signed up, so the user will be signed in automatically in the flow.)
+- After the user completes sign-up and is redirected back to your app, start your normal sign-in flow (for example, CodeFlow). A session is already started, so the user is typically signed in automatically.
 - Client property `allow_signup` must be set to `true` for the used OAuth client.
-- Client property `social_signup` must be set to `true` for the user can sign up with social login.
+- Client property `social_signup` must be set to `true` for users to sign up with social login.
 :::
 
 ## SQL
