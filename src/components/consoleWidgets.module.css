@@ -1,0 +1,194 @@
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.muted {
+    color: var(--ifm-color-emphasis-700);
+    font-size: 0.95rem;
+}
+
+.signOut {
+    min-width: 9rem;
+}
+
+.card {
+    margin-top: 0.9rem;
+}
+
+.cardTitle {
+    margin-bottom: 0;
+}
+
+.sectionIntro {
+    margin: 0 0 0.8rem;
+    color: var(--ifm-color-emphasis-700);
+    font-size: 0.95rem;
+}
+
+.identityGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+}
+
+.identityItem {
+    padding: 0.65rem 0.75rem;
+    border: 1px solid var(--ifm-color-emphasis-300);
+    border-radius: var(--ifm-global-radius);
+    background: var(--ifm-color-emphasis-100);
+}
+
+.identityLabel {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: var(--ifm-color-emphasis-700);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.identityValue {
+    display: block;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.tokenLabel {
+    display: inline-block;
+    margin-bottom: 0.4rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.tokenRow {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+    margin-bottom: 0.5rem;
+}
+
+.tokenField {
+    flex: 1;
+    width: 100%;
+    font-family: var(--ifm-font-family-monospace, monospace);
+    background-color: var(--ifm-color-emphasis-100);
+    border: 1px solid var(--ifm-color-emphasis-300);
+    border-radius: var(--ifm-global-radius);
+    padding: 0.5rem;
+    min-height: 2.45rem;
+}
+
+.copyButton {
+    min-width: 5.5rem;
+}
+
+.tokenHint {
+    color: var(--ifm-color-emphasis-700);
+}
+
+.status {
+    color: var(--ifm-color-emphasis-700);
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.statCard {
+    border: 1px solid var(--ifm-color-emphasis-300);
+    border-radius: var(--ifm-global-radius);
+    background: var(--ifm-color-emphasis-100);
+    padding: 0.7rem 0.8rem;
+}
+
+.statLabel {
+    display: block;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ifm-color-emphasis-700);
+    margin-bottom: 0.2rem;
+}
+
+.statValue {
+    display: block;
+    font-size: 1.05rem;
+}
+
+.sectionLabel {
+    margin: 0 0 0.45rem;
+    font-size: 0.88rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ifm-color-emphasis-700);
+}
+
+.dataTableWrap {
+    overflow-x: auto;
+    border: 1px solid var(--ifm-color-emphasis-300);
+    border-radius: var(--ifm-global-radius);
+}
+
+.dataTable {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dataTable th,
+.dataTable td {
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+.dataTable th {
+    background: var(--ifm-color-emphasis-100);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ifm-color-emphasis-700);
+}
+
+.dataTable tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.billingBox {
+    margin-top: 0.3rem;
+}
+
+.billingTitle {
+    margin: 0 0 0.55rem;
+    font-size: 1.15rem;
+}
+
+.billingText {
+    margin: 0 0 0.8rem;
+    color: var(--ifm-color-emphasis-700);
+}
+
+@media (max-width: 640px) {
+    .identityGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .tokenRow {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .copyButton {
+        width: 100%;
+    }
+
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+}

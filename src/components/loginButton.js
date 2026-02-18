@@ -1,5 +1,6 @@
 import {CodeFlow} from '@mapcentia/gc2-js-client'
 import {useEffect, useMemo} from "react";
+import styles from "./consoleWidgets.module.css";
 
 function LoginButton(props) {
     const {auth, setAuth} = props.status;
@@ -53,32 +54,32 @@ function LoginButton(props) {
 
     if (auth)
         return (
-            <>
-                <button className="button button--outline button--primary" onClick={signOutHandler}>
+            <div className={styles.actions}>
+                <button className={`button button--outline button--primary ${styles.signOut}`} onClick={signOutHandler}>
                     Sign out
                 </button>
-            </>
+            </div>
         )
     else
         if (process.env.NODE_ENV === 'production') {
             return (
-                <>
-                    <a className="button button--primary margin-left--md" href="https://api.centia.io/signup?redirect_uri=https://centia.io/console?r">Sign
+                <div className={styles.actions}>
+                    <a className="button button--primary" href="https://api.centia.io/signup?redirect_uri=https://centia.io/console?r">Sign
                         up for
                         an account</a>
-                    <span className="margin-left--md">or</span>
-                    <button className="button button--secondary margin-left--md" onClick={signInHandler}>Sign in</button>
-                </>
+                    <span className={styles.muted}>or</span>
+                    <button className="button button--secondary" onClick={signInHandler}>Sign in</button>
+                </div>
             )
         }
         return (
-            <>
-                <a className="button button--primary margin-left--md" href="http://localhost:8080/signup?redirect_uri=http://localhost:4000/console?r">Sign
+            <div className={styles.actions}>
+                <a className="button button--primary" href="http://localhost:8080/signup?redirect_uri=http://localhost:4000/console?r">Sign
                     up for
                     an account</a>
-                <span className="margin-left--md">or</span>
-                <button className="button button--secondary margin-left--md" onClick={signInHandler}>Sign in</button>
-            </>
+                <span className={styles.muted}>or</span>
+                <button className="button button--secondary" onClick={signInHandler}>Sign in</button>
+            </div>
         )
 
 }

@@ -7,6 +7,7 @@ import Head from '@docusaurus/Head';
 import {trackCtaClick} from '../utils/analytics';
 import styles from './index.module.css';
 
+
 export default function Home() {
     const {siteConfig} = useDocusaurusContext();
     const pageTitle = 'Postgres BaaS for Cloud and Self-Hosting';
@@ -56,6 +57,7 @@ export default function Home() {
                     })}
                 </script>
             </Head>
+            <div className="front-page">
             <header className={clsx(styles.heroBanner)}>
                 <div className="container">
                     <h1 className="hero__title">{siteConfig.title}</h1>
@@ -89,6 +91,7 @@ export default function Home() {
             <main>
                 <HomepageFeatures/>
             </main>
+            </div>
         </Layout>
     );
 }

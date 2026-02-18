@@ -4,6 +4,33 @@
  */
 
 
+:global(.front-page) {
+    min-height: 100vh;
+    background-color: #f7fafc;
+    background:
+            radial-gradient(circle at 92% -18%, rgba(14, 165, 233, 0.14), transparent 38%),
+            radial-gradient(circle at 2% 24%, rgba(59, 130, 246, 0.1), transparent 42%),
+            linear-gradient(180deg, #f8fbff 0%, #f7fafc 60%, #f3f7fb 100%);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
+}
+
+:global([data-theme='dark'] .front-page) {
+    min-height: 100vh;
+    background-color: #0f172a;
+    background:
+            radial-gradient(circle at 90% -20%, rgba(37, 117, 252, 0.2), transparent 35%),
+            radial-gradient(circle at 0% 20%, rgba(56, 189, 248, 0.16), transparent 40%),
+            linear-gradient(180deg, #0f172a 0%, #111827 100%) !important;
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+    background-attachment: fixed !important;
+}
+
+:global([data-theme='dark'] .main-wrapper) {
+    background: transparent !important;
+}
 
 .heroBanner {
   padding: 6rem 0;

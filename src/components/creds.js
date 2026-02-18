@@ -1,5 +1,6 @@
 import {Claims, Status} from '@mapcentia/gc2-js-client'
 import {useRef, useState} from 'react'
+import styles from './consoleWidgets.module.css'
 
 function Creds(props) {
     if (props.status.auth === false) {
@@ -9,14 +10,12 @@ function Creds(props) {
     let email = ''
     let uid = ''
     let accessToken = ''
-    let refreshToken = ''
     try {
         const claims = new Claims().get()
         const tokens = new Status().getTokens()
         email = claims?.email ?? ''
         uid = claims?.uid ?? ''
         accessToken = tokens?.accessToken ?? ''
-        refreshToken = tokens?.refreshToken ?? ''
     } catch (e) {
         console.log(e)
     }
@@ -49,44 +48,36 @@ function Creds(props) {
 
     return (
         <>
-            <div className="card margin-top--md">
+            <div className={`card ${styles.card}`}>
                 <div className="card__header">
-                    <h3 className="margin-bottom--none">Credentials</h3>
+                    <h3 className={styles.cardTitle}>Credentials</h3>
                 </div>
                 <div className="card__body">
-                    <div className="margin-bottom--sm">
-                        <strong>UID:</strong> <span className="margin-left--xs">{uid}</span>
-                    </div>
-                    <div className="margin-bottom--md">
-                        <strong>Email:</strong> <span className="margin-left--xs">{email}</span>
+                    <p className={styles.sectionIntro}>Signed in account details and current access token.</p>
+                    <div className={styles.identityGrid}>
+                        <div className={styles.identityItem}>
+                            <span className={styles.identityLabel}>UID</span>
+                            <span className={styles.identityValue}>{uid || 'Unknown'}</span>
+                        </div>
+                        <div className={styles.identityItem}>
+                            <span className={styles.identityLabel}>Email</span>
+                            <span className={styles.identityValue}>{email || 'Unknown'}</span>
+                        </div>
                     </div>
 
-                    <label htmlFor="accessToken" className="margin-bottom--xs">Access token</label>
-                    <div
-                        className="margin-bottom--sm"
-                        style={{display: 'flex', gap: '0.5rem', alignItems: 'flex-start'}}
-                    >
+                    <label htmlFor="accessToken" className={styles.tokenLabel}>Access token (JWT)</label>
+                    <div className={styles.tokenRow}>
                         <input
                             id="accessToken"
                             ref={textRef}
                             readOnly
                             value={accessToken}
-                            className="flex-grow"
-                            style={{
-                                flex: 1,
-                                width: '100%',
-                                fontFamily: 'var(--ifm-font-family-monospace, monospace)',
-                                backgroundColor: 'var(--ifm-color-emphasis-100)',
-                                border: '1px solid var(--ifm-color-emphasis-300)',
-                                borderRadius: 'var(--ifm-global-radius)',
-                                padding: '0.5rem',
-                                resize: 'vertical'
-                            }}
+                            className={styles.tokenField}
                             placeholder="No access token available"
                         />
                         <button
                             type="button"
-                            className={`button button--sm ${copied ? 'button--success' : 'button--secondary'}`}
+                            className={`button button--sm ${styles.copyButton} ${copied ? 'button--success' : 'button--secondary'}`}
                             onClick={copyToClipboard}
                             aria-live="polite"
                             title="Copy to clipboard"
@@ -95,7 +86,7 @@ function Creds(props) {
                         </button>
                     </div>
 
-                    <small>
+                    <small className={styles.tokenHint}>
                         Keep this token secret. You can regenerate it from your account if needed.
                     </small>
                 </div>

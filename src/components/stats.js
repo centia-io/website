@@ -1,4 +1,21 @@
 import {useStats} from '../hooks/stats'
+import styles from './consoleWidgets.module.css'
+
+function formatCount(value) {
+    const count = Number(value)
+    if (Number.isNaN(count)) {
+        return '0'
+    }
+    return new Intl.NumberFormat('en-US').format(count)
+}
+
+function formatUsage(value) {
+    const usage = Number(value)
+    if (Number.isNaN(usage)) {
+        return '0 units'
+    }
+    return `${Math.round(usage)} units`
+}
 
 function Stats(props) {
     if (props.status.auth === false) {
@@ -6,14 +23,16 @@ function Stats(props) {
     }
 
     const {data, error, isFetching} = useStats()
+    const stat = data?.stat ?? {}
+    const tables = Array.isArray(stat.tables) ? stat.tables : []
 
     return (
-        <div className="card margin-top--md">
+        <div className={`card ${styles.card}`}>
             <div className="card__header">
-                <h3 className="margin-bottom--none">System Statistics</h3>
+                <h3 className={styles.cardTitle}>System Statistics</h3>
             </div>
             <div className="card__body">
-                {isFetching && <div>Loading...</div>}
+                {isFetching && <div className={styles.status}>Loading statistics...</div>}
 
                 {!isFetching && error && (
                     <div className="alert alert--danger" role="alert">
@@ -23,28 +42,46 @@ function Stats(props) {
 
                 {!isFetching && !error && data && (
                     <>
-                        <table className="table table--striped">
-                            <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th>Value</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr>
-                                <td>Number of Tables</td>
-                                <td>{data.stat.number_of_tables}</td>
-                            </tr>
-                            <tr>
-                                <td>Total Size</td>
-                                <td>{data.stat.total_size}</td>
-                            </tr>
-                            <tr>
-                                <td>Usage</td>
-                                <td>{Math.round(parseFloat(data.stat.cost))} units</td>
-                            </tr>
-                            </tbody>
-                        </table>
+                        <div className={styles.statsGrid}>
+                            <article className={styles.statCard}>
+                                <span className={styles.statLabel}>Tables</span>
+                                <strong className={styles.statValue}>{formatCount(stat.number_of_tables)}</strong>
+                            </article>
+                            <article className={styles.statCard}>
+                                <span className={styles.statLabel}>Total size</span>
+                                <strong className={styles.statValue}>{stat.total_size || '0 B'}</strong>
+                            </article>
+                            <article className={styles.statCard}>
+                                <span className={styles.statLabel}>Usage</span>
+                                <strong className={styles.statValue}>{formatUsage(stat.cost)}</strong>
+                            </article>
+                        </div>
+
+                        {tables.length > 0 && (
+                            <>
+                                <p className={styles.sectionLabel}>Table breakdown</p>
+                                <div className={styles.dataTableWrap}>
+                                    <table className={styles.dataTable}>
+                                        <thead>
+                                        <tr>
+                                            <th>Table</th>
+                                            <th>Rows</th>
+                                            <th>Total size</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        {tables.map((table) => (
+                                            <tr key={`${table.schema_name}.${table.table_name}`}>
+                                                <td>{table.schema_name}.{table.table_name}</td>
+                                                <td>{table.row_count >= 0 ? formatCount(table.row_count) : 'n/a'}</td>
+                                                <td>{table.total_size || '0 B'}</td>
+                                            </tr>
+                                        ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </>
+                        )}
                     </>
                 )}
             </div>

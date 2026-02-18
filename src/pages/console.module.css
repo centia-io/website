@@ -1,0 +1,158 @@
+.consolePage {
+    padding: 1rem 0 2rem;
+    background-color: #f7fafc;
+    background:
+        radial-gradient(circle at 92% -18%, rgba(14, 165, 233, 0.14), transparent 38%),
+        radial-gradient(circle at 2% 24%, rgba(59, 130, 246, 0.1), transparent 42%),
+        linear-gradient(180deg, #f8fbff 0%, #f7fafc 60%, #f3f7fb 100%);
+}
+
+:global([data-theme='dark']) .consolePage {
+    background-color: #0f172a;
+    background:
+        radial-gradient(circle at 90% -20%, rgba(37, 117, 252, 0.2), transparent 35%),
+        radial-gradient(circle at 0% 20%, rgba(56, 189, 248, 0.16), transparent 40%),
+        linear-gradient(180deg, #0f172a 0%, #111827 100%);
+}
+
+.headerSection {
+    margin-bottom: 1.5rem;
+}
+
+.kicker {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    color: var(--ifm-color-primary);
+    font-weight: 500;
+}
+
+.title {
+    margin: 0.35rem 0 0.5rem;
+    font-size: clamp(1.6rem, 1.2rem + 1.8vw, 2.25rem);
+    line-height: 1.15;
+}
+
+.subtitle {
+    margin: 0;
+    max-width: 58ch;
+    color: var(--ifm-color-emphasis-700);
+}
+
+.workspaceSection {
+    margin-bottom: 2rem;
+}
+
+.workspaceGrid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 1rem;
+    align-items: start;
+}
+
+.primaryPanel,
+.secondaryPanel {
+    background: var(--ifm-card-background-color, var(--ifm-background-surface-color));
+    border: 1px solid var(--ifm-color-emphasis-200);
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+}
+
+.loginRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: center;
+    //margin-bottom: 0.75rem;
+}
+
+.loginRow :global(.margin-left--md) {
+    margin-left: 0 !important;
+}
+
+.panelTitle {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.panelBody {
+    margin: 0.35rem 0 1rem;
+    color: var(--ifm-color-emphasis-700);
+}
+
+.secondaryPanel :global(form) {
+    margin: 0;
+}
+
+.secondaryPanel :global(stripe-pricing-table) {
+    display: block;
+    width: 100%;
+}
+
+.guidesSection {
+    margin-bottom: 1rem;
+}
+
+.guidesTitle {
+    margin: 0 0 0.8rem;
+    font-size: 1.3rem;
+}
+
+.guidesGrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.guideCard {
+    background: linear-gradient(
+        160deg,
+        var(--ifm-card-background-color, var(--ifm-background-surface-color)) 0%,
+        rgba(37, 117, 252, 0.05) 100%
+    );
+    border: 1px solid var(--ifm-color-emphasis-200);
+    border-radius: 14px;
+    padding: 1rem;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    justify-content: space-between;
+}
+
+.guideCard h3 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.guideCard p {
+    margin: 0;
+    color: var(--ifm-color-emphasis-700);
+}
+
+@media (max-width: 996px) {
+    .workspaceGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .guidesGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 640px) {
+    .consolePage {
+        padding-top: 0.5rem;
+    }
+
+    .primaryPanel,
+    .secondaryPanel {
+        padding: 0.85rem;
+    }
+
+    .guidesGrid {
+        grid-template-columns: 1fr;
+    }
+}
