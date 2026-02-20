@@ -28,20 +28,8 @@
     margin-bottom: 2rem;
 }
 
-.workspaceGrid {
-    display: grid;
-    grid-template-columns: 1.6fr 1fr;
-    gap: 1rem;
-    align-items: start;
-}
-
-.primaryPanel,
-.secondaryPanel {
-    background: var(--ifm-card-background-color, var(--ifm-background-surface-color));
-    border: 1px solid var(--ifm-color-emphasis-200);
-    border-radius: 16px;
-    padding: 1rem;
-    box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+.billingPanel {
+    margin-top: 0.9rem;
 }
 
 .loginRow {
@@ -66,11 +54,11 @@
     color: var(--ifm-color-emphasis-700);
 }
 
-.secondaryPanel :global(form) {
+.billingPanel :global(form) {
     margin: 0;
 }
 
-.secondaryPanel :global(stripe-pricing-table) {
+.billingPanel :global(stripe-pricing-table) {
     display: block;
     width: 100%;
 }
@@ -117,25 +105,12 @@
 }
 
 @media (max-width: 996px) {
-    .workspaceGrid {
-        grid-template-columns: 1fr;
-    }
-
     .guidesGrid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 640px) {
-    .consolePage {
-        padding-top: 0.5rem;
-    }
-
-    .primaryPanel,
-    .secondaryPanel {
-        padding: 0.85rem;
-    }
-
     .guidesGrid {
         grid-template-columns: 1fr;
     }

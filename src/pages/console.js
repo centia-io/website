@@ -28,22 +28,22 @@ export default function Home() {
                     </section>
 
                     <section className={`container ${styles.workspaceSection}`}>
-                        {/*<div className={styles.workspaceGrid}>*/}
-                        <div className={styles.primaryPanel}>
-                            <div className={styles.loginRow}>
-                                <LoginButton status={{auth, setAuth}}/>
-                            </div>
-                            <Creds status={{auth, setAuth}}/>
-                            <Stats status={{auth, setAuth}}/>
+                        <div className={styles.loginRow}>
+                            <LoginButton status={{auth, setAuth}}/>
                         </div>
-                        {/*            <div className={styles.secondaryPanel}>
-                                <h2 className={styles.panelTitle}>Billing</h2>
+                        <Creds status={{auth, setAuth}}/>
+                        <div className={`card ${styles.billingPanel}`}>
+                            <div className="card__header">
+                                <h3 className={styles.panelTitle}>Billing</h3>
+                            </div>
+                            <div className="card__body">
                                 <p className={styles.panelBody}>
                                     Choose a plan or manage your existing subscription.
                                 </p>
                                 <StripePricingTable status={{auth, setAuth}}/>
-                            </div>*/}
-                        {/*</div>*/}
+                            </div>
+                        </div>
+                        <Stats status={{auth, setAuth}}/>
                     </section>
 
                     <section className={`container ${styles.guidesSection}`}>

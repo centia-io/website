@@ -10,8 +10,17 @@ import {themes as prismThemes} from 'prism-react-renderer';
 const gaTrackingId = process.env.GA_TRACKING_ID;
 const hasGaTracking = Boolean(gaTrackingId);
 
+const stripeLinks = {
+    personalMonthly: process.env.STRIPE_PERSONAL_MONTHLY ?? 'https://buy.stripe.com/test_4gM4gA5Z08ok2I8dYP8Zq01',
+    personalYearly:  process.env.STRIPE_PERSONAL_YEARLY  ?? 'https://buy.stripe.com/test_aFaeVe9bc9so3Mcg6X8Zq02',
+    proMonthly:      process.env.STRIPE_PRO_MONTHLY      ?? 'https://buy.stripe.com/test_6oUdRaevwbAwaaAcUL8Zq03',
+    proYearly:       process.env.STRIPE_PRO_YEARLY       ?? 'https://buy.stripe.com/test_9B628sbjkbAw5UkcUL8Zq04',
+}
+
 /** @type {import('@docusaurus/types').Config} */
 const config = {
+
+    customFields: {stripeLinks},
 
     title: 'Centia.io',
     tagline: 'Managed Postgres backend in the cloud or self-hosted with Docker',
