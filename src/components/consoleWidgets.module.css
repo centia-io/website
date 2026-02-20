@@ -164,6 +164,10 @@
     margin-top: 0.3rem;
 }
 
+.loginNotice {
+    margin-bottom: 1.2rem;
+}
+
 .billingTitle {
     margin: 0 0 0.55rem;
     font-size: 1.15rem;

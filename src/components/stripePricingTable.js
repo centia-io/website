@@ -73,20 +73,18 @@ function StripePricingTable(props) {
         console.log(e)
     }
 
+    const isLoggedIn = !!uid
+
     const {data, error, isFetching} = useUser(uid)
 
-    if (props.status.auth === false) {
-        return null
-    }
-
-    if (isFetching) {
+    if (isLoggedIn && isFetching) {
         return <p className={styles.status}>Loading billing data...</p>
     }
-    if (error) {
+    if (isLoggedIn && error) {
         return <div className="alert alert--danger" role="alert">An error has occurred: {error.message}</div>
     }
 
-    if (data.private_properties?.customer) {
+    if (isLoggedIn && data?.private_properties?.customer) {
         return <form className="mb-0" method="POST" action={`${apiHost}/console/billing`}>
             <input type="hidden" name="id" value={data.private_properties?.customer}/>
             <button className="button button--outline button--success" type="submit">Manage billing</button>
@@ -97,13 +95,18 @@ function StripePricingTable(props) {
         if (!url) return null
         const sep = url.includes('?') ? '&' : '?'
         const params = new URLSearchParams()
-        if (data.name) params.set('client_reference_id', data.name)
-        if (data.email) params.set('prefilled_email', data.email)
+        if (data?.name) params.set('client_reference_id', data.name)
+        if (data?.email) params.set('prefilled_email', data.email)
         return `${url}${sep}${params.toString()}`
     }
 
     return (
         <div className={styles.billingBox}>
+            {!isLoggedIn && (
+                <div className={`alert alert--warning ${styles.loginNotice}`} role="alert">
+                    Sign in to select a plan.
+                </div>
+            )}
             <div className={styles.toggleRow}>
                 <span className={!yearly ? styles.toggleActive : styles.toggleInactive}>Monthly</span>
                 <button
@@ -123,7 +126,7 @@ function StripePricingTable(props) {
             <div className={styles.pricingGrid}>
                 {PLANS.map(plan => {
                     const price = yearly ? plan.yearly : plan.monthly
-                    const link = plan.paymentLinks[yearly ? 'yearly' : 'monthly']
+                    const link = isLoggedIn ? plan.paymentLinks[yearly ? 'yearly' : 'monthly'] : null
                     const href = buildLink(link)
 
                     return (
@@ -157,7 +160,7 @@ function StripePricingTable(props) {
                                 </a>
                             ) : (
                                 <button
-                                    className="button button--block button--outline button--secondary"
+                                    className={`button button--block ${plan.highlighted ? 'button--primary' : 'button--outline button--secondary'}`}
                                     disabled
                                 >
                                     {plan.cta}
