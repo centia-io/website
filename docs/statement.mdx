@@ -207,7 +207,7 @@ The streaming formats (ndjson and ccsv) are newline delimited text that can be p
 This makes it possible to stream huge result sets without having to load them into memory.
 
 Other output formats have a row limit of 100.000 rows and are delivered as a single chunk,
-which ensures a complete dataset.
+which always ensures a complete dataset.
 
 ## Execute multiple statements
 

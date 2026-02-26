@@ -46,21 +46,48 @@ You can add the Centia.io MCP server to your AI agent (like Claude Desktop or Ju
 }
 ```
 
-:::info
-The `API_BASE_URL` environment variable is optional when using Centia Cloud. Set it when using a self-hosted deployment.
+### Configuration
+The server accepts the following environment variables:
 
-Get your access token from the [console](/console).
+- `API_BASE_URL` (optional) — Base URL for the Centia.io API. Set it when using a self-hosted deployment. Default: `https://api.centia.io`
+- `API_TOKEN` (recommended) — Personal access token for Centia. Most endpoints/tools require authentication; set this to enable them.
+
+:::info
+Get your access token from the [console](console).
 :::
 
-## Agent Guide (AGENT.md)
+## Agent Guide (AGENTS.md and skills)
 
-To ensure AI agents work effectively with Centia.io, we maintain a comprehensive **Agent Guide**. This guide contains
+To ensure AI agents work effectively with Centia.io, we maintain a AGENTS.md file and Skills folder. These contain
 "Prime Directives" and "Hard Rules" that help agents choose the right tools for the job, whether it's using the SDK for
-runtime code or MCP tools for provisioning. Copy the AGENT.md file into your agent's root directory to get started.
+runtime code or MCP tools for provisioning.
 
-In Claude Code, copy `AGENT.md` to `CLAUDE.md`, because Claude Code automatically reads `CLAUDE.md`.
+`AGENTS.md` contains the core rules (tool priority, security baselines, destructive-ops policy), while each skill in `skills/*/SKILL.md` covers a specific workflow area.
 
-You can find the full guide in the [AGENT.md](https://github.com/centia-io/mcp-server/blob/master/AGENT.md) file in our repositories.
+To ensure your AI agent follows these rules while developing your application:
+
+1. Copy `AGENTS.md` and the `skills/` folder from this repository to the root of **your own application's** repository.
+2. When starting a session with your AI agent, it will automatically find and follow the guidelines.
+
+:::info
+In Claude Code, copy `AGENTS.md` to `CLAUDE.md`, because Claude Code automatically reads `CLAUDE.md`.
+:::
+
+**AGENTS.md** covers:
+- **Prime Directive**: Preferring MCP tools and official SDKs.
+- **Tool Priority**: Order of interaction (MCP tools > SDK > HTTP).
+- **Security & Auth**: How to handle tokens and OAuth flows correctly.
+- **Destructive Operations Policy**: Requiring explicit confirmation before destructive changes.
+
+**Skills** (`skills/*/SKILL.md`) cover task-specific workflows:
+- `centia-runtime-sdk` — Building JS/TS runtime code with `@centia-io/sdk`
+- `centia-provisioning` — Schema, tables, columns, constraints, indexes, migrations
+- `centia-json-rpc` — JSON-RPC method lifecycle and TypeScript interfaces
+- `centia-auth-model` — Auth across browser, backend, CLI, and provisioning
+- `centia-types-formats` — PostgreSQL types, casts, type hints, output formats
+- `centia-file-import` — File import workflow
+- `centia-openapi-docs` — OpenAPI and docs fallback policy
+- `centia-delivery` — Delivery checklist and quality gate
 
 ### Key Takeaways for Agents
 
