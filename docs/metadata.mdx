@@ -1,0 +1,266 @@
+---
+title: Metadata
+description: Supplementary, context-dependent information about database relations in the Centia.io platform.
+sidebar_position: 30
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Metadata
+
+Relation metadata provides supplementary, context-dependent information about database relations in Centia.io.
+
+Metadata is stored outside the physical database schema and does not affect table structure, constraints, or storage.
+Instead, it is consumed by clients such as admin interfaces, map viewers, SDKs, query builders, and automation tools.
+
+Each metadata entry is keyed by the fully qualified relation name: `<schema>.<relation>`.
+
+## Endpoint
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+    ```http title="Get Metadata"
+    GET /api/v4/meta/{query}
+    ```
+    
+    </TabItem>
+</Tabs>
+
+**query** can be a schema qualified relation name, a schame name, a tag in the form tag:name or combination of the three separated by comma.
+
+**Example Request:**
+`GET /api/v4/meta/my_schema`
+
+## Updating Metadata
+
+To update metadata, use the `PATCH` method. You can update relation-level attributes and field-level metadata. System metadata is read-only and cannot be modified.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+    ```http title="Update Relation Metadata"
+    PATCH /api/v4/meta HTTP/1.1
+    Content-Type: application/json
+    
+    {
+      "relations": {
+        "my_schema.my_relation": {
+          "title": "New Relation Title",
+          "abstract": "Updated description",
+          "fields": {
+            "id": {
+              "alias": "Identifier",
+              "sort_id": 10
+            }
+          },
+          "properties": {
+            "custom_key": "new_value"
+          }
+        },
+        "my_schema.my_other_relation": {
+          "title": "Another new Relation Title",
+          "abstract": "Updated description",
+          "fields": {
+            "id": {
+              "alias": "Identifier",
+              "sort_id": 10
+            }
+          },
+          "properties": {
+            "custom_key": "new_value"
+          }
+        }
+      }
+    }
+
+    ```
+
+    </TabItem>
+</Tabs>
+
+### Updateable Fields
+
+Only the following sections can be updated:
+
+1.  **Relation-level metadata**: `title`, `abstract`, `group`, `sort_id`, `tags`, and the `properties` object.
+2.  **Field metadata**: `alias`, `queryable`, and `sort_id` for individual fields.
+
+Any attempt to update system metadata (fields starting with `_`) will be ignored.
+
+## Metadata Sections
+
+A relation metadata object consists of three conceptual sections:
+
+1.  **Relation-level metadata**: User-defined attributes describing the relation.
+2.  **Field metadata**: Descriptions of individual columns.
+3.  **System metadata**: Read-only attributes generated from the data source.
+
+---
+
+### 1. Relation-level metadata
+
+These are user-defined, contextual attributes describing the relation.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `title` | `string \| null` | Human-readable title |
+| `abstract` | `string \| null` | Description or summary |
+| `group` | `string \| null` | Logical grouping (e.g. UI category) |
+| `sort_id` | `integer \| null` | Sorting weight |
+| `tags` | `string[]` | Classification tags |
+| `properties` | `object` | Free-form key/value metadata |
+
+**Example:**
+
+```json
+{
+    "title": null,
+    "abstract": "Example description of the relation",
+    "group": "My Group",
+    "sort_id": 100,
+    "tags": ["tag1", "tag2"]
+}
+```
+
+#### Properties object
+
+The `properties` container is for arbitrary user-defined attributes.
+
+*   Keys are user-defined.
+*   Values may be `string`, `numeric`, or `boolean`.
+*   Semantics are defined by the consuming application.
+
+**Example:**
+
+```json
+{
+    "properties": {
+        "feature_flag": true,
+        "external_id": 12345,
+        "owner": "Martin Høgh"
+    }
+}
+```
+
+---
+
+### 2. Field metadata
+
+Field metadata describes individual columns within the relation.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `alias` | `string \| null` | Display label used in UI |
+| `queryable` | `boolean` | Whether the field can be filtered/searched |
+| `sort_id` | `integer \| null` | Field sort order within the list |
+
+**Example:**
+
+```json
+{
+    "fields": {
+        "id": {
+            "alias": "Primary ID",
+            "queryable": false,
+            "sort_id": 1000
+        }
+    }
+}
+```
+
+---
+
+### 3. System metadata
+
+System metadata is generated automatically from the underlying data source and is **read-only**.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `_uuid` | `string` | Internal relation UUID |
+| `_schema` | `string` | Schema name |
+| `_rel` | `string` | Relation name |
+| `_rel_type` | `string` | Relation type (TABLE, VIEW, etc.) |
+| `_pkey` | `string` | Primary key column |
+
+#### Geometry metadata
+
+Present for spatial relations (relations with a geometry field).
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `_geometry_column` | `string` | Geometry column name |
+| `_geom_type` | `string` | Geometry type (e.g. POINT) |
+| `_coord_dimension`| `integer` | Coordinate dimension |
+| `_srid` | `integer` | Spatial reference ID (SRID) |
+
+**Example:**
+
+```json
+{
+    "_geometry_column": "the_geom",
+    "_geom_type": "POINT",
+    "_coord_dimension": 2,
+    "_srid": 25832
+}
+```
+
+#### Security metadata
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `_authentication` | `string` | Relation access level (e.g. `Read`, `Write`, `Read/write`) |
+
+---
+
+## Full Example Response
+
+```json
+{
+    "relations": {
+        "geofa.test": {
+            "title": null,
+            "abstract": "Example relation description",
+            "group": "Demo Group",
+            "sort_id": 100,
+            "tags": ["demo", "test"],
+            "properties": {
+                "custom_key": "custom_value"
+            },
+            "fields": {
+                "gid": {
+                    "alias": null,
+                    "queryable": false,
+                    "sort_id": null
+                },
+                "id": {
+                    "alias": "ID TEST",
+                    "queryable": false,
+                    "sort_id": 1000
+                }
+            },
+            "_uuid": "3f13e92e-ddad-4b26-a4e3-bd8b29f8f28a",
+            "_schema": "geofa",
+            "_rel": "test",
+            "_geometry_column": "the_geom",
+            "_pkey": "gid",
+            "_rel_type": "TABLE",
+            "_coord_dimension": 2,
+            "_geom_type": "POINT",
+            "_srid": 25832,
+            "_authentication": "Read/write",
+            "_children": null
+        }
+    }
+}
+```
+
+## Semantics and Usage
+
+Relation metadata does **not**:
+*   Modify the database schema.
+*   Create or alter columns.
+*   Affect physical storage or indexing.
+
+It is interpreted purely by higher-level services such as admin dashboards, map clients, SDKs, and code generators.
