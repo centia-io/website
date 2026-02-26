@@ -24,7 +24,7 @@ Each metadata entry is keyed by the fully qualified relation name: `<schema>.<re
     ```http title="Get Metadata"
     GET /api/v4/meta/{query}
     ```
-    
+
     </TabItem>
 </Tabs>
 
@@ -43,7 +43,7 @@ To update metadata, use the `PATCH` method. You can update relation-level attrib
     ```http title="Update Relation Metadata"
     PATCH /api/v4/meta HTTP/1.1
     Content-Type: application/json
-    
+
     {
       "relations": {
         "my_schema.my_relation": {
@@ -97,7 +97,6 @@ A relation metadata object consists of three conceptual sections:
 2.  **Field metadata**: Descriptions of individual columns.
 3.  **System metadata**: Read-only attributes generated from the data source.
 
----
 
 ### 1. Relation-level metadata
 
@@ -144,35 +143,7 @@ The `properties` container is for arbitrary user-defined attributes.
 }
 ```
 
----
-
-### 2. Field metadata
-
-Field metadata describes individual columns within the relation.
-
-| Property | Type | Description |
-| :--- | :--- | :--- |
-| `alias` | `string \| null` | Display label used in UI |
-| `queryable` | `boolean` | Whether the field can be filtered/searched |
-| `sort_id` | `integer \| null` | Field sort order within the list |
-
-**Example:**
-
-```json
-{
-    "fields": {
-        "id": {
-            "alias": "Primary ID",
-            "queryable": false,
-            "sort_id": 1000
-        }
-    }
-}
-```
-
----
-
-### 3. System metadata
+#### System metadata
 
 System metadata is generated automatically from the underlying data source and is **read-only**.
 
@@ -212,7 +183,72 @@ Present for spatial relations (relations with a geometry field).
 | :--- | :--- | :--- |
 | `_authentication` | `string` | Relation access level (e.g. `Read`, `Write`, `Read/write`) |
 
----
+
+### 2. Field metadata
+
+Field metadata describes individual columns within the relation. It consists of user-defined attributes and system-generated attributes.
+
+#### User-defined field attributes
+
+These attributes can be updated via the `PATCH` endpoint.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `alias` | `string \| null` | Display label used in UI |
+| `queryable` | `boolean` | Whether the field can be filtered/searched |
+| `sort_id` | `integer \| null` | Field sort order within the list |
+
+**Example:**
+
+```json
+{
+    "fields": {
+        "id": {
+            "alias": "Primary ID",
+            "queryable": false,
+            "sort_id": 1000
+        }
+    }
+}
+```
+
+#### System field metadata
+
+System field metadata is generated automatically from the database catalog and is **read-only**. These attributes are prefixed with `_` and provide introspection details for each column.
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `_type` | `string` | PostgreSQL data type (e.g. `integer`, `character varying`, `geometry`) |
+| `_character_maximum_length` | `integer \| null` | Maximum character length (for character types) |
+| `_numeric_precision` | `integer \| null` | Numeric precision (for numeric types) |
+| `_numeric_scale` | `integer \| null` | Numeric scale (for numeric types) |
+| `_max_bytes` | `integer \| null` | Maximum byte size of the column |
+| `_is_unique` | `boolean` | Whether the column has a unique constraint |
+| `_is_nullable` | `boolean` | Whether the column allows NULL values |
+| `_default_value` | `string \| null` | Default value expression (e.g. `nextval('seq'::regclass)`, `now()`) |
+
+**Example:**
+
+```json
+{
+    "fields": {
+        "gid": {
+            "alias": "GID",
+            "queryable": false,
+            "sort_id": 0,
+            "_type": "integer",
+            "_character_maximum_length": null,
+            "_numeric_precision": 32,
+            "_numeric_scale": 0,
+            "_max_bytes": 4,
+            "_is_unique": true,
+            "_is_nullable": false,
+            "_default_value": "nextval('my_table_gid_seq'::regclass)"
+        }
+    }
+}
+```
+
 
 ## Full Example Response
 
@@ -232,12 +268,28 @@ Present for spatial relations (relations with a geometry field).
                 "gid": {
                     "alias": null,
                     "queryable": false,
-                    "sort_id": null
+                    "sort_id": null,
+                    "_type": "integer",
+                    "_character_maximum_length": null,
+                    "_numeric_precision": 32,
+                    "_numeric_scale": 0,
+                    "_max_bytes": 4,
+                    "_is_unique": true,
+                    "_is_nullable": false,
+                    "_default_value": "nextval('test_gid_seq'::regclass)"
                 },
                 "id": {
                     "alias": "ID TEST",
                     "queryable": false,
-                    "sort_id": 1000
+                    "sort_id": 1000,
+                    "_type": "integer",
+                    "_character_maximum_length": null,
+                    "_numeric_precision": 32,
+                    "_numeric_scale": 0,
+                    "_max_bytes": 4,
+                    "_is_unique": false,
+                    "_is_nullable": true,
+                    "_default_value": null
                 }
             },
             "_uuid": "3f13e92e-ddad-4b26-a4e3-bd8b29f8f28a",
