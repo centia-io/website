@@ -74,29 +74,26 @@ This stops any statement, which are not allowed or limited in prior matches rule
         Content-Type: application/json
         Authorization: Bearer abc123
 
-        {
-            "rules": [
-                {
-                    "priority": 1,
-                    "username": "joe",
-                    "request": "delete",
-                    "schema": "my_schema",
-                    "table": "my_table"
-                    "access": "limit",
-                    "filter": "user='joe'"
-                },
-                {
-                    "priority": 1,
-                    "username": "peter",
-                    "request": "delete",
-                    "schema": "my_schema",
-                    "table": "my_table"
-                    "access": "limit",
-                    "filter": "user='peter'"
-                }
-            ]
-
-        }
+        [
+            {
+                "priority": 1,
+                "username": "joe",
+                "request": "delete",
+                "schema": "my_schema",
+                "table": "my_table",
+                "access": "limit",
+                "filter": "user='joe'"
+            },
+            {
+                "priority": 1,
+                "username": "peter",
+                "request": "delete",
+                "schema": "my_schema",
+                "table": "my_table",
+                "access": "limit",
+                "filter": "user='peter'"
+            }
+        ]
         ```
 
     </TabItem>

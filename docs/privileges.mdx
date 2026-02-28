@@ -37,18 +37,16 @@ By default, a sub-user has `none` privilege on tables outside their own schema. 
         Content-Type: application/json
         Authorization: Bearer abc123
 
-        {
-            "privileges": [
-                {
-                    "subuser": "alx",
-                    "privilege": "write"
-                },
-                {
-                    "subuser": "slash",
-                    "privilege": "write"
-                }
-            ]
-        }
+        [
+            {
+                "subuser": "alx",
+                "privilege": "write"
+            },
+            {
+                "subuser": "slash",
+                "privilege": "write"
+            }
+        ]
         ```
 
     </TabItem>
@@ -73,18 +71,16 @@ By default, a sub-user has `none` privilege on tables outside their own schema. 
         ```
 
         ```json title="Response"
-        {
-            "privileges": [
-                {
-                    "subuser": "alx",
-                    "privilege": "write"
-                },
-                {
-                    "subuser": "slash",
-                    "privilege": "write"
-                }
-            ]
-        }
+        [
+            {
+                "subuser": "alx",
+                "privilege": "write"
+            },
+            {
+                "subuser": "slash",
+                "privilege": "write"
+            }
+        ]
         ```
 
     </TabItem>
