@@ -14,6 +14,14 @@ Choose your deployment model first:
 - Managed Centia Cloud: [Sign up and create a backend](/console)
 - Self-hosted with Docker: [Open source and self-hosting guide](./opensource)
 
+Then pick whichever interface suits you — **Web App**, **CLI**, or **API**. All three give you access to the full platform.
+
+## Web App
+
+The Centia Web App is the fastest way to get started. After creating a backend, open the [console](/console) and you can visually manage schemas, tables, columns, users, clients, and more — no code required.
+
+![Centia Web App overview](/img/screenshots/webapp-placeholder.svg)
+
 ## Install the CLI
 
 <Tabs>
@@ -64,7 +72,7 @@ centia constraint add "rollhall" "inductees" "id" primary
 
 Now your table is ready for data inserts:
 ```bash
-echo "INSERT into rollhall.inductees values(1, 'Guns n’ Roses')" | centia sql
+echo "INSERT into rollhall.inductees values(1, ‘Guns n’’ Roses’)" | centia sql
 ```
 
 Run queries on your table:

@@ -4,6 +4,9 @@ description: Create and execute JSON-RPC methods.
 sidebar_position: 60
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 In the Centia.io API, instead of sending raw SQL every time you want to run a statement,
 you can **wrap your SQL statements inside JSON-RPC methods**.
 This means you define a **named method** which holds your SQL query along with optional instructions on how to
@@ -37,7 +40,7 @@ select now() as date
 You can wrap it as a JSON-RPC method named with a date formatting hint: `getDate`
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/methods
+POST  https://api.centia.io/api/v4/methods
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -92,7 +95,7 @@ The `result` property is similar to what the [SQL API](./statement) returns.
 The REST API is used like this:
 
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/call
+POST  https://api.centia.io/api/v4/call
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -164,7 +167,7 @@ And when call the the method with `params`:
 ```json
 {
   "jsonrpc": "2.0",
-  "methode": "getDatePlusDays",
+  "method": "getDatePlusDays",
   "params": {
     "date": "09-07-10",
     "days": 10
@@ -325,5 +328,85 @@ Response:
 Clients should handle error responses gracefully by checking for the presence of the `error` object and using the `code` and `message` fields to determine actions or inform the user.
 
 ## Get methods
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Get all methods"
+        GET https://api.centia.io/api/v4/methods HTTP/1.1
+        Accept: application/json
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="Get a specific method"
+        GET https://api.centia.io/api/v4/methods/getDate HTTP/1.1
+        Accept: application/json
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash title="Get all methods"
+        centia rpc get
+        ```
+
+        ```bash title="Get a specific method"
+        centia rpc get "getDate"
+        ```
+
+    </TabItem>
+</Tabs>
+
 ## Update methods
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Update a method"
+        PATCH https://api.centia.io/api/v4/methods/getDate HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "q": "select now()::date as date",
+            "type_formats": {
+                "date": "Y-m-d"
+            }
+        }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash title="Update a method"
+        centia rpc update "getDate"
+        ```
+
+    </TabItem>
+</Tabs>
+
 ## Delete methods
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Delete a method"
+        DELETE https://api.centia.io/api/v4/methods/getDate HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="Delete multiple methods"
+        DELETE https://api.centia.io/api/v4/methods/getDate,getDatePlusDays HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash title="Delete a method"
+        centia rpc drop "getDate"
+        ```
+
+    </TabItem>
+</Tabs>

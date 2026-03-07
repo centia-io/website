@@ -21,6 +21,9 @@ The flow is typically two steps:
 Uploads one or more files to be processed later.
 
 <Tabs>
+  <TabItem value="webapp" label="Web App">
+    ![Upload files in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+  </TabItem>
   <TabItem value="http" label="HTTP" default>
 
 ```http title="Upload a file for later import"
@@ -35,14 +38,14 @@ Content-Type: multipart/form-data
 curl \
   -X POST "https://api.centia.io/api/v4/file/upload" \
   -H "Authorization: Bearer abc123" \
-  -F "filename=@./mydata.cvs"
+  -F "filename=@./mydata.csv"
 ```
 
   </TabItem>
   <TabItem value="cli" label="CLI">
 
 ```bash title="Upload and process a file"
-centia import ./mydata.cvs
+centia import ./mydata.csv
 ```
 
 ```bash title="Upload and process a directory with all files and subdirectories"

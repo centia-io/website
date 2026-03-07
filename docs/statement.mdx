@@ -9,9 +9,13 @@ import TabItem from '@theme/TabItem';
 
 # SQL
 
-Data can be retrieved and altered using the `sql` API or a websocket.
+Data can be retrieved and altered using the Web App, the `sql` API, or a websocket.
 
 Only `select`, `insert`, `update`, `delete` and `merge` statements can be executed. Any other types of SQL (DDL, transaction control, etc.) will be rejected by the API.
+
+The Web App includes a built-in SQL editor where you can write and execute queries directly in the browser.
+
+![SQL editor in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
 
 Send an HTTP POST to the SQL endpoint with a JSON body:
 - `q`: the SQL text. Use named parameters like `:name` with explicit casts (e.g., `:id::int`).
@@ -28,7 +32,7 @@ See also: [Types](./types) for data type formatting/conversion and [Rules](./rul
 
 The REST API is used like this:
 ```http request
-POST  https://api.centia.io/api/v4/api/v4/sql
+POST  https://api.centia.io/api/v4/sql
 Content-Type: application/json
 Accept: application/json; charset=utf-8
 Authorization: Bearer abc123
@@ -150,21 +154,10 @@ In a `select` statement the `params` must be a single object not an array of obj
 ```json title="Select rows with parameters"
 {
     "q": "select id, name from rockhall.inductees where id = :id::int",
-    "params": [{ "id": 4 }],
-    "id": "1"
-}
-```
-
-```json title="Select rows with parameters as object"
-{
-    "q": "select id, name from rockhall.inductees where id = :id::int",
     "params": { "id": 4 },
     "id": "1"
 }
 ```
-:::note
-Array of parameters can only have one set of parameters. 2nd parameter set will throw an error.
-:::
 
 Result objects include a `schema` section describing each returned column and a `data` array with the actual rows.
 

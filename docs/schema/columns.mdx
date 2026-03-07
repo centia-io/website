@@ -20,6 +20,9 @@ concatenation are available.
 You can either get a single column or a collection of columns.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![View columns in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
 
         ```http title="All columns for a table"
@@ -87,6 +90,9 @@ If submitted in a POST or PATCH they will be ignored.
 ## Add column
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Add column in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP">
 
         ```http title="Create new column"
@@ -125,6 +131,9 @@ If submitted in a POST or PATCH they will be ignored.
 You can change name, type, default and nullable of a column or collection of columns.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Edit column properties in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP">
         ```http
         PATCH https://api.centia.io/api/v4/schemas/rockhall/tables/inductees/columns/name HTTP/1.1
@@ -162,6 +171,9 @@ The type of a column can only be changed to a type that is compatible with the e
 ## Delete column
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Delete column in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP">
         ```http
         DELETE https://api.centia.io/api/v4/schemas/rockhall/tables/inductees/columns/id,name HTTP/1.1

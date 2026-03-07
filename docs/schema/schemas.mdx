@@ -18,6 +18,9 @@ can contain tables named inductees.
 A new schema object can be empty (name is the only property) or contain nested tables.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Create schema in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
 
         ```http request title="Create new empty schema"
@@ -37,7 +40,6 @@ A new schema object can be empty (name is the only property) or contain nested t
         centia schema add "rockhall"
         ```
 
-
     </TabItem>
 </Tabs>
 
@@ -47,6 +49,9 @@ You can either get a single schema or a collection of schemas. The schema object
 tables, columns, indices and constraints. Use the `namesOnly` parameter to omit nested objects.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![View schemas in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
 
         ```http title="All schemas, names only"
@@ -153,6 +158,9 @@ A schema object with nested objects looks like this.
 ## Rename schema
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Rename schema in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
         ```http
         PATCH https://api.centia.io/api/v4/schemas/rockhall HTTP/1.1
@@ -174,10 +182,13 @@ A schema object with nested objects looks like this.
 ## Delete schema
 
 :::danger
-Be careful when delete schemas - all nested objects will also be deleted!
+Be careful when deleting schemas - all nested objects will also be deleted!
 :::
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Delete schema in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
         ```http
         DELETE https://api.centia.io/api/v4/schemas/rock_roll_of_hall HTTP/1.1

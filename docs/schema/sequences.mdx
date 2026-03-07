@@ -15,6 +15,9 @@ A sequence is a database object that generates a sequence of integers, often use
 A new sequence can be created by providing at least a name.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Add sequence in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
 
         ```http title="Create new sequence"
@@ -60,6 +63,9 @@ A new sequence can be created by providing at least a name.
 You can either get a single sequence or a collection of sequences.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![View sequences in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
 
         ```http title="All sequences"
@@ -110,6 +116,9 @@ A sequence object looks like this:
 You can update a sequence by using the `PATCH` method.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Update sequence in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
         ```http
         PATCH https://api.centia.io/api/v4/schemas/rockhall/sequences/my_sequence HTTP/1.1
@@ -126,6 +135,9 @@ You can update a sequence by using the `PATCH` method.
 ## Delete sequence
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Delete sequence in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
         ```http
         DELETE https://api.centia.io/api/v4/schemas/rockhall/sequences/my_sequence HTTP/1.1

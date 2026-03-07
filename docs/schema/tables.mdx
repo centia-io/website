@@ -17,6 +17,9 @@ at a given moment.
 A new table object can be empty (name is the only property) or contain nested columns, indices and constraints.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Create table in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
 
         ```http title="Create new empty table"
@@ -46,6 +49,9 @@ You can either get a single table or a collection of tables. The schema object c
 columns, indices and constraints. Use the `namesOnly` parameter to omit nested objects.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![View tables in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
 
         ```http title="All tables, names only"
@@ -150,6 +156,9 @@ You can move a table to another schema by setting the `schema` property and rena
 `name` property.
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Rename and move table in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
         ```http
         PATCH https://api.centia.io/api/v4/schemas/rockhall/tables/inductees HTTP/1.1
@@ -175,6 +184,9 @@ You can move a table to another schema by setting the `schema` property and rena
 ## Delete table
 
 <Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Delete table in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
     <TabItem value="http" label="HTTP" default>
         ```http
         DELETE https://api.centia.io/api/v4/schemas/rockhall/tables/inductees HTTP/1.1
