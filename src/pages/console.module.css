@@ -44,6 +44,25 @@
     margin-left: 0 !important;
 }
 
+.webAppButton {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.betaBadge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 4px;
+    padding: 0.1rem 0.35rem;
+    line-height: 1.2;
+}
+
 .panelTitle {
     margin: 0;
     font-size: 1.1rem;

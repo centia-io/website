@@ -1,5 +1,6 @@
 import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import LoginButton from "../components/loginButton";
 import Creds from "../components/creds";
 import Stats from "../components/stats";
@@ -13,6 +14,8 @@ import StripePricingTable from "../components/stripePricingTable";
 const queryClient = new QueryClient();
 
 export default function Home() {
+    const {siteConfig} = useDocusaurusContext();
+    const {webAppUrl} = siteConfig.customFields;
     const [auth, setAuth] = useAuth();
 
     return (
@@ -30,6 +33,18 @@ export default function Home() {
                     <section className={`container ${styles.workspaceSection}`}>
                         <div className={styles.loginRow}>
                             <LoginButton status={{auth, setAuth}}/>
+                            {auth && (
+                                <a
+                                    className={`button button--primary button--lg ${styles.webAppButton}`}
+                                    href={webAppUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={() => trackCtaClick('cta_webapp_open_click', {location: 'console_login_row'})}
+                                >
+                                    Open Web App
+                                    <span className={styles.betaBadge}>Beta</span>
+                                </a>
+                            )}
                         </div>
                         <Creds status={{auth, setAuth}}/>
                         <div className={`card ${styles.billingPanel}`}>
