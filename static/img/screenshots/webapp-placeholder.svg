@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="450" viewBox="0 0 800 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#f8f9fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e9ecef;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" rx="8" fill="url(#bg)" stroke="#dee2e6" stroke-width="2"/>
+  <rect x="0" y="0" width="800" height="48" rx="8" fill="#343a40"/>
+  <rect x="0" y="40" width="800" height="8" fill="#343a40"/>
+  <circle cx="24" cy="24" r="8" fill="#6c757d"/>
+  <rect x="48" y="16" width="120" height="16" rx="4" fill="#6c757d"/>
+  <rect x="0" y="48" width="200" height="402" fill="#f1f3f5"/>
+  <rect x="16" y="64" width="168" height="12" rx="3" fill="#adb5bd"/>
+  <rect x="16" y="92" width="140" height="10" rx="3" fill="#ced4da"/>
+  <rect x="16" y="112" width="150" height="10" rx="3" fill="#ced4da"/>
+  <rect x="16" y="132" width="120" height="10" rx="3" fill="#ced4da"/>
+  <rect x="16" y="152" width="160" height="10" rx="3" fill="#ced4da"/>
+  <rect x="16" y="180" width="168" height="12" rx="3" fill="#adb5bd"/>
+  <rect x="16" y="208" width="130" height="10" rx="3" fill="#ced4da"/>
+  <rect x="16" y="228" width="145" height="10" rx="3" fill="#ced4da"/>
+  <rect x="220" y="68" width="560" height="360" rx="6" fill="#ffffff" stroke="#dee2e6" stroke-width="1"/>
+  <rect x="240" y="88" width="200" height="14" rx="3" fill="#495057"/>
+  <rect x="240" y="120" width="520" height="1" fill="#dee2e6"/>
+  <rect x="240" y="140" width="520" height="32" rx="4" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+  <rect x="240" y="188" width="520" height="32" rx="4" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+  <rect x="240" y="236" width="520" height="32" rx="4" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+  <rect x="240" y="284" width="520" height="32" rx="4" fill="#f8f9fa" stroke="#dee2e6" stroke-width="1"/>
+  <text x="400" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="16" fill="#868e96" text-anchor="middle" font-weight="500">Screenshot coming soon</text>
+</svg>
