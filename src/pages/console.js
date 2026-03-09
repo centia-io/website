@@ -35,7 +35,7 @@ export default function Home() {
                             <LoginButton status={{auth, setAuth}}/>
                             {auth && (
                                 <a
-                                    className={`button button--primary button--lg ${styles.webAppButton}`}
+                                    className={`button button--outline button--success button ${styles.webAppButton}`}
                                     href={webAppUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
