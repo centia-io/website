@@ -10,7 +10,9 @@ The GraphQL API allows you to query and manipulate your database data using a dy
 
 ## Endpoint and Authentication
 
-The GraphQL endpoint is schema-specific (see [Schemas](/docs/schema/schemas) for more information):
+### HTTP
+
+The HTTP endpoint is schema-specific (see [Schemas](/docs/schema/schemas) for more information):
 
 `POST https://api.centia.io/api/graphql/schema/{schema_name}`
 
@@ -26,9 +28,35 @@ Content-Type: application/json
 }
 ```
 
-:::info
-The GraphQL API can currently only be used in http context. Websockets will be supported soon.
-:::
+### WebSocket
+
+All GraphQL operations — queries, mutations, and subscriptions — are also available over WebSocket:
+
+```
+wss://api.centia.io/broadcast?token=<your_token>
+```
+
+Send operations as JSON messages with `type`, `schema`, and `query`:
+
+```json
+{
+  "type": "subscribe",
+  "id": "q1",
+  "schema": "public",
+  "query": "query { getArtists { artist_id legal_name } }"
+}
+```
+
+This works identically for mutations:
+
+```json
+{
+  "type": "subscribe",
+  "id": "m1",
+  "schema": "public",
+  "query": "mutation { insertArtists(objects: [{ legal_name: \"Jane Doe\" }]) { artist_id } }"
+}
+```
 
 ## Introspection
 
@@ -169,6 +197,126 @@ Authorization: Bearer <your_token>
 {
   "query": "mutation { deleteArtists(where: { artist_id: { eq: 1 } }) { artist_id } }"
 }
+```
+
+## Subscriptions
+
+Subscriptions let you receive real-time database change events (INSERT, UPDATE, DELETE) over the WebSocket connection using GraphQL syntax.
+
+### Subscribing
+
+After connecting to the WebSocket (see [WebSocket](#websocket) above), send a message to register a subscription:
+
+```json
+{
+  "type": "subscribe",
+  "id": "sub1",
+  "schema": "public",
+  "query": "subscription { ArtistsMessageAdded { artist_id legal_name instrument } }"
+}
+```
+
+The server responds with an acknowledgement:
+
+```json
+{
+  "type": "subscribe_ack",
+  "id": "sub1"
+}
+```
+
+### Subscription Field Names
+
+Each table gets three subscription fields following the pattern `{TableName}Message{Event}`:
+
+- `{TableName}MessageAdded` — triggered on INSERT
+- `{TableName}MessageUpdated` — triggered on UPDATE
+- `{TableName}MessageDeleted` — triggered on DELETE
+
+The table name is in PascalCase, matching the same convention as queries and mutations.
+
+### Filtering
+
+Use the `where` argument to only receive events matching specific conditions. The same JSON object syntax used in queries and mutations is supported:
+
+```json title="Subscribe with filter"
+{
+  "type": "subscribe",
+  "id": "sub2",
+  "schema": "public",
+  "query": "subscription { ArtistsMessageUpdated(where: {instrument: {eq: \"guitar\"}}) { artist_id legal_name instrument } }"
+}
+```
+
+**Supported operators:**
+- `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `like`, `ilike`
+
+**Logical operators:**
+- `AND`, `OR`, `NOT`
+
+```json title="Subscribe with complex filter"
+{
+  "type": "subscribe",
+  "id": "sub3",
+  "schema": "public",
+  "query": "subscription { ArtistsMessageAdded(where: {OR: [{instrument: {eq: \"guitar\"}}, {instrument: {eq: \"piano\"}}]}) { artist_id legal_name } }"
+}
+```
+
+A SQL-style string syntax is also supported:
+
+```json title="Subscribe with string filter"
+{
+  "type": "subscribe",
+  "id": "sub4",
+  "schema": "public",
+  "query": "subscription { ArtistsMessageAdded(where: \"instrument = 'guitar'\") { artist_id legal_name } }"
+}
+```
+
+:::note
+Subscription filtering only works with scalar column types (`integer`, `float`, `boolean`, `string`, etc.). Complex types such as geometric types, range types, and JSON are not supported in subscription `where` clauses.
+:::
+
+### Column Selection
+
+The fields you select in the subscription body determine which columns are included in the event payload. Only matching columns are returned.
+
+### JavaScript Example
+
+```javascript
+const ws = new WebSocket(
+  `wss://api.centia.io/broadcast?token=${encodeURIComponent(token)}`
+);
+
+ws.onopen = () => {
+  // Query over WebSocket
+  ws.send(JSON.stringify({
+    type: "subscribe",
+    id: "q1",
+    schema: "public",
+    query: `query { getArtists { artist_id legal_name } }`
+  }));
+
+  // Subscribe to real-time events
+  ws.send(JSON.stringify({
+    type: "subscribe",
+    id: "sub1",
+    schema: "public",
+    query: `subscription {
+      ArtistsMessageAdded(where: {instrument: {eq: "guitar"}}) {
+        artist_id
+        legal_name
+        instrument
+      }
+    }`
+  }));
+};
+
+ws.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log("Received:", data);
+};
 ```
 
 ## Data Types
