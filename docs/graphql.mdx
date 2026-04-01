@@ -33,7 +33,7 @@ Content-Type: application/json
 All GraphQL operations — queries, mutations, and subscriptions — are also available over WebSocket:
 
 ```
-wss://api.centia.io/broadcast?token=<your_token>
+wss://event.centia.io?token=<your_token>
 ```
 
 Send operations as JSON messages with `type`, `schema`, and `query`:
@@ -286,7 +286,7 @@ The fields you select in the subscription body determine which columns are inclu
 
 ```javascript
 const ws = new WebSocket(
-  `wss://api.centia.io/broadcast?token=${encodeURIComponent(token)}`
+  `wss://event.centia.io?token=${encodeURIComponent(token)}`
 );
 
 ws.onopen = () => {
