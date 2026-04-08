@@ -20,17 +20,17 @@ The realtime system exposes a lightweight HTTP/WebSocket:
 
 The WebSocket endpoint is:
 
-- wss://event.centia.io?token=...&rel=...
+- wss://event.centia.io?token=...&rels=...
 
 Query parameters:
 
 - `token` (required): A Centia.io JWT.
-- `rel` (optional): Comma‑separated list of relations the client wants events from (e.g., `rockhall.inductees,rockhall.stars`).
+- `rels` (optional): Comma‑separated list of relations the client wants events from (e.g., `rockhall.inductees,rockhall.stars`).
 
 Connection flow:
 
 1. Server validates the token in a worker.
-2. If sub-user, server enforces per‑relation access for each entry in `rel`. Unauthorized relations result in an error message and socket close.
+2. If sub-user, server enforces per‑relation access for each entry in `rels`. Unauthorized relations result in an error message and socket close.
 3. On success, the client is registered.
 
 Errors are returned as JSON and the socket is closed. Examples:
@@ -39,7 +39,7 @@ Errors are returned as JSON and the socket is closed. Examples:
 `{ "type": "error", "error": "missing_token", "message": "Missing token" }`
 - Invalid token:
 `{ "type": "error", "error": "invalid_token", "message": "..." }`
-- Unauthorized rel:
+- Unauthorized rels:
 `{ "type": "error", "error": "not_allowed", "message": "Not allowed to access this resource: <rel>" }`
 
 ## Receiving database change events
@@ -47,7 +47,7 @@ Errors are returned as JSON and the socket is closed. Examples:
 To enable database change events, set `emit_events` to `true` in the table schema:
 
 ```http request
-PATCH https://api.centia.io/api/v4/schemas/my_schema/tables/my_table
+PATCH https://api.centia.io/api/v4/schemas/my_schema/tables/my_table/events
 Content-Type: application/json
 Authorization: Bearer <token>
 
@@ -84,21 +84,86 @@ When a batch is flushed, a message is sent to the clients:
 }
 ```
 
-:::note
-The server broadcasts to all clients connected to that database, without further per‑table filtering at send time. If you need additional client‑side filtering, filter messages on the client.
+## Subscriptions
 
-Centia.io will soon support `shapes`, which will allow you to filter events based on the shape of the data.
-:::
+Instead of receiving all events for the database, you can dynamically subscribe to specific tables with server‑side filtering. Send a JSON message over an open WebSocket connection:
+
+```json
+{
+  "type": "subscription",
+  "id": "sub1",
+  "schema": "my_schema",
+  "rel": "my_table"
+}
+```
+
+The server acknowledges with:
+
+```json
+{
+  "type": "subscription_ack",
+  "id": "sub1"
+}
+```
+
+Once subscribed, you only receive batches that match your subscription — the server filters before sending.
+
+A single client can register multiple subscriptions on different tables by sending additional `subscription` messages.
+
+### Shapes — filtering and column selection
+
+Subscriptions support **shapes**: server‑side row filtering and column projection so the client only receives the data it needs.
+
+| Field     | Type   | Required | Description                                                                                   |
+|-----------|--------|----------|-----------------------------------------------------------------------------------------------|
+| `type`    | string | yes      | Must be `"subscription"`                                                                      |
+| `id`      | string | yes      | A client‑chosen identifier for this subscription                                              |
+| `schema`  | string | yes      | Database schema name                                                                          |
+| `rel`     | string | yes      | Table name                                                                                    |
+| `where`   | string | no       | SQL‑like filter applied to `full_data` rows before delivery                                   |
+| `columns` | string | no       | Comma‑separated list of columns to include in `full_data` (empty = all columns)               |
+| `op`      | string | no       | Limit to a single operation: `"INSERT"`, `"UPDATE"`, or `"DELETE"` (empty = all operations)   |
+
+#### Where syntax
+
+The `where` clause supports a subset of SQL:
+
+- Comparison operators: `=`, `!=`, `<>`, `>`, `<`, `>=`, `<=`
+- Logical operators: `AND`, `OR`, parentheses for grouping
+- `IN` / `NOT IN` with value lists
+- `LIKE` / `ILIKE` with `%` and `_` wildcards
+
+#### Example with shape
+
+```json
+{
+  "type": "subscription",
+  "id": "active-users",
+  "schema": "public",
+  "rel": "users",
+  "where": "status = 'active' AND age >= 18",
+  "columns": "id,name,email",
+  "op": "UPDATE"
+}
+```
+
+This subscribes to `UPDATE` events on `public.users`, only receiving rows where `status = 'active' AND age >= 18`, projected to the columns `id`, `name`, and `email`.
+
+### GraphQL subscriptions
+
+For GraphQL‑based subscriptions with typed queries and field selection, see [GraphQL Subscriptions](/docs/graphql#subscriptions).
 
 ## Client examples
+
+### Broadcast (legacy)
 
 JavaScript (browser):
 
 ```html title="index.html"
 <script>
   const token = "<your-jwt>";
-  const rel = "public.parcels,public.addresses";
-  const ws = new WebSocket(`wss://event.centia.io/?token=${encodeURIComponent(token)}&rel=${encodeURIComponent(rel)}`);
+  const rels = "public.parcels,public.addresses";
+  const ws = new WebSocket(`wss://event.centia.io/?token=${encodeURIComponent(token)}&rels=${encodeURIComponent(rels)}`);
 
   ws.onopen = () => {
     console.log("connected");
@@ -119,7 +184,36 @@ JavaScript (browser):
 </script>
 ```
 
-Node (ws):
+### Subscription with shape
+
+```js title="subscription.js"
+const token = "<your-jwt>";
+const ws = new WebSocket(`wss://event.centia.io/?token=${encodeURIComponent(token)}`);
+
+ws.onopen = () => {
+  // Subscribe to updates on public.users with filtering
+  ws.send(JSON.stringify({
+    type: "subscription",
+    id: "active-users",
+    schema: "public",
+    rel: "users",
+    where: "status = 'active'",
+    columns: "id,name,email",
+    op: "UPDATE"
+  }));
+};
+
+ws.onmessage = (e) => {
+  const msg = JSON.parse(e.data);
+  if (msg.type === 'subscription_ack') {
+    console.log(`Subscribed: ${msg.id}`);
+  } else if (msg.type === 'batch') {
+    console.log("Filtered batch:", msg.batch);
+  }
+};
+```
+
+### Node (ws)
 
 ```js title="index.js"
 import WebSocket from 'ws';
