@@ -23,7 +23,7 @@ function Stats(props) {
     }
 
     const {data, error, isFetching} = useStats()
-    const stat = data?.stat ?? {}
+    const stat = data ?? {}
     const tables = Array.isArray(stat.tables) ? stat.tables : []
 
     return (
@@ -56,32 +56,6 @@ function Stats(props) {
                                 <strong className={styles.statValue}>{formatUsage(stat.cost)}</strong>
                             </article>
                         </div>
-
-                        {tables.length > 0 && (
-                            <>
-                                <p className={styles.sectionLabel}>Table breakdown</p>
-                                <div className={styles.dataTableWrap}>
-                                    <table className={styles.dataTable}>
-                                        <thead>
-                                        <tr>
-                                            <th>Table</th>
-                                            <th>Rows</th>
-                                            <th>Total size</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {tables.map((table) => (
-                                            <tr key={`${table.schema_name}.${table.table_name}`}>
-                                                <td>{table.schema_name}.{table.table_name}</td>
-                                                <td>{table.row_count >= 0 ? formatCount(table.row_count) : 'n/a'}</td>
-                                                <td>{table.total_size || '0 B'}</td>
-                                            </tr>
-                                        ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </>
-                        )}
                     </>
                 )}
             </div>
