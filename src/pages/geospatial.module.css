@@ -1,0 +1,361 @@
+/**
+ * Geospatial landing page. Cartographic theme: graticule grid, survey-marker
+ * step numbers, mono accents. Stays within the site's Infima palette.
+ */
+
+.page {
+    --geo-ink: #0f2540;
+    --geo-accent: #2575fc;
+    --geo-geometry: #3cad6e;
+    --geo-line: rgba(37, 117, 252, 0.14);
+    --geo-card-bg: #ffffff;
+    --geo-card-border: rgba(15, 37, 64, 0.08);
+    --geo-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+
+:global([data-theme='dark']) .page {
+    --geo-ink: #e2e8f0;
+    --geo-line: rgba(56, 189, 248, 0.16);
+    --geo-card-bg: #1e293b;
+    --geo-card-border: rgba(148, 163, 184, 0.16);
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+    position: relative;
+    padding: 5rem 0 4rem;
+    overflow: hidden;
+    background-image:
+        linear-gradient(var(--geo-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--geo-line) 1px, transparent 1px);
+    background-size: 56px 56px;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 20%, transparent 30%, rgba(247, 250, 252, 0.9) 100%);
+    pointer-events: none;
+}
+
+:global([data-theme='dark']) .hero::after {
+    background: radial-gradient(ellipse at 30% 20%, transparent 30%, rgba(15, 23, 42, 0.92) 100%);
+}
+
+.heroInner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: 3rem;
+    align-items: center;
+}
+
+.kicker {
+    font-family: var(--geo-mono);
+    font-size: 0.8rem;
+    font-weight: 400;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--geo-accent);
+    margin-bottom: 1rem;
+}
+
+.heroTitle {
+    font-size: 3.25rem;
+    line-height: 1.08;
+    background: linear-gradient(to left, #2575fc, #6a11cb);
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+}
+
+.heroSubtitle {
+    font-size: 1.2rem;
+    max-width: 36rem;
+    margin: 1rem 0 1.75rem;
+}
+
+.ctaButtons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.formatPills {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0;
+    margin: 1.75rem 0 0;
+}
+
+.formatPills li {
+    font-family: var(--geo-mono);
+    font-size: 0.75rem;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid var(--geo-card-border);
+    border-radius: 999px;
+    background: var(--geo-card-bg);
+    color: var(--geo-ink);
+}
+
+/* Hero map artwork */
+
+.heroArt {
+    position: relative;
+}
+
+.heroMap {
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    border: 1px solid var(--geo-card-border);
+    background: var(--geo-card-bg);
+    box-shadow: 0 24px 48px -24px rgba(15, 37, 64, 0.3);
+}
+
+.graticule line {
+    stroke: var(--geo-line);
+    stroke-width: 1;
+}
+
+.polygons polygon {
+    fill: rgba(60, 173, 110, 0.18);
+    stroke: var(--geo-geometry);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+}
+
+.queryRadius {
+    fill: rgba(37, 117, 252, 0.08);
+    stroke: var(--geo-accent);
+    stroke-width: 1.5;
+    stroke-dasharray: 6 5;
+    animation: radiusPulse 4s ease-in-out infinite;
+    transform-origin: 216px 172px;
+}
+
+@keyframes radiusPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.04); opacity: 0.75; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .queryRadius { animation: none; }
+}
+
+.queryPoint {
+    fill: var(--geo-accent);
+}
+
+.points circle {
+    fill: var(--geo-geometry);
+    opacity: 0.85;
+}
+
+.heroResponse {
+    position: absolute;
+    right: -0.75rem;
+    bottom: -1.25rem;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    font-family: var(--geo-mono);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--geo-ink);
+    background: var(--geo-card-bg);
+    border: 1px solid var(--geo-card-border);
+    border-left: 3px solid var(--geo-accent);
+    border-radius: 8px;
+    box-shadow: 0 16px 32px -16px rgba(15, 37, 64, 0.35);
+}
+
+/* ---------- Sections ---------- */
+
+.section {
+    padding: 4.5rem 0;
+}
+
+.sectionAlt {
+    background: rgba(37, 117, 252, 0.04);
+}
+
+:global([data-theme='dark']) .sectionAlt {
+    background: rgba(37, 117, 252, 0.08);
+}
+
+.sectionTitle {
+    font-size: 2rem;
+    margin-bottom: 2.25rem;
+}
+
+/* Steps */
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+}
+
+.step {
+    position: relative;
+    padding-top: 0.5rem;
+    border-top: 2px solid var(--geo-accent);
+}
+
+.stepMarker {
+    display: inline-block;
+    font-family: var(--geo-mono);
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--geo-accent);
+    margin: 0.75rem 0 0.5rem;
+}
+
+.stepLink {
+    font-family: var(--geo-mono);
+    font-size: 0.85rem;
+}
+
+/* Feature grid */
+
+.featureGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.25rem;
+}
+
+.featureCard {
+    padding: 1.5rem;
+    background: var(--geo-card-bg);
+    border: 1px solid var(--geo-card-border);
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.featureCard:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 32px -20px rgba(15, 37, 64, 0.4);
+}
+
+.featureCard h3 {
+    font-size: 1.05rem;
+    margin: 0.5rem 0;
+}
+
+.featureCard p {
+    margin: 0;
+    font-size: 0.92rem;
+}
+
+.featureIcon {
+    font-size: 1.4rem;
+    color: var(--geo-accent);
+}
+
+/* Code section */
+
+.codeSection {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 3rem;
+    align-items: center;
+}
+
+.codeCopy .sectionTitle {
+    margin-bottom: 1rem;
+}
+
+.codeBlock {
+    box-shadow: 0 24px 48px -24px rgba(15, 37, 64, 0.3);
+    border-radius: var(--ifm-code-border-radius, 8px);
+}
+
+/* Use cases */
+
+.useCaseGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.25rem;
+}
+
+.useCaseCard {
+    padding: 1.5rem;
+    background: var(--geo-card-bg);
+    border: 1px solid var(--geo-card-border);
+    border-left: 3px solid var(--geo-geometry);
+    border-radius: 12px;
+}
+
+.useCaseCard h3 {
+    font-size: 1.05rem;
+}
+
+.useCaseCard p {
+    margin: 0;
+    font-size: 0.92rem;
+}
+
+/* Final CTA */
+
+.finalCta {
+    padding: 4.5rem 0;
+    text-align: center;
+    color: #fff;
+    background: linear-gradient(120deg, #6a11cb, #2575fc);
+}
+
+.finalCta h2 {
+    font-size: 2rem;
+}
+
+.finalCta p {
+    margin-bottom: 1.75rem;
+}
+
+.finalCta .ctaButtons {
+    justify-content: center;
+}
+
+.ctaGhost {
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: transparent;
+}
+
+.ctaGhost:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- Responsive ---------- */
+
+@media screen and (max-width: 996px) {
+    .hero {
+        padding: 3rem 0;
+    }
+
+    .heroInner,
+    .codeSection {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+
+    .heroTitle {
+        font-size: 2.4rem;
+    }
+
+    .heroResponse {
+        right: 0.5rem;
+        bottom: -0.75rem;
+    }
+
+    .steps {
+        grid-template-columns: 1fr;
+    }
+}
