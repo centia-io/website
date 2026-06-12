@@ -1,11 +1,105 @@
+/**
+ * Front-page feature cards, styled to match the /geospatial landing page:
+ * bordered cards with hover lift, mono link accents, cartographic mini-map
+ * on the geospatial card.
+ */
+
 .features {
-  display: flex;
-  align-items: center;
-  padding: 2rem 0;
   width: 100%;
+  padding: 2rem 0 4rem;
+  --geo-ink: #0f2540;
+  --geo-accent: #2575fc;
+  --geo-geometry: #3cad6e;
+  --geo-line: rgba(37, 117, 252, 0.14);
+  --geo-card-bg: #ffffff;
+  --geo-card-border: rgba(15, 37, 64, 0.08);
+  --geo-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+}
+
+:global([data-theme='dark']) .features {
+  --geo-ink: #e2e8f0;
+  --geo-line: rgba(56, 189, 248, 0.16);
+  --geo-card-bg: #1e293b;
+  --geo-card-border: rgba(148, 163, 184, 0.16);
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+}
+
+.featureCard {
+  padding: 1.5rem;
+  background: var(--geo-card-bg);
+  border: 1px solid var(--geo-card-border);
+  border-radius: 12px;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.featureCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px -20px rgba(15, 37, 64, 0.4);
+}
+
+.featureCard h3 {
+  font-size: 1.05rem;
+  margin: 0.75rem 0 0.5rem;
+}
+
+.featureCard p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.featureCardGeo {
+  border-left: 3px solid var(--geo-geometry);
+}
+
+.featureArt {
+  display: flex;
+  justify-content: center;
 }
 
 .featureSvg {
-  height: 200px;
-  width: 200px;
+  height: 140px;
+  width: 140px;
+}
+
+.featureLink {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-family: var(--geo-mono);
+  font-size: 0.85rem;
+}
+
+/* Mini map on the geospatial card */
+
+.geoGrid line {
+  stroke: var(--geo-line);
+  stroke-width: 1;
+}
+
+.geoPolygons polygon {
+  fill: rgba(60, 173, 110, 0.18);
+  stroke: var(--geo-geometry);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.geoRadius {
+  fill: rgba(37, 117, 252, 0.08);
+  stroke: var(--geo-accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+}
+
+.geoPoint {
+  fill: var(--geo-accent);
+}
+
+.geoFeaturePoints circle {
+  fill: var(--geo-geometry);
+  opacity: 0.85;
 }

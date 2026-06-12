@@ -32,6 +32,43 @@
   text-align: center;
   position: relative;
   overflow: hidden;
+  --geo-line: rgba(37, 117, 252, 0.14);
+  --geo-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  background-image:
+      linear-gradient(var(--geo-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--geo-line) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+:global([data-theme='dark']) .heroBanner {
+  --geo-line: rgba(56, 189, 248, 0.16);
+}
+
+.heroBanner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(247, 250, 252, 0.9) 100%);
+  pointer-events: none;
+}
+
+:global([data-theme='dark'] ) .heroBanner::after {
+  background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(15, 23, 42, 0.92) 100%);
+}
+
+.heroBanner > :global(.container) {
+  position: relative;
+  z-index: 1;
+}
+
+.kicker {
+  font-family: var(--geo-mono);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #2575fc;
+  margin-bottom: 1rem;
 }
 
 .heroBanner h1 {

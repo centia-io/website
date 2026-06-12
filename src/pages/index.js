@@ -60,6 +60,7 @@ export default function Home() {
             <div className="front-page">
             <header className={clsx(styles.heroBanner)}>
                 <div className="container">
+                    <p className={styles.kicker}>Postgres backend as a service</p>
                     <h1 className="hero__title">{siteConfig.title}</h1>
                     <p className="hero__subtitle">The Postgres backend for teams that want to launch fast in cloud or self-host with full control.</p>
                     <div className={styles.ctaButtons}>
