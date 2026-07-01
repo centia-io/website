@@ -1,0 +1,414 @@
+---
+title: Functions
+description: Run your own Node.js or Python code on demand or in response to events, sandboxed and with secure callbacks into your data.
+sidebar_position: 63
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+Where [Methods](./methods) let you wrap **SQL** in a named, callable unit,
+**Functions** let you do the same with **code**. A function is a named piece of
+Node.js or Python that Centia.io runs for you — on demand, on a schedule, or when
+a table changes — inside an isolated sandbox.
+
+### Why use functions?
+
+- **Custom logic:** do things SQL can't — call an external API, transform a file,
+  send a notification, compute something bespoke.
+- **Secure by default:** your code runs in a sandbox, isolated from other tenants.
+- **First-class data access:** each invocation gets a short-lived, scoped token so
+  your handler can call the Centia.io API back with **your own privileges** —
+  [rules](./rules) and geofencing still apply.
+- **Event-driven:** trigger a function from a cron schedule or a row change.
+- **Typed clients:** infer input/output types from a dry-run and generate a
+  TypeScript interface.
+
+> A function receives two arguments: `event` (the payload you invoke it with) and
+> `context` (execution info, including a scoped `token` and the API `apiBaseUrl`).
+
+### The handler
+
+The `handler` field points at an exported function as `file.export`. The default
+`index.handler` means "the `handler` export of `index`".
+
+<Tabs>
+    <TabItem value="node" label="Node.js" default>
+
+        ```javascript title="index.mjs"
+        export const handler = async (event, context) => {
+            return { greeting: `Hello, ${event.name}!` };
+        };
+        ```
+
+    </TabItem>
+    <TabItem value="python" label="Python">
+
+        ```python title="index.py"
+        def handler(event, context):
+            return {"greeting": f"Hello, {event['name']}!"}
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Create a function
+
+Post a function definition. `code` is the inline source (see
+[Packaging](#packaging-multi-file-bundles) for multi-file zips).
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http request
+        POST https://api.centia.io/api/v4/functions
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "name": "greet",
+            "runtime": "nodejs20",
+            "handler": "index.handler",
+            "code": "export const handler = async (event) => ({ greeting: `Hello, ${event.name}!` });",
+            "memory_mb": 128,
+            "timeout_s": 30
+        }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash
+        centia function create "greet"
+        ```
+
+    </TabItem>
+</Tabs>
+
+Fields:
+
+- `name` — unique, a valid identifier (`[A-Za-z_][A-Za-z0-9_]*`).
+- `runtime` — `nodejs20` or `python312`.
+- `handler` — entry point as `file.export`, e.g. `index.handler`.
+- `code` — inline source, or a base64 zip when `package` is `zip`.
+- `package` — `inline` (default) or `zip`.
+- `env` — environment variables passed to the runtime.
+- `memory_mb` (default 128), `timeout_s` (default 30).
+- `triggers` — schedule and/or event bindings (see [Triggers](#triggers)).
+
+## Invoke a function
+
+`POST` an event payload to the function's `invocations` sub-resource. By default
+this is **synchronous** — the handler runs and the result is returned.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http request
+        POST https://api.centia.io/api/v4/functions/greet/invocations
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        { "name": "Ada" }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash
+        centia function invoke "greet" --data '{"name":"Ada"}'
+        ```
+
+    </TabItem>
+</Tabs>
+
+Response:
+
+```json
+{
+    "invocation": "b1f0…",
+    "status": "succeeded",
+    "result": { "greeting": "Hello, Ada!" },
+    "logs": "",
+    "duration_ms": 12
+}
+```
+
+### Asynchronous invocation
+
+Add `?async=true` (or the header `X-Invocation-Type: Event`) to **queue** the
+invocation and return immediately with `202 Accepted`. A background worker runs
+it; poll the invocation to get the result.
+
+```http request
+POST https://api.centia.io/api/v4/functions/greet/invocations?async=true
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{ "name": "Ada" }
+```
+
+```json
+{ "invocation": "b1f0…", "status": "pending" }
+```
+
+Check status:
+
+```http request
+GET https://api.centia.io/api/v4/functions/greet/invocations/b1f0… HTTP/1.1
+Authorization: Bearer abc123
+```
+
+```json
+{ "invocation": "b1f0…", "function": "greet", "status": "succeeded", "response": { "greeting": "Hello, Ada!" } }
+```
+
+## Calling Centia.io from your function
+
+Every invocation receives a short-lived, scoped token in
+`context.token` and the API base URL in `context.apiBaseUrl`. Use them to call the
+Centia.io API back — the request runs with **your** privileges, so
+[rules](./rules) and geofencing are enforced automatically.
+
+<Tabs>
+    <TabItem value="node" label="Node.js" default>
+
+        ```javascript title="index.mjs"
+        export const handler = async (event, context) => {
+            const res = await fetch(`${context.apiBaseUrl}/api/v4/sql`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${context.token}`,
+                },
+                body: JSON.stringify({ q: "SELECT count(*) AS n FROM my_table" }),
+            });
+            return await res.json();
+        };
+        ```
+
+    </TabItem>
+    <TabItem value="python" label="Python">
+
+        ```python title="index.py"
+        import json, urllib.request
+
+        def handler(event, context):
+            req = urllib.request.Request(
+                context["apiBaseUrl"] + "/api/v4/sql",
+                data=json.dumps({"q": "SELECT count(*) AS n FROM my_table"}).encode(),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": "Bearer " + context["token"],
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req) as r:
+                return json.load(r)
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Triggers
+
+Functions can run automatically. Add a `triggers` object when creating or
+updating a function.
+
+### Schedule
+
+Run on a cron schedule (five-field cron expression).
+
+```http request
+POST https://api.centia.io/api/v4/functions
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "name": "nightlyReport",
+    "runtime": "python312",
+    "handler": "index.handler",
+    "code": "def handler(event, context):\n    return {'ran': True}\n",
+    "triggers": { "schedule": "0 2 * * *" }
+}
+```
+
+The `event` for a scheduled run is `{ "source": "schedule", "time": "…", "cron": "…" }`.
+
+### Table events
+
+Run when rows change in a table. `on` may contain any of `insert`, `update`,
+`delete` (defaults to all).
+
+```http request
+POST https://api.centia.io/api/v4/functions
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "name": "onOrder",
+    "runtime": "nodejs20",
+    "handler": "index.handler",
+    "code": "export const handler = async (event) => { console.log(event.op, event.pk); };",
+    "triggers": { "event": { "table": "public.orders", "on": ["insert", "update"] } }
+}
+```
+
+The `event` for a table change looks like:
+
+```json
+{
+    "source": "db",
+    "op": "insert",
+    "schema": "public",
+    "table": "orders",
+    "pk_column": "id",
+    "pk": "42",
+    "row": { "id": 42, "total": 199 }
+}
+```
+
+> The watched table must have a single-column primary key. Event functions run
+> asynchronously and inherit the privileges of the user who created the function.
+
+## Packaging: multi-file bundles
+
+For anything beyond a single file — helper modules, bundled dependencies — set
+`package` to `zip` and send a base64-encoded zip archive as `code`. The archive
+is extracted and the `handler` entry file is resolved inside it (Node resolves
+relative and `node_modules` imports; Python can import sibling modules).
+
+```http request
+POST https://api.centia.io/api/v4/functions
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "name": "report",
+    "runtime": "nodejs20",
+    "handler": "index.handler",
+    "package": "zip",
+    "code": "UEsDBBQAAAAI…(base64 zip)…"
+}
+```
+
+## Typed clients (dry-run + TypeScript)
+
+Functions are opaque code, so their input/output types are learned from a
+**dry-run**: invoke once with a representative event and Centia.io infers and
+stores the input and output type shapes.
+
+```http request
+POST https://api.centia.io/api/v4/functions/greet/invocations?dry=true
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{ "name": "Ada" }
+```
+
+> A dry-run **executes** the function to observe its result. Unlike SQL methods,
+> a function's side effects are not rolled back.
+
+Then fetch a generated TypeScript interface for all your functions:
+
+```http request
+GET https://api.centia.io/api/v4/function-interfaces HTTP/1.1
+Accept: text/plain
+Authorization: Bearer abc123
+```
+
+```typescript
+export interface Functions {
+    greet(event: { name: string }): Promise<{ greeting: string }>;
+}
+```
+
+Functions without a dry-run fall back to `Record<string, unknown>` / `unknown`.
+
+## Get functions
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Get all functions"
+        GET https://api.centia.io/api/v4/functions HTTP/1.1
+        Accept: application/json
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="Get a specific function"
+        GET https://api.centia.io/api/v4/functions/greet HTTP/1.1
+        Accept: application/json
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash title="Get all functions"
+        centia function get
+        ```
+
+        ```bash title="Get a specific function"
+        centia function get "greet"
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Update a function
+
+Changing the code bumps the function's `version`.
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Update a function"
+        PATCH https://api.centia.io/api/v4/functions/greet HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "code": "export const handler = async (event) => ({ greeting: `Hi, ${event.name}` });",
+            "timeout_s": 60
+        }
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash title="Update a function"
+        centia function update "greet"
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Delete a function
+
+<Tabs>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Delete a function"
+        DELETE https://api.centia.io/api/v4/functions/greet HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+    <TabItem value="cli" label="CLI">
+
+        ```bash title="Delete a function"
+        centia function drop "greet"
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Status codes
+
+- `201 Created` — function created.
+- `200 OK` — synchronous invocation completed (`status` is `succeeded` or `failed`).
+- `202 Accepted` — asynchronous invocation queued.
+- `400 Bad Request` — invalid definition (bad runtime, name, cron, event trigger or package).
+- `404 Not Found` — no such function or invocation.
+- `501 Not Implemented` — the function runtime is not configured on this instance.
