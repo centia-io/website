@@ -6,13 +6,32 @@ import styles from './styles.module.css';
 
 const FeatureList = [
   {
-    title: 'Choose Cloud or Self-Host',
+    title: 'Instant Data APIs',
     Svg: require('@site/static/img/feature-sql.svg').default,
     description: (
       <>
-        Start in managed Centia Cloud in minutes, or self-host with Docker when compliance or data residency requires it.
+        Spatial SQL, GraphQL, and typed JSON-RPC methods over your PostgreSQL schema, plus realtime WebSocket subscriptions on data changes.
       </>
     ),
+    link: {
+      to: '/docs/intro',
+      label: 'Explore the APIs',
+      onClick: () => trackCtaClick('cta_api_docs_click', {location: 'home_features'}),
+    },
+  },
+  {
+    title: 'Functions in Node.js & Python',
+    Svg: require('@site/static/img/feature-dev.svg').default,
+    description: (
+      <>
+        Run your own sandboxed code on demand, on a schedule, or in response to events — with secure callbacks into your data.
+      </>
+    ),
+    link: {
+      to: '/docs/functions',
+      label: 'See Functions docs',
+      onClick: () => trackCtaClick('cta_functions_click', {location: 'home_features'}),
+    },
   },
   {
     title: 'Production Security by Default',
@@ -20,15 +39,6 @@ const FeatureList = [
     description: (
       <>
         OAuth2, rule-based access, and rate limiting are built in so you can ship faster without re-building backend security.
-      </>
-    ),
-  },
-  {
-    title: 'Built for AI-Assisted Development',
-    Svg: require('@site/static/img/feature-dev.svg').default,
-    description: (
-      <>
-        Connect agents through MCP to model schemas, run backend workflows, and iterate quickly from natural language prompts.
       </>
     ),
   },
@@ -50,7 +60,7 @@ const FeatureList = [
 
 function GeoMiniMap() {
   return (
-    <svg className={styles.featureSvg} viewBox="0 0 200 200" role="img" aria-hidden="true">
+    <svg className={styles.featureSvg} viewBox="0 0 200 200" aria-hidden="true">
       <g className={styles.geoGrid}>
         {[50, 100, 150].map((p) => (
           <line key={`v${p}`} x1={p} y1="0" x2={p} y2="200" />
@@ -77,8 +87,8 @@ function GeoMiniMap() {
 function Feature({Svg, geo, title, description, link}) {
   return (
     <div className={clsx(styles.featureCard, geo && styles.featureCardGeo)}>
-      <div className={styles.featureArt}>
-        {geo ? <GeoMiniMap /> : <Svg className={styles.featureSvg} role="img" />}
+      <div className={styles.featureArt} aria-hidden="true">
+        {geo ? <GeoMiniMap /> : <Svg className={styles.featureSvg} />}
       </div>
       <Heading as="h3">{title}</Heading>
       <p>{description}</p>
@@ -96,8 +106,8 @@ export default function HomepageFeatures() {
     <section className={styles.features}>
       <div className="container">
         <div className={styles.featureGrid}>
-          {FeatureList.map((props, idx) => (
-            <Feature key={idx} {...props} />
+          {FeatureList.map((props) => (
+            <Feature key={props.title} {...props} />
           ))}
         </div>
       </div>

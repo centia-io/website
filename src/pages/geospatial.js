@@ -7,7 +7,7 @@ import CodeBlock from '@theme/CodeBlock';
 import {trackCtaClick} from '../utils/analytics';
 import styles from './geospatial.module.css';
 
-const pageTitle = 'Geospatial Backend as a Service — Managed PostGIS with Instant APIs';
+const pageTitle = 'Geospatial BaaS — Managed PostGIS & Instant APIs';
 const pageDescription =
     'Upload GeoJSON, Shapefile or GeoPackage and get SQL, GraphQL and realtime APIs on a managed PostGIS database. Built for geospatial developers.';
 
@@ -101,7 +101,7 @@ const sqlExample = `-- Query your uploaded data with full PostGIS power
 SELECT name, ST_AsGeoJSON(geom) AS geometry
 FROM parks
 WHERE ST_DWithin(
-  geom,
+  geom::geography,
   ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
   1000
 )`;
@@ -152,16 +152,15 @@ export default function Geospatial() {
                 <link rel="canonical" href="https://centia.io/geospatial" />
                 <meta property="og:title" content={`${pageTitle} | Centia.io`} />
                 <meta property="og:description" content={pageDescription} />
-                <meta property="og:image" content="https://centia.io/img/centia-logo.svg" />
+                <meta property="og:image" content="https://centia.io/img/social-card-geospatial.png" />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
                 <meta property="og:url" content="https://centia.io/geospatial" />
                 <meta property="og:type" content="website" />
                 <meta name="twitter:card" content="summary_large_image" />
                 <meta name="twitter:title" content={`${pageTitle} | Centia.io`} />
                 <meta name="twitter:description" content={pageDescription} />
-                <meta
-                    name="keywords"
-                    content="geospatial API, managed PostGIS, PostGIS hosting, spatial data API, GeoJSON API, shapefile to API, GIS backend, geospatial backend as a service"
-                />
+                <meta name="twitter:image" content="https://centia.io/img/social-card-geospatial.png" />
                 <script type="application/ld+json">
                     {JSON.stringify({
                         '@context': 'https://schema.org',
@@ -194,12 +193,12 @@ export default function Geospatial() {
                             <div className={styles.ctaButtons}>
                                 <Link
                                     className="button button--primary button--lg"
-                                    to="/docs/start"
+                                    to="/console"
                                     onClick={() =>
-                                        trackCtaClick('cta_docs_start_click', {location: 'geo_hero'})
+                                        trackCtaClick('cta_cloud_start_click', {location: 'geo_hero'})
                                     }
                                 >
-                                    Explore the docs
+                                    Start in Centia Cloud
                                 </Link>
                                 <Link
                                     className="button button--secondary button--lg"
@@ -208,7 +207,16 @@ export default function Geospatial() {
                                         trackCtaClick('cta_import_demo_click', {location: 'geo_hero'})
                                     }
                                 >
-                                    See it in action
+                                    Try the import flow
+                                </Link>
+                                <Link
+                                    className={styles.docsGhostLink}
+                                    to="/docs/start"
+                                    onClick={() =>
+                                        trackCtaClick('cta_docs_start_click', {location: 'geo_hero'})
+                                    }
+                                >
+                                    Read the Docs →
                                 </Link>
                             </div>
                             <ul className={styles.formatPills}>
@@ -216,6 +224,18 @@ export default function Geospatial() {
                                     <li key={format}>{format}</li>
                                 ))}
                             </ul>
+                            <p className={styles.heroTrust}>
+                                Open source (AGPLv3)
+                                <span aria-hidden="true"> · </span>
+                                <Link
+                                    to="https://github.com/centia-io"
+                                    onClick={() => trackCtaClick('cta_github_click', {location: 'geo_hero'})}
+                                >
+                                    GitHub
+                                </Link>
+                                <span aria-hidden="true"> · </span>
+                                PostgreSQL 16 + PostGIS 3.4
+                            </p>
                         </div>
                         <HeroMap />
                     </div>
@@ -302,25 +322,28 @@ export default function Geospatial() {
                     <section className={styles.finalCta}>
                         <div className="container">
                             <Heading as="h2">See what your data looks like as an API</Heading>
-                            <p>Start with the docs, or try the import flow with one of your own files.</p>
+                            <p>
+                                Try the import flow with one of your own files. Centia Cloud is free
+                                while in beta — see the <Link to="/faq" className={styles.finalCtaLink}>FAQ</Link> for limits.
+                            </p>
                             <div className={styles.ctaButtons}>
                                 <Link
-                                    className="button button--primary button--lg"
+                                    className="button button--secondary button--lg"
+                                    to="/console"
+                                    onClick={() =>
+                                        trackCtaClick('cta_cloud_start_click', {location: 'geo_footer'})
+                                    }
+                                >
+                                    Start in Centia Cloud
+                                </Link>
+                                <Link
+                                    className={clsx('button', 'button--lg', styles.ctaGhost)}
                                     to="/docs/start"
                                     onClick={() =>
                                         trackCtaClick('cta_docs_start_click', {location: 'geo_footer'})
                                     }
                                 >
                                     Explore the docs
-                                </Link>
-                                <Link
-                                    className={clsx('button', 'button--lg', styles.ctaGhost)}
-                                    to="/console"
-                                    onClick={() =>
-                                        trackCtaClick('cta_cloud_start_click', {location: 'geo_footer'})
-                                    }
-                                >
-                                    Get started free
                                 </Link>
                             </div>
                         </div>

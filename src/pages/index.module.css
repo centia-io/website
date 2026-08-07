@@ -1,18 +1,11 @@
-/**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
- */
-
-
 :global(.main-wrapper) {
-    background-color: #f7fafc;
+    background-color: #f8fafc;
     background:
             radial-gradient(circle at 92% -18%, rgba(14, 165, 233, 0.14), transparent 38%),
             radial-gradient(circle at 2% 24%, rgba(59, 130, 246, 0.1), transparent 42%),
-            linear-gradient(180deg, #f8fbff 0%, #f7fafc 60%, #f3f7fb 100%);
+            linear-gradient(180deg, #f8fbff 0%, #f8fafc 60%, #f1f5f9 100%);
     background-repeat: no-repeat;
     background-size: cover;
-    background-attachment: fixed;
 }
 
 :global([data-theme='dark'] .main-wrapper) {
@@ -23,93 +16,568 @@
             linear-gradient(180deg, #0f172a 0%, #111827 100%);
     background-repeat: no-repeat;
     background-size: cover;
-    background-attachment: fixed;
 }
 
-
+/* ==========================================================================
+   Hero Banner Section
+   ========================================================================== */
 .heroBanner {
-  padding: 6rem 0;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  --geo-line: rgba(37, 117, 252, 0.14);
-  --geo-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-  background-image:
-      linear-gradient(var(--geo-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--geo-line) 1px, transparent 1px);
-  background-size: 56px 56px;
+    padding: 5rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+    --geo-line: rgba(37, 117, 252, 0.12);
+    --geo-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    background-image:
+            linear-gradient(var(--geo-line) 1px, transparent 1px),
+            linear-gradient(90deg, var(--geo-line) 1px, transparent 1px);
+    background-size: 48px 48px;
 }
 
 :global([data-theme='dark']) .heroBanner {
-  --geo-line: rgba(56, 189, 248, 0.16);
+    --geo-line: rgba(56, 189, 248, 0.14);
 }
 
 .heroBanner::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(247, 250, 252, 0.9) 100%);
-  pointer-events: none;
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(248, 250, 252, 0.85) 100%);
+    pointer-events: none;
 }
 
-:global([data-theme='dark'] ) .heroBanner::after {
-  background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(15, 23, 42, 0.92) 100%);
+:global([data-theme='dark']) .heroBanner::after {
+    background: radial-gradient(ellipse at 50% 30%, transparent 30%, rgba(15, 23, 42, 0.9) 100%);
 }
 
-.heroBanner > :global(.container) {
-  position: relative;
-  z-index: 1;
+.heroContainer {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
 }
-
-.kicker {
-  font-family: var(--geo-mono);
-  font-size: 0.8rem;
-  font-weight: 400;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #2575fc;
-  margin-bottom: 1rem;
-}
-
-.heroBanner h1 {
-    background: linear-gradient(to left, #2575fc, #6a11cb);
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: inline-block;
-    font-size: 4rem;
-}
-
-
-
-.heroBanner a {
-  color: #fff;
-  text-decoration: none;
-}
-
 
 @media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 3rem 1rem;
-  }
+    .heroContainer {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+        text-align: center;
+    }
 }
 
-.buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.heroCopy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+}
+
+@media screen and (max-width: 996px) {
+    .heroCopy {
+        align-items: center;
+    }
+}
+
+.heroBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    max-width: 100%;
+    padding: 0.35rem 0.85rem;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #2563eb;
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    margin-bottom: 1.25rem;
+    backdrop-filter: blur(8px);
+}
+
+:global([data-theme='dark']) .heroBadge {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.25);
+}
+
+.badgeSparkle {
+    font-size: 0.9rem;
+}
+
+.heroTitle {
+    font-size: 3rem;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+    background: linear-gradient(135deg, #1e293b 0%, #2563eb 50%, #6366f1 100%);
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+:global([data-theme='dark']) .heroTitle {
+    background: linear-gradient(135deg, #ffffff 0%, #38bdf8 50%, #818cf8 100%);
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+@media screen and (max-width: 768px) {
+    .heroTitle {
+        font-size: 2.25rem;
+    }
+}
+
+.heroSubtitle {
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: #475569;
+    margin-bottom: 2rem;
+    max-width: 34rem;
+}
+
+:global([data-theme='dark']) .heroSubtitle {
+    color: #94a3b8;
 }
 
 .ctaButtons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: .75rem;
-  flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
 }
-
 
 @media screen and (max-width: 996px) {
-  .heroArt {
-    display: none;
-  }
+    .ctaButtons {
+        justify-content: center;
+    }
 }
+
+.heroTrust {
+    margin: 1.25rem 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.heroTrust a {
+    color: #2563eb;
+    font-weight: 600;
+}
+
+:global([data-theme='dark']) .heroTrust {
+    color: #94a3b8;
+}
+
+:global([data-theme='dark']) .heroTrust a {
+    color: #38bdf8;
+}
+
+.docsGhostLink {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    color: #2563eb;
+    text-decoration: none;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.docsGhostLink:hover {
+    color: #1d4ed8;
+    background: rgba(37, 99, 235, 0.06);
+    text-decoration: none;
+}
+
+:global([data-theme='dark']) .docsGhostLink {
+    color: #38bdf8;
+}
+
+:global([data-theme='dark']) .docsGhostLink:hover {
+    color: #7dd3fc;
+    background: rgba(56, 189, 248, 0.1);
+}
+
+/* ==========================================================================
+   Code Showcase Window Widget
+   ========================================================================== */
+.heroVisual {
+    width: 100%;
+    min-width: 0;
+}
+
+.codeShowcase {
+    background: #0f172a;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    text-align: left;
+}
+
+.codeHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #1e293b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-x: auto;
+}
+
+.windowControls {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-right: 1rem;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dotRed { background: #ef4444; }
+.dotYellow { background: #f59e0b; }
+.dotGreen { background: #10b981; }
+
+.tabList {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.tabButton {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-family: var(--geo-mono);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.tabButton:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.tabButtonActive {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    font-weight: 600;
+}
+
+.codeBody {
+    position: relative;
+    display: grid;
+}
+
+/* All panels share the same grid cell, so the box keeps the height of the
+   tallest snippet and never jumps when switching tabs. */
+.codePanel {
+    grid-area: 1 / 1;
+    min-width: 0;
+    visibility: hidden;
+}
+
+.codePanelActive {
+    visibility: visible;
+}
+
+.codePanel :global(.theme-code-block) {
+    margin: 0;
+    box-shadow: none;
+}
+
+.codeBody :global(pre) {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    background: #0f172a !important;
+    font-size: 0.85rem !important;
+    line-height: 1.55 !important;
+}
+
+.codeBody :global(pre),
+.codeBody :global(pre code) {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere;
+    overflow-x: hidden !important;
+}
+
+/* ==========================================================================
+   Quickstart 3-Step Section
+   ========================================================================== */
+.quickstartSection {
+    padding: 4.5rem 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+:global([data-theme='dark']) .quickstartSection {
+    border-top-color: rgba(255, 255, 255, 0.06);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+    background: rgba(15, 23, 42, 0.4);
+}
+
+.sectionHeader {
+    text-align: center;
+    max-width: 36rem;
+    margin: 0 auto 3rem;
+}
+
+.sectionTitle {
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.75rem;
+}
+
+.sectionSub {
+    font-size: 1.1rem;
+    color: #64748b;
+}
+
+:global([data-theme='dark']) .sectionSub {
+    color: #94a3b8;
+}
+
+/* Same look as the steps on /geospatial: accent top border, mono markers. */
+.quickStepsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 2rem;
+}
+
+.stepCard {
+    position: relative;
+    padding-top: 0.5rem;
+    border-top: 2px solid #2575fc;
+    display: flex;
+    flex-direction: column;
+}
+
+.stepBadge {
+    display: inline-block;
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #2575fc;
+    margin: 0.75rem 0 0.5rem;
+}
+
+.stepTitle {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.stepDesc {
+    font-size: 0.95rem;
+    color: #475569;
+    line-height: 1.55;
+    flex-grow: 1;
+    margin-bottom: 1.25rem;
+}
+
+:global([data-theme='dark']) .stepDesc {
+    color: #94a3b8;
+}
+
+.stepLink {
+    font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.stepLink:hover {
+    text-decoration: underline;
+}
+
+:global([data-theme='dark']) .stepLink {
+    color: #38bdf8;
+}
+
+@media screen and (max-width: 996px) {
+    .quickStepsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================================
+   AI Agent & MCP Spotlight Section
+   ========================================================================== */
+.mcpSection {
+    padding: 5rem 0;
+}
+
+.mcpBox {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 1.25rem;
+    padding: 3.5rem;
+    color: #f8fafc;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.4);
+}
+
+@media screen and (max-width: 996px) {
+    .mcpBox {
+        grid-template-columns: 1fr;
+        padding: 2.25rem 1.5rem;
+        gap: 2rem;
+    }
+}
+
+.mcpBadge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #a5b4fc;
+    background: rgba(165, 180, 252, 0.12);
+    border: 1px solid rgba(165, 180, 252, 0.25);
+    margin-bottom: 1.25rem;
+}
+
+.mcpTitle {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.mcpSub {
+    font-size: 1.05rem;
+    color: #cbd5e1;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.mcpList {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+}
+
+.mcpList li {
+    font-size: 0.95rem;
+    color: #e2e8f0;
+    margin-bottom: 0.85rem;
+    line-height: 1.5;
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.mcpList li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    color: #818cf8;
+    font-weight: bold;
+}
+
+.mcpCta {
+    margin-top: 1rem;
+}
+
+.mcpTerminalCard {
+    background: #090d16;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.mcpTerminalHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: #151d2a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mcpTerminalDot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #818cf8;
+}
+
+.mcpTerminalTitle {
+    font-family: var(--geo-mono);
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.mcpLogOutput {
+    margin: 0;
+    padding: 1.25rem;
+    background: transparent;
+    font-family: var(--geo-mono);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: #38bdf8;
+    overflow-x: auto;
+    white-space: pre-wrap;
+}
+
+/* ==========================================================================
+   Final CTA Banner Section
+   ========================================================================== */
+.finalCtaSection {
+    padding: 5rem 0 6rem;
+}
+
+.finalCtaBox {
+    text-align: center;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.06) 0%, rgba(99, 102, 241, 0.08) 100%);
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    border-radius: 1.25rem;
+    padding: 4rem 2rem;
+}
+
+:global([data-theme='dark']) .finalCtaBox {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+    border-color: rgba(56, 189, 248, 0.2);
+}
+
+.finalCtaTitle {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.finalCtaSub {
+    font-size: 1.15rem;
+    color: #475569;
+    max-width: 32rem;
+    margin: 0 auto 2rem;
+}
+
+:global([data-theme='dark']) .finalCtaSub {
+    color: #94a3b8;
+}
+
+.finalCtaButtons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+

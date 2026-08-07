@@ -104,16 +104,11 @@ const config = {
 
     themeConfig:
         {
-            // Replace with your project's social card
-            image: 'img/centia-logo.svg',
+            image: 'img/social-card.png',
             metadata: [
                 {
                     name: 'description',
                     content: 'Centia.io is a PostgreSQL/PostGIS backend platform. Launch fast in managed cloud or self-host with Docker. Includes OAuth, realtime APIs, SDKs, and MCP support for AI agents.'
-                },
-                {
-                    name: 'keywords',
-                    content: 'Centia.io, Postgres BaaS, PostgreSQL backend, self-hosted backend, managed backend, PostGIS, realtime API, OAuth2, SDK, MCP server'
                 },
                 {property: 'og:type', content: 'website'},
                 {property: 'og:site_name', content: 'Centia.io'},

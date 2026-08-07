@@ -85,6 +85,51 @@
     flex-wrap: wrap;
 }
 
+.docsGhostLink {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    color: var(--geo-accent);
+    text-decoration: none;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.docsGhostLink:hover {
+    color: #1d4ed8;
+    background: rgba(37, 117, 252, 0.06);
+    text-decoration: none;
+}
+
+:global([data-theme='dark']) .docsGhostLink {
+    color: #38bdf8;
+}
+
+:global([data-theme='dark']) .docsGhostLink:hover {
+    color: #7dd3fc;
+    background: rgba(56, 189, 248, 0.1);
+}
+
+.heroTrust {
+    margin: 1.25rem 0 0;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.heroTrust a {
+    color: var(--geo-accent);
+    font-weight: 600;
+}
+
+:global([data-theme='dark']) .heroTrust {
+    color: #94a3b8;
+}
+
+:global([data-theme='dark']) .heroTrust a {
+    color: #38bdf8;
+}
+
 .formatPills {
     list-style: none;
     display: flex;
@@ -320,6 +365,16 @@
 
 .finalCta .ctaButtons {
     justify-content: center;
+}
+
+.finalCtaLink {
+    color: #fff;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.finalCtaLink:hover {
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .ctaGhost {
