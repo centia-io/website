@@ -130,7 +130,7 @@ So if you want to create a method that gives you a formatted date plus a given n
 
 ```json
 {
-  "q": "select date(:date) %2B :days::int as result",
+  "q": "select date(:date) + :days::int as result",
   "params": {
       "date": "09-07-10",
       "days": 0
@@ -151,7 +151,7 @@ You create the method without `params`:
 ```json
 {
   "method": "getDatePlusDays",
-  "q": "select date(:date) %2B :days::int as result",
+  "q": "select date(:date) + :days::int as result",
   "type_hints": {
     "date": "timestamptz",
     "days": "int"
