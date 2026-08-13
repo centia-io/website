@@ -1,0 +1,8 @@
+{
+  "label": "Layers",
+  "position": 72,
+  "link": {
+    "type": "generated-index",
+    "description": "Configure how your geospatial data is rendered as map layers with classes, styles and labels"
+  }
+}

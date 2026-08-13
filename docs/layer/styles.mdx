@@ -1,0 +1,120 @@
+---
+title: Styles
+description: Styles define how a class's features are drawn — fill, outline, symbols, dash patterns and data-driven sizing.
+sidebar_position: 30
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Styles
+
+A **style** defines how the features matching a [class](./classes.mdx) are drawn: fill and outline colors, symbols, line widths and dash patterns. A style maps to a MapServer `STYLE` block. A class can hold multiple styles — they are drawn on top of each other in `sortid` order, so you can e.g. combine a wide dark line with a narrow bright line to get a cased road symbol.
+
+## Get styles
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![View styles in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="All styles of a class"
+        GET https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/styles HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="A specific style"
+        GET https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/styles/1 HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Add a style
+
+The server assigns the style `id` — a request that includes an `id` is rejected with `400`.
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Add style in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="A point symbol"
+        POST https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/styles HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "symbol": "circle",
+            "color": "#FF0000",
+            "outlinecolor": "#FFFFFF",
+            "size": "12",
+            "opacity": "80"
+        }
+        ```
+
+        ```http title="A dashed line, sized by an attribute"
+        POST https://api.centia.io/api/v4/layers/rockhall.tours.the_geom/classes/1/styles HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "color": "#3333FF",
+            "width": "[popularity]",
+            "pattern": "10 5",
+            "linecap": "butt"
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Update a style
+
+`PATCH` merges the keys you send into the style:
+
+```http title="Change the color"
+PATCH https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/styles/1 HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "color": "#00AA00"
+}
+```
+
+## Delete a style
+
+```http
+DELETE https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/styles/1 HTTP/1.1
+Authorization: Bearer abc123
+```
+
+## Style properties
+
+Numeric values are stored as strings; an empty string means unset. Several properties accept a `[column]` reference for data-driven styling.
+
+| Property | Description |
+|---|---|
+| `id` | Fixed, server-assigned id. |
+| `name` | Display name (UI only). |
+| `sortid` | Render order. Defaults to highest existing + 10. |
+| `color` | Fill color. |
+| `outlinecolor` | Outline color — the stroke around a polygon fill or symbol. |
+| `width` | Line width. |
+| `symbol` | Symbol to draw: `circle`, `square`, `triangle`, `hatch1`, `dashed1`, `dot-dot`, `dashed-line-short`, `dashed-line-long`, `dash-dot`, `dash-dot-dot`, `arrow`, `arrow2` — or a custom symbol from the map's symbol set. Empty draws a plain fill/line. |
+| `size` | Symbol size in pixels. Accepts `[column]` for data-driven sizing. |
+| `angle` | Rotation in degrees (-360 to 360), `auto`, or `[column]` for data-driven rotation. |
+| `gap` | Distance between symbols on decorated lines and polygon fills. Negative values align symbols to the line's tangent. |
+| `opacity` | 0 (transparent) to 100 (opaque). |
+| `pattern` | Dash pattern as alternating on/off lengths, e.g. `10 5`. |
+| `linecap` | Line-end style: `round` (default), `butt` or `square`. |
+| `geomtransform` | Draw at a derived geometry instead of the native one: `bbox`, `centroid`, `start`, `end`, `vertices`, `labelpnt` or `labelpoly`. |
+| `minsize` / `maxsize` | Bounds in pixels for the drawn symbol regardless of scaling. |
+| `offsetx` / `offsety` | Geometry offset in pixels. Accepts `[column]`. |
+| `polaroffsetr` / `polaroffsetd` | Polar-coordinate offset: radius and angle (degrees, counter-clockwise). |

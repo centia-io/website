@@ -1,0 +1,107 @@
+---
+title: Classes
+description: Thematic classes group a layer's features by expression and hold the styles and labels used to render them.
+sidebar_position: 20
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Classes
+
+A **class** is a thematic group of a [layer's](./layers.mdx) features — for example "rock venues" versus "jazz venues". Each class has an optional expression that decides which features it matches, and contains the [styles](./styles.mdx) and [labels](./labels.mdx) used to render them. A class maps to a MapServer `CLASS` block.
+
+Features are matched against classes in `sortid` order. When the layer property `theme_column` is set, a simple string expression like `rock` is compared against that column; without a `theme_column`, use logical expressions like `([capacity] > 1000)`. A class without an expression matches all features.
+
+## Get classes
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![View classes in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="All classes of a layer"
+        GET https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="A specific class"
+        GET https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1 HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Add a class
+
+The server assigns the class `id` — a request that includes an `id` is rejected with `400`.
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Add class in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Add a class with a nested style"
+        POST https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "name": "Large rock venues",
+            "expression": "([capacity] > 1000)",
+            "minscaledenom": "1000",
+            "maxscaledenom": "250000",
+            "styles": [
+                {
+                    "symbol": "circle",
+                    "color": "#FF0000",
+                    "size": "14"
+                }
+            ]
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Update a class
+
+`PATCH` merges the keys you send into the class. Styles and labels are managed through their own routes — see [Styles](./styles.mdx) and [Labels](./labels.mdx).
+
+```http title="Change the expression"
+PATCH https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1 HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "expression": "([capacity] > 2000)"
+}
+```
+
+## Delete a class
+
+```http
+DELETE https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1 HTTP/1.1
+Authorization: Bearer abc123
+```
+
+## Class properties
+
+| Property | Description |
+|---|---|
+| `id` | Fixed, server-assigned id. |
+| `name` | Class name, shown in the WMS legend. |
+| `expression` | MapServer class expression. A plain string is matched against the layer's `theme_column`; logical expressions like `([capacity] > 1000)` work without one. |
+| `sortid` | Render/display order. |
+| `minscaledenom` / `maxscaledenom` | Scale range in which the class is drawn. |
+| `leader` | Boolean. Enables a MapServer `LEADER` block that connects a label to its feature with a line when the label is offset from its anchor. |
+| `leader_color` | Color of the leader line. Defaults to black. |
+| `leader_gridstep` | Grid step used to search for a valid label position. Defaults to 5. |
+| `leader_maxdistance` | Maximum distance in pixels the label may be moved from the feature. Defaults to 30. |
+| `styles` | The class's [style](./styles.mdx) entries. |
+| `labels` | The class's [label](./labels.mdx) entries. |

@@ -1,0 +1,137 @@
+---
+title: Labels
+description: Labels put text on a class's features — fonts, halos, placement, backgrounds and expression-based label text.
+sidebar_position: 40
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Labels
+
+A **label** puts text on the features matching a [class](./classes.mdx) — typically the value of a column. A label maps to a MapServer `LABEL` block. A class can hold multiple label entries, each with its own text, styling and optional expression filter.
+
+The label text usually references a column, e.g. `[name]`, and can combine several columns and literals. The layer properties `label_column`, `label_min_scale` and `label_max_scale` set layer-wide labelling defaults — see [Layers](./layers.mdx).
+
+## Get labels
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![View labels in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="All labels of a class"
+        GET https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/labels HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="A specific label"
+        GET https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/labels/1 HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Add a label
+
+The server assigns the label `id` — a request that includes an `id` is rejected with `400`.
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Add label in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Label with a halo and background"
+        POST https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/labels HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "on": true,
+            "text": "[name]",
+            "font": "arial",
+            "fontweight": "bold",
+            "size": "12",
+            "color": "#000000",
+            "outlinecolor": "#FFFFFF",
+            "backgroundcolor": "#FFFFCC",
+            "position": "auto",
+            "buffer": "4"
+        }
+        ```
+
+        ```http title="Label only large venues, repeated along lines"
+        POST https://api.centia.io/api/v4/layers/rockhall.tours.the_geom/classes/1/labels HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "on": true,
+            "text": "[band]",
+            "expression": "([attendance] > 10000)",
+            "angle": "follow",
+            "repeatdistance": "200"
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Update a label
+
+`PATCH` merges the keys you send into the label:
+
+```http title="Turn a label off"
+PATCH https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/labels/1 HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "on": false
+}
+```
+
+## Delete a label
+
+```http
+DELETE https://api.centia.io/api/v4/layers/rockhall.venues.the_geom/classes/1/labels/1 HTTP/1.1
+Authorization: Bearer abc123
+```
+
+## Label properties
+
+Numeric values are stored as strings; an empty string means unset.
+
+| Property | Description |
+|---|---|
+| `id` | Fixed, server-assigned id. |
+| `name` | Display name (UI only). |
+| `sortid` | Render order. Defaults to highest existing + 10. |
+| `on` | Boolean. Whether the label is enabled. |
+| `text` | Label text expression, e.g. `[name]`. |
+| `expression` | When set, this label is only rendered for features matching the expression. |
+| `font` | Font family, e.g. `arial` or `courier` (available families depend on server configuration). |
+| `fontweight` | `normal`, `bold`, `italic` or `bolditalic`. |
+| `size` | Font size in pixels. Defaults to 11. Accepts `[column]`. |
+| `color` | Text color. Defaults to black. |
+| `outlinecolor` | Halo color around the text for legibility. Defaults to white. |
+| `position` | Placement relative to the anchor point: `auto` or a combination of upper/center/lower and left/center/right (`ul`, `uc`, `ur`, `cl`, `cc`, `cr`, `ll`, `lc`, `lr`). |
+| `buffer` | Minimum distance in pixels kept clear around the label. |
+| `repeatdistance` | Distance in pixels at which the label repeats along a line feature. |
+| `angle` | Rotation in degrees, `auto`, `auto2` or `follow` for orientation along the feature, or `[column]`. |
+| `backgroundcolor` | Fill color of a rectangle behind the text. Empty disables the background. |
+| `backgroundpadding` | Padding in pixels around the text when `backgroundcolor` is set. Defaults to 1. |
+| `offsetx` / `offsety` | Pixel offset applied to the label position. |
+| `force` | Boolean. Always draw the label even if it overlaps others. |
+| `minscaledenom` / `maxscaledenom` | Scale range in which the label is drawn. |
+| `maxsize` | Maximum font size in pixels when scaling text. Defaults to 256. |
+| `minfeaturesize` | Minimum feature size in pixels required to be labelled, or `auto`. |
+
+:::tip Leader lines
+When labels must be moved away from crowded features, enable a leader line on the [class](./classes.mdx) with `leader`, `leader_color`, `leader_gridstep` and `leader_maxdistance` — the label is then connected to its feature with a line.
+:::

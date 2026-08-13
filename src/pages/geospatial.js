@@ -9,7 +9,7 @@ import styles from './geospatial.module.css';
 
 const pageTitle = 'Geospatial BaaS — Managed PostGIS & Instant APIs';
 const pageDescription =
-    'Upload GeoJSON, Shapefile or GeoPackage and get SQL, GraphQL and realtime APIs on a managed PostGIS database. Built for geospatial developers.';
+    'Upload GeoJSON, Shapefile or GeoPackage and get SQL, GraphQL, realtime APIs and OGC WMS/WFS services on a managed PostGIS database. Built for geospatial developers.';
 
 const formats = ['GeoJSON', 'Shapefile', 'GeoPackage', 'CSV', 'GML'];
 
@@ -25,7 +25,7 @@ const steps = [
         marker: '02',
         title: 'Get instant APIs',
         description:
-            'Query with parameterized SQL over REST or WebSocket, auto-generated GraphQL, or named JSON-RPC methods.',
+            'Query with parameterized SQL over REST or WebSocket, auto-generated GraphQL — and serve every layer as OGC WMS/WFS.',
         link: {to: '/docs/statement', label: 'SQL API'},
     },
     {
@@ -48,6 +48,12 @@ const features = [
         icon: '⛁',
         title: 'Managed PostGIS, or self-hosted',
         description: 'Run on Centia’s cloud or deploy yourself with Docker.',
+    },
+    {
+        icon: '▦',
+        title: 'OGC WMS & WFS built in',
+        description:
+            'Every layer is served as WMS and WFS — connect QGIS, OpenLayers or Leaflet, and edit features via WFS-T.',
     },
     {
         icon: '⬡',
@@ -95,7 +101,23 @@ const useCases = [
         title: 'GIS + AI workflows',
         description: 'Let agents query and manage spatial data via MCP.',
     },
+    {
+        title: 'Desktop GIS integration',
+        description: 'Connect QGIS directly over WMS/WFS and edit with WFS-T.',
+    },
 ];
+
+const ogcExample = `# Render a styled map image (WMS GetMap)
+https://api.centia.io/api/v4/ows/schema/parks
+  ?SERVICE=WMS&VERSION=1.1.0&REQUEST=GetMap
+  &LAYERS=parks.areas&SRS=EPSG:3857
+  &BBOX=1204164,7485240,1259200,7534200
+  &WIDTH=1024&HEIGHT=768&FORMAT=image/png
+
+# Fetch the vector features (WFS GetFeature)
+https://api.centia.io/api/v4/wfs/schema/parks
+  ?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature
+  &TYPENAME=areas&SRSNAME=EPSG:4326`;
 
 const sqlExample = `-- Query your uploaded data with full PostGIS power
 SELECT name, ST_AsGeoJSON(geom) AS geometry
@@ -188,7 +210,8 @@ export default function Geospatial() {
                             <p className={styles.heroSubtitle}>
                                 Centia is a backend as a service built for geospatial. Upload a
                                 Shapefile, GeoJSON or GeoPackage — get a managed PostGIS database
-                                with SQL, GraphQL and realtime APIs out of the box.
+                                with SQL, GraphQL, realtime APIs and OGC services (WMS/WFS) out
+                                of the box.
                             </p>
                             <div className={styles.ctaButtons}>
                                 <Link
@@ -304,6 +327,33 @@ export default function Geospatial() {
                     </section>
 
                     <section className={clsx(styles.section, styles.sectionAlt)}>
+                        <div className={clsx('container', styles.codeSection)}>
+                            <div className={styles.codeCopy}>
+                                <Heading as="h2" className={styles.sectionTitle}>
+                                    Standard OGC services — WMS &amp; WFS
+                                </Heading>
+                                <p>
+                                    Every table with a geometry column is served as WMS and WFS.
+                                    Render server-styled map images, fetch vector features, or edit
+                                    data through WFS-T — from QGIS, OpenLayers, Leaflet or any
+                                    OGC-compliant client. Styling is configured with classes,
+                                    styles and labels through the Layer API.
+                                </p>
+                                <Link to="/docs/ogc" className={styles.stepLink}>
+                                    Read the OGC services docs →
+                                </Link>
+                                <br />
+                                <Link to="/docs/layer/layers" className={styles.stepLink}>
+                                    Style layers with the Layer API →
+                                </Link>
+                            </div>
+                            <div className={styles.codeBlock}>
+                                <CodeBlock language="bash">{ogcExample}</CodeBlock>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className={styles.section}>
                         <div className="container">
                             <Heading as="h2" className={styles.sectionTitle}>
                                 What developers build on Centia

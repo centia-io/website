@@ -1,0 +1,149 @@
+---
+title: Layers
+description: Configure map layers in Centia.io. Set rendering properties and manage classes, styles and labels through the Layer API.
+sidebar_position: 10
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Layers
+
+Every table with a geometry column is a **layer** that can be rendered through [WMS](../ogc.mdx). The Layer API controls how a layer is drawn: its rendering properties, and its **classes**, which in turn contain **styles** and **labels**:
+
+```
+Layer (schema.table.geometry_column)
+├── properties          Rendering and tile-cache settings
+└── classes[]           Thematic groups of features
+    ├── styles[]        How matching features are drawn
+    └── labels[]        How matching features are labelled
+```
+
+A layer is identified by the key `schema.table.geometry_column`, e.g. `rockhall.venues.the_geom`. The configuration is translated to a MapServer mapfile on the server, so most properties map directly to MapServer parameters.
+
+## Get layers
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![View layers in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="All layers"
+        GET https://api.centia.io/api/v4/layers HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="A specific layer"
+        GET https://api.centia.io/api/v4/layers/rockhall.venues.the_geom HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Configure a layer
+
+`POST /api/v4/layers` configures a layer declaratively in one atomic request: it sets the properties and **replaces the entire `classes` array** with the one you send. This is the recommended way to apply a complete styling in one go — for incremental changes, use the [classes](./classes.mdx), [styles](./styles.mdx) and [labels](./labels.mdx) sub-resources instead.
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Configure layer in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Configure a layer with one class, style and label"
+        POST https://api.centia.io/api/v4/layers HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "name": "rockhall.venues.the_geom",
+            "properties": {
+                "theme_column": "genre",
+                "opacity": "80",
+                "maxscaledenom": "500000"
+            },
+            "classes": [
+                {
+                    "name": "Rock venues",
+                    "expression": "rock",
+                    "styles": [
+                        {
+                            "symbol": "circle",
+                            "color": "#FF0000",
+                            "outlinecolor": "#FFFFFF",
+                            "size": "10"
+                        }
+                    ],
+                    "labels": [
+                        {
+                            "on": true,
+                            "text": "[name]",
+                            "size": "11",
+                            "position": "auto"
+                        }
+                    ]
+                }
+            ]
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+:::warning Ids are preserved — if you send them back
+Classes, styles and labels each carry a fixed, server-assigned `id`. `POST /api/v4/layers` accepts and round-trips these ids: include them in the payload to keep existing entries stable. Entries sent without an `id` are treated as new and get a fresh id.
+:::
+
+## Update layer properties
+
+`PATCH` merges the keys you send into the layer's properties, leaving everything else — including classes — untouched:
+
+```http title="Change opacity only"
+PATCH https://api.centia.io/api/v4/layers/rockhall.venues.the_geom HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "properties": {
+        "opacity": "50"
+    }
+}
+```
+
+## Layer properties
+
+All values are stored as strings — an empty string means unset — except where noted. The most commonly used properties:
+
+| Property | Description |
+|---|---|
+| `theme_column` | Column evaluated against each class's expression (MapServer `CLASSITEM`). Empty means classes match on logical expressions only. |
+| `geotype` | Geometry type override: `Default`, `POINT`, `LINE` or `POLYGON`. `Default` derives it from the geometry column. |
+| `opacity` | Layer opacity, 0–100. |
+| `minscaledenom` / `maxscaledenom` | Scale range in which the layer is drawn (min = most zoomed-in bound, max = most zoomed-out bound). |
+| `symbolscaledenom` | Scale at which symbols and text render at their true size; they scale as the map diverges from it. |
+| `label_column` | Column exposed to label text/expressions (MapServer `LABELITEM`). |
+| `label_min_scale` / `label_max_scale` | Scale range in which labels are drawn. |
+| `label_no_clip` | Boolean. Avoids label jitter and duplicate labels across tiled requests. |
+| `polyline_no_clip` | Boolean. Avoids discontinuities in dashed/symbolized lines across tiled requests. |
+| `cluster` | Point-clustering distance in pixels. Empty disables clustering. |
+| `offsite` | RGB pixel value MapServer should treat as background for raster layers. |
+| `bands` | Raster band selection, comma-separated (1 band = greyscale, 3 = RGB, 4 = RGBA). |
+| `format` | Tile image format: `PNG` (default), `jpeg_low`, `jpeg_medium` or `jpeg_high`. |
+| `cache` | Tile cache backend: `disk`, `sqlite`, `s3` or `memcache`. |
+| `ttl` | Tile time-to-live in seconds (HTTP `Expires`/`Cache-Control`). Minimum 30. |
+| `auto_expire` | Age in seconds after which a cached tile is refreshed on next access. Overrides `ttl` for that purpose. |
+| `meta_size` | Metatile size (columns/rows per WMS request when building the tile cache). Default 3. |
+| `meta_buffer` | Buffer in pixels around each metatile, cropped off to prevent edge artifacts. |
+| `layers` | Comma-separated schema-qualified layer names rendered into the same cached tile. |
+| `lock` | Boolean. Locks the tile cache so it cannot be cleared. |
+
+## Delete a layer configuration
+
+```http
+DELETE https://api.centia.io/api/v4/layers/rockhall.venues.the_geom HTTP/1.1
+Authorization: Bearer abc123
+```

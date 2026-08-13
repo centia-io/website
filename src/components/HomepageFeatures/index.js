@@ -47,7 +47,7 @@ const FeatureList = [
     geo: true,
     description: (
       <>
-        PostGIS built in. Upload GeoJSON, Shapefile or GeoPackage and get spatial SQL, GraphQL and realtime APIs on your data.
+        PostGIS built in. Upload GeoJSON, Shapefile or GeoPackage and get spatial SQL, GraphQL, realtime APIs and OGC WMS/WFS services on your data.
       </>
     ),
     link: {

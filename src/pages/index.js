@@ -74,6 +74,26 @@ ORDER BY distance_meters ASC
 LIMIT 10;`,
     },
     {
+        id: 'ogc',
+        label: 'OGC (WMS/WFS)',
+        language: 'bash',
+        code: `# Every layer is served through standard OGC services
+
+# Render a styled map image (WMS GetMap)
+https://api.centia.io/api/v4/ows/schema/parks
+  ?SERVICE=WMS&VERSION=1.1.0&REQUEST=GetMap
+  &LAYERS=parks.areas&SRS=EPSG:3857
+  &BBOX=1204164,7485240,1259200,7534200
+  &WIDTH=1024&HEIGHT=768&FORMAT=image/png
+
+# Fetch the vector features (WFS GetFeature)
+https://api.centia.io/api/v4/wfs/schema/parks
+  ?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature
+  &TYPENAME=areas&SRSNAME=EPSG:4326
+
+# Works with QGIS, OpenLayers, Leaflet — WFS-T for editing`,
+    },
+    {
         id: 'docker',
         label: 'Self-Host',
         language: 'bash',
@@ -99,7 +119,7 @@ const quickSteps = [
     {
         step: '02',
         title: 'Auto-Generated APIs',
-        description: 'Instant REST, GraphQL, Spatial SQL, and Realtime WebSocket subscriptions over your PostgreSQL & PostGIS database tables.',
+        description: 'Instant REST, GraphQL, Spatial SQL, Realtime WebSocket subscriptions, and OGC WMS/WFS map services over your PostgreSQL & PostGIS database tables.',
         link: { to: '/docs/intro', label: 'View API docs' },
     },
     {

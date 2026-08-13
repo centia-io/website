@@ -121,7 +121,7 @@ It is not possible to update all sub-users in a single operation. You must speci
         Authorization: Bearer abc123
 
         {
-            "user_group": "gunsnroses"
+            "user_group": "[\"gunsnroses\"]"
         }
 
         ```
@@ -162,6 +162,58 @@ It is not possible to delete all sub-users in a single operation. You must speci
 
     </TabItem>
 </Tabs>
+
+## Groups and inheritance
+
+Sub-users can be organized in groups, and privileges granted to a group are inherited by its members. A group is simply a sub-user itself: create a sub-user to act as the group (e.g. `gunsnroses`) and add other sub-users to it by setting their `user_group` property.
+
+The `user_group` property holds a JSON array of group names, encoded as a string. It can be set when creating a sub-user or later with a PATCH:
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Set groups in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Add sub-users to a group"
+        PATCH https://api.centia.io/api/v4/users/alx,slash HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "user_group": "[\"gunsnroses\"]"
+        }
+        ```
+
+        ```http title="Membership of multiple groups"
+        PATCH https://api.centia.io/api/v4/users/slash HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "user_group": "[\"gunsnroses\", \"velvetrevolver\"]"
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+A sub-user can be a member of multiple groups, and a group can itself be a member of other groups, so inheritance is transitive across multiple levels. Cyclic and diamond-shaped memberships are handled safely.
+
+### How privileges are resolved
+
+The effective privilege of a sub-user on a table is the *highest* privilege found among:
+
+- the sub-user's own [privilege](./privileges.mdx) on the table, and
+- the privileges of every group in the sub-user's full inheritance chain.
+
+Privileges rank `none` < `read` < `write`. If `alx` has no explicit privilege on `rockhall.inductees` but the group `gunsnroses` has `write`, then `alx` effectively has `write` on the table.
+
+Schema ownership is inherited the same way: a sub-user owns a schema when the sub-user — or any group in its inheritance chain — has the same name as the schema. Since every sub-user gets a schema named after itself, adding members to the group `gunsnroses` also gives them full access to the `gunsnroses` schema.
+
+:::note
+Inheritance applies everywhere privileges are enforced: SQL and the HTTP API as well as the [OGC services](./ogc.mdx) (WMS/WFS). The super-user (the database owner) always has full access and is not affected by groups.
+:::
 
 ## Signup (Browser – Create a new user)
 
