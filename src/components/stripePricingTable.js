@@ -1,5 +1,5 @@
 import {useState} from 'react'
-import {Claims} from '@mapcentia/gc2-js-client'
+import {Claims} from '@centia-io/sdk'
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext'
 
 import {useUser} from '../hooks/user'

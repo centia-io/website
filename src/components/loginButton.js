@@ -1,4 +1,4 @@
-import {CodeFlow} from '@mapcentia/gc2-js-client'
+import {CodeFlow} from '@centia-io/sdk'
 import {useEffect, useMemo} from "react";
 import styles from "./consoleWidgets.module.css";
 

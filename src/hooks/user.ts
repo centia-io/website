@@ -1,5 +1,5 @@
 import {useQuery} from '@tanstack/react-query'
-import {Users} from '@mapcentia/gc2-js-client'
+import {Users} from '@centia-io/sdk'
 
 function useUser(userId: string) {
     return useQuery({
