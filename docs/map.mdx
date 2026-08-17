@@ -1,0 +1,95 @@
+---
+title: Map
+description: Store a per-schema map view — center, zoom and extent — used as the initial view in map clients and as the bounding box in OGC services.
+sidebar_position: 74
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Map
+
+The Map API stores a **map view configuration per schema**: a center, a zoom level and an extent. Map clients use it as the initial view when opening a schema's map, and the extent is also used as the schema's bounding box in the [OGC services](./ogc.mdx) — it becomes the `GetCapabilities` bounding box for WMS/WFS. If no extent is set, a world extent is used.
+
+The Map API is orthogonal to the [Layer API](./layer/layers.mdx): layers control *how* data is rendered, the map configuration controls *where* the map starts.
+
+All coordinates are **EPSG:4326**: `center` is `[longitude, latitude]` and `extent` is `[minx, miny, maxx, maxy]` in degrees.
+
+:::note
+The Map API is token-only — unlike the OGC services, it has no anonymous/HTTP Basic variant. Sub-users can access their own schema (and read public schemas); the super-user can access all schemas in the database.
+:::
+
+## Get the map configuration
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Map view in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Request"
+        GET https://api.centia.io/api/v4/map/schema/rockhall HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```json title="Response"
+        {
+            "center": [12.4571, 55.7906],
+            "zoom": 12,
+            "extent": [8.0, 54.5, 15.5, 57.5],
+            "_links": {
+                "self": "/api/v4/map/schema/rockhall"
+            }
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+Fields that have not been set are `null`.
+
+## Set the map configuration
+
+`PATCH` is partial: send any subset of the three fields, and set a field to `null` to clear it. The response is `303 See Other` with a `Location` header pointing back to the configuration — follow it with a `GET` to see the updated state.
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Save map view in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Set the full view"
+        PATCH https://api.centia.io/api/v4/map/schema/rockhall HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "center": [12.5, 55.8],
+            "zoom": 11,
+            "extent": [8.0, 54.5, 15.5, 57.5]
+        }
+        ```
+
+        ```http title="Clear the extent only"
+        PATCH https://api.centia.io/api/v4/map/schema/rockhall HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "extent": null
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+Invalid input — an unknown property, a `center` that is not exactly 2 numbers, an `extent` that is not exactly 4 numbers, a non-numeric `zoom`, or an empty body — is rejected with `400`.
+
+## Fields
+
+| Field | Description |
+|---|---|
+| `center` | Map center as `[longitude, latitude]` in EPSG:4326. Nullable. |
+| `zoom` | Initial zoom level (unitless). Nullable. |
+| `extent` | Map extent as `[minx, miny, maxx, maxy]` in EPSG:4326. Sets the initial extent of the map **and** the schema's bounding box in the [OGC services](./ogc.mdx). Nullable. |
