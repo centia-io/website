@@ -46,7 +46,7 @@ Which layers a service exposes — and whether they can be read or written — f
 
 ## WMS
 
-WMS renders map images on the server. Versions 1.1.0 and 1.3.0 are supported (with 1.3.0, use the `CRS` parameter instead of `SRS`). Start with `GetCapabilities` to see the available layers:
+WMS renders map images on the server. Versions 1.1.0 and 1.3.0 are supported (with 1.3.0, use the `CRS` parameter instead of `SRS`). Start with `GetCapabilities` to see the available layers — the schema's bounding box in the capabilities document comes from the extent set with the [Map API](./map.mdx):
 
 ```http title="GetCapabilities"
 GET https://api.centia.io/api/v4/ows/schema/rockhall?SERVICE=WMS&VERSION=1.1.0&REQUEST=GetCapabilities HTTP/1.1
