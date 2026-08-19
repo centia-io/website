@@ -108,14 +108,14 @@ const useCases = [
 ];
 
 const ogcExample = `# Render a styled map image (WMS GetMap)
-https://api.centia.io/api/v4/ows/schema/parks
+https://api.centia.io/api/v4/ows/schema/parks/database/mydb
   ?SERVICE=WMS&VERSION=1.1.0&REQUEST=GetMap
   &LAYERS=parks.areas&SRS=EPSG:3857
   &BBOX=1204164,7485240,1259200,7534200
   &WIDTH=1024&HEIGHT=768&FORMAT=image/png
 
 # Fetch the vector features (WFS GetFeature)
-https://api.centia.io/api/v4/wfs/schema/parks
+https://api.centia.io/api/v4/wfs/schema/parks/database/mydb
   ?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature
   &TYPENAME=areas&SRSNAME=EPSG:4326`;
 

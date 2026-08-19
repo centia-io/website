@@ -74,11 +74,11 @@ export default function Home() {
                                 </div>
                             </div>
                             <div className={styles.guideCard}>
-                                <h3>Vibe coding</h3>
+                                <h3>Agentic development</h3>
                                 <p>Connect your AI agents directly via MCP to start building.</p>
                                 <div>
-                                    <Link className="button button--sm button--primary" to="/docs/vibe-coding"
-                                          onClick={() => trackCtaClick('cta_console_vibe_coding_click', {location: 'console_card_vibe'})}>Get
+                                    <Link className="button button--sm button--primary" to="/docs/agentic-development"
+                                          onClick={() => trackCtaClick('cta_console_agentic_development_click', {location: 'console_card_agentic'})}>Get
                                         started</Link>
                                 </div>
                             </div>

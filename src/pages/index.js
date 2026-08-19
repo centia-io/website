@@ -80,14 +80,14 @@ LIMIT 10;`,
         code: `# Every layer is served through standard OGC services
 
 # Render a styled map image (WMS GetMap)
-https://api.centia.io/api/v4/ows/schema/parks
+https://api.centia.io/api/v4/ows/schema/parks/database/mydb
   ?SERVICE=WMS&VERSION=1.1.0&REQUEST=GetMap
   &LAYERS=parks.areas&SRS=EPSG:3857
   &BBOX=1204164,7485240,1259200,7534200
   &WIDTH=1024&HEIGHT=768&FORMAT=image/png
 
 # Fetch the vector features (WFS GetFeature)
-https://api.centia.io/api/v4/wfs/schema/parks
+https://api.centia.io/api/v4/wfs/schema/parks/database/mydb
   ?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature
   &TYPENAME=areas&SRSNAME=EPSG:4326
 
@@ -372,7 +372,7 @@ export default function Home() {
                                     <div className={styles.mcpCta}>
                                         <Link
                                             className="button button--primary button--lg"
-                                            to="/docs/vibe-coding"
+                                            to="/docs/agentic-development"
                                             onClick={() => trackCtaClick('cta_mcp_docs_click', { location: 'mcp_spotlight' })}
                                         >
                                             Connect AI Agents via MCP →

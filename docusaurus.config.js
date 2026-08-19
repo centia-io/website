@@ -56,6 +56,20 @@ const config = {
         locales: ['en'],
     },
 
+    plugins: [
+        [
+            '@docusaurus/plugin-client-redirects',
+            {
+                redirects: [
+                    {
+                        from: '/docs/vibe-coding',
+                        to: '/docs/agentic-development',
+                    },
+                ],
+            },
+        ],
+    ],
+
     presets: [
         [
             '@docusaurus/preset-classic',
