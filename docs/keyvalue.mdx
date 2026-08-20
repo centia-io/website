@@ -1,0 +1,232 @@
+---
+title: Key/value store
+description: Store arbitrary JSON documents under globally unique keys — application settings, feature flags, drafts or any other unstructured state, without creating a table.
+sidebar_position: 55
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Key/value store
+
+The key/value store lets you keep **arbitrary JSON under globally unique keys** — application settings, feature flags, user preferences, drafts or any other unstructured state — without creating a table for it. Every entry has an owner and a `public` flag that controls who can read it.
+
+The API is token-only: all requests require an `Authorization: Bearer` header.
+
+**Access model:**
+
+- The **super user** has full create/read/update/delete access to every key in the database.
+- A **sub-user** can read their own keys and all `public` keys, but can only create, update and delete keys they own.
+- The `owner` is always set server-side from the token — it cannot be sent in the request body.
+
+## List keys
+
+`GET` without a key returns all entries visible to the caller. The stored `value` is returned decoded as JSON:
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Key/value list in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Request"
+        GET https://api.centia.io/api/v4/keyvalue HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```json title="Response"
+        [
+            {
+                "id": 1,
+                "key": "app_settings",
+                "value": {
+                    "theme": "dark",
+                    "band": {
+                        "name": "Guns N' Roses"
+                    }
+                },
+                "owner": "slash",
+                "public": false
+            },
+            {
+                "id": 2,
+                "key": "tour_notice",
+                "value": {
+                    "message": "New dates announced"
+                },
+                "owner": "alx",
+                "public": true
+            }
+        ]
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Get a key
+
+`GET` with a key returns a single entry, or `404` if the key does not exist or is not visible to the caller:
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Key/value entry in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Request"
+        GET https://api.centia.io/api/v4/keyvalue/app_settings HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```json title="Response"
+        {
+            "id": 1,
+            "key": "app_settings",
+            "value": {
+                "theme": "dark",
+                "band": {
+                    "name": "Guns N' Roses"
+                }
+            },
+            "owner": "slash",
+            "public": false
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+### Project parts of the value
+
+Instead of fetching the whole document, the `paths` query parameter projects only the named sub-trees of the value. Paths are comma-separated; a dot navigates into nested objects. The result `value` is keyed by each path string:
+
+```http title="Request"
+GET https://api.centia.io/api/v4/keyvalue/app_settings?paths=band.name,theme HTTP/1.1
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+```
+
+```json title="Response"
+{
+    "id": 1,
+    "key": "app_settings",
+    "value": {
+        "band.name": "Guns N' Roses",
+        "theme": "dark"
+    },
+    "owner": "slash",
+    "public": false
+}
+```
+
+An empty path or path segment is rejected with `400` (`INVALID_PATHS`).
+
+## Create a key
+
+`POST` creates a key owned by the caller. `value` is required and can be any JSON; `public` defaults to `false`. The response is `201 Created` with a `Location` header pointing to the new entry. Keys are globally unique — if the key already exists, the request is rejected with `409`:
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Create key/value entry in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Request"
+        POST https://api.centia.io/api/v4/keyvalue/app_settings HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "value": {
+                "theme": "dark",
+                "band": {
+                    "name": "Guns N' Roses"
+                }
+            },
+            "public": false
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Update a key
+
+`PATCH` is partial: send `value`, `public` or both. The response is `303 See Other` with a `Location` header pointing back to the entry — follow it with a `GET` to see the updated state:
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Update key/value entry in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Make the entry public"
+        PATCH https://api.centia.io/api/v4/keyvalue/app_settings HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "public": true
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Delete a key
+
+`DELETE` removes the entry and returns `204 No Content`:
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Delete key/value entry in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Request"
+        DELETE https://api.centia.io/api/v4/keyvalue/app_settings HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Using the SDK
+
+The [`@centia-io/sdk`](./sdk.mdx) (0.2.10+) exposes the store through the `Keyvalue` class. The stored value can be typed, and errors are thrown as `CentiaApiError` with `.status` and `.code`:
+
+```ts
+import { createCentiaClient, Keyvalue } from '@centia-io/sdk'
+
+const kv = new Keyvalue(createCentiaClient({ baseUrl, auth: { getAccessToken } }))
+
+// Create (201; 409 if the key already exists)
+await kv.postKeyvalue('app_settings', { value: { theme: 'dark' }, public: false })
+
+// Read one key — the value is typed
+const entry = await kv.getKeyvalue<{ theme: string }>('app_settings')
+
+// List all keys visible to the caller
+const entries = await kv.getKeyvalue()
+
+// Project only parts of the value (dot notation, result keyed by path)
+const { value } = await kv.getKeyvalue('app_settings', ['band.name', 'theme'])
+
+// Partial update of value and/or public flag
+await kv.patchKeyvalue('app_settings', { public: true })
+
+// Delete
+await kv.deleteKeyvalue('app_settings')
+```
+
+## Fields
+
+| Field | Description |
+|---|---|
+| `key` | Globally unique key, given in the URL path. |
+| `value` | Arbitrary JSON value. Required when creating. |
+| `public` | When `true`, the entry is readable by any user in the database. Default `false`. |
+| `owner` | The user who owns the entry. Always set server-side from the token — read-only. |
+| `id` | Server-assigned numeric id — read-only. |

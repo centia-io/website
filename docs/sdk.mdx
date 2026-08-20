@@ -18,6 +18,7 @@ TypeScript/JavaScript client SDK for Centia.io. It provides:
     - Sql: Execute parameterized SQL
     - Rpc: Call JSON-RPC methods
     - createApi: A tiny type-safe helper that maps TypeScript interfaces to JSON‑RPC calls
+    - Keyvalue: Store arbitrary JSON under globally unique keys
 
 ## Installation
 
@@ -539,6 +540,39 @@ const res: GqlResponse = await gql.request(req)
 console.log(res)
 ```
 
+
+## Key/value store
+
+Store arbitrary JSON under globally unique keys (SDK 0.2.10+). See [Key/value store](/docs/keyvalue) for more details about the Keyvalue API.
+
+- Class: `new Keyvalue(client: CentiaHttpClient)`
+- Endpoints: `GET|POST|PATCH|DELETE https://api.centia.io/api/v4/keyvalue/{key}`
+
+```ts
+import { createCentiaClient, Keyvalue } from "@centia-io/sdk"
+
+const kv = new Keyvalue(createCentiaClient({ baseUrl, auth: { getAccessToken } }))
+
+// Create (201; 409 if the key already exists)
+await kv.postKeyvalue("app_settings", { value: { theme: "dark" }, public: false })
+
+// Read one key — the value is typed
+const entry = await kv.getKeyvalue<{ theme: string }>("app_settings")
+
+// List all keys visible to the caller
+const entries = await kv.getKeyvalue()
+
+// Project only parts of the value (dot notation, result keyed by path)
+const { value } = await kv.getKeyvalue("app_settings", ["user.name", "theme"])
+
+// Partial update of value and/or public flag (303)
+await kv.patchKeyvalue("app_settings", { public: true })
+
+// Delete (204)
+await kv.deleteKeyvalue("app_settings")
+```
+
+Types: `KeyvalueEntry<T>` (`{ id, key, value, owner, public }`), `CreateKeyvalueRequest<T>`, `PatchKeyvalueRequest<T>`, `KeyvalueProjection`. Errors are thrown as `CentiaApiError` with `.status` and `.code`.
 
 ## Error handling
 
