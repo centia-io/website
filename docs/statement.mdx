@@ -244,6 +244,158 @@ If an error occurs, the response will include an error message and the SQLSTATE 
 - Use parameters (e.g., `:id`) and explicit casts (`::type`) to ensure correct typing and protect against SQL injection.
 - Access may be limited or denied by configured [Rules](./rules). Refer to [Types](./types) for handling complex types and formatting.
 
+## Using the SDK
+
+The [SDK](./sdk) wraps the SQL API in the `Sql` class:
+
+- Class: `new Sql()`
+- Method: `exec(request: SqlRequest): Promise<SqlResponse>`
+- Endpoint: `POST https://api.centia.io/api/v4/sql`
+
+Types (simplified):
+- `SqlRequest` has:
+    - `q`: SQL string with named placeholders like `:a`
+    - `params?`: object with values for placeholders
+    - `type_hints?`: optional explicit type hints
+    - `type_formats?`: optional per-column format strings
+- `SqlResponse` has:
+    - `schema`: a map of column name -> `{ type: string, array: boolean }`
+    - `data`: an array of rows (records)
+
+```ts
+import { Sql } from "@centia-io/sdk";
+
+const sql = new Sql();
+
+const payload = {
+  a: 1,
+  b: "hello",
+  c: "3.14",          // numeric/decimal values are strings
+  d: ["x", "y"],      // arrays are supported
+  e: { nested: [1,2] } // JSON
+};
+
+const res = await sql.exec({
+  q: "select :a::int as a, :b::varchar as b, :c::numeric as c, :d::varchar[] as d, :e::jsonb as e",
+  params: payload,
+  type_hints: { d: "varchar[]" } // Arrays are not inferred by default, and must be specified explicitly
+});
+
+console.log(res.schema); // { a: {type: 'int4', array: false}, ... }
+console.log(res.data);   // [{ a: 1, b: 'hello', c: '3.14', d: ['x','y'], e: {nested:[1,2]} }]
+```
+
+Typing the rows:
+```ts
+import type { PgTypes } from "@centia-io/sdk";
+
+interface Row extends PgTypes.DataRow {
+  a: number;
+  b: PgTypes.Varchar;
+  c: PgTypes.NumericString;
+  d: PgTypes.PgArray<PgTypes.Varchar>;
+  e: PgTypes.JsonValue;
+}
+
+// res: PgTypes.SqlResponse<Row>
+const res = await sql.exec({ q: "...", params: payload }) as PgTypes.SqlResponse<Row>;
+```
+
+### SQL Builder
+
+Build strongly typed SQL requests from a DB schema so you don't write raw SQL.
+
+- Function: `createSqlBuilder(schema)`
+- Types: `DBSchema`, `TableDef`, `ColumnDef`
+- Supports: `select` (andWhere/orWhere, andWhereOp/orWhereOp, grouped predicates, orderBy, limit, offset, join, selectFrom), `insert(returning)`, `update(where, returning)`, `delete(where, returning)`
+- Produces an object with `toSql(): SqlRequest` which you pass to `new Sql().exec()`
+
+```ts
+import { createSqlBuilder, Sql } from "@centia-io/sdk";
+import type { DBSchema, RowOfSelect } from "@centia-io/sdk";
+
+// Minimal schema.
+// Don't write this by hand.
+// You can get the schema from the Sql endpoint: https://api.centia.io/api/v4/sql/schema
+// or use the CLI tool: centia schema get public --raw
+const schema =
+    {
+        "name": "public",
+        "tables": [
+            {
+                "name": "albums",
+                "columns": [
+                    {"name": "album_id", "_typname": "int4", "_is_array": false, "is_nullable": false},
+                    {"name": "band_id", "_typname": "int4", "_is_array": false, "is_nullable": false},
+                    {"name": "title", "_typname": "text", "_is_array": false, "is_nullable": false},
+                    {"name": "release_date", "_typname": "date", "_is_array": false, "is_nullable": true},
+                    {"name": "critic_score", "_typname": "int2", "_is_array": false, "is_nullable": true}
+                ],
+                "constraints": [
+                    {"name": "albums_pkey", "constraint": "primary", "columns": ["album_id"]},
+                    {"name": "fk_albums_band", "constraint": "foreign", "columns": ["band_id"], "referenced_table": "bands", "referenced_columns": ["band_id"]}
+                ]
+            },
+            {
+                "name": "bands",
+                "columns": [
+                    {"name": "band_id", "_typname": "int4", "_is_array": false, "is_nullable": false},
+                    {"name": "name", "_typname": "text", "_is_array": false, "is_nullable": false},
+                    {"name": "subgenre", "_typname": "rock_subgenre", "_is_array": false, "is_nullable": false}
+                ],
+                "constraints": [
+                    {"name": "bands_pkey", "constraint": "primary", "columns": ["band_id"]}
+                ]
+            }
+        ]
+    } as const satisfies DBSchema;
+
+const b = createSqlBuilder(schema);
+
+// SELECT with where/order/limit
+const selectReq = b.table("bands")
+  .select(["name", "subgenre"]) // or omit to select all: .select()
+  .andWhere({ band_id: [1, 2, 3] }) // => "band_id" = ANY(:param)
+  .orderBy([["name","desc"]])
+  .limit(10)
+
+// SELECT with join
+const joinReq = b.table("bands")
+    .select(["name", "subgenre"])
+    .join("albums")
+    .selectFrom("albums", ["title", "critic_score", "release_date"])
+    .andWhereOp("name", "=", "Guns n’ Roses")
+
+// If you need the type of the row, use the helper RowOfSelect
+type Row = RowOfSelect<typeof selectReq>
+
+const sql = new Sql();
+const rows: Row[] = (await sql.exec(selectReq.toSql())).data;
+
+// INSERT
+const insertReq = b.table("albums")
+  .insert({ band_id: 1, title: "Appetite For Destruction", release_date: "1987-07-21" })
+  .returning(["album_id"])
+await sql.exec(insertReq.toSql());
+
+// UPDATE
+const updateReq = b.table("albums")
+  .update({ critic_score: 10 })
+  .where({ album_id: 10 })
+  .returning(["title"])
+await sql.exec(updateReq.toSql());
+
+// DELETE
+const deleteReq = b.table("albums")
+  .delete()
+  .where({ album_id: 11 })
+await sql.exec(deleteReq.toSql());
+```
+
+:::note
+The builder automatically adds `type_hints` for all parameters (e.g., `int4[]`).
+:::
+
 ## CLI
 
 You can also use the `centia sql` command to execute statement strings.

@@ -82,6 +82,36 @@ Authorization: Bearer eyJhbGciOiJIUzI1...
 `client_secret` is only required for confidential clients.
 :::
 
+### Using the SDK
+
+The [SDK](./sdk) implements the Password Flow with the `PasswordFlow` class. Use it only in trusted environments — the user's credentials are exchanged directly for tokens, which are then stored and refreshed automatically for subsequent SDK calls.
+
+Required options:
+- `host`: Base URL of your Centia.io instance, e.g. `https://api.centia.io`
+- `clientId`: OAuth client id configured in Centia.io
+- `username`
+- `password`
+- `database`: The database to connect to. For a super user, this is the same as the username.
+
+```ts title="Node.js"
+import { PasswordFlow } from "@centia-io/sdk";
+
+const flow = new PasswordFlow({
+  host: "https://api.centia.io",
+  clientId: "your-client-id",
+  username: "your-username",
+  password: "your-password",
+  database: "parent-database"
+});
+
+await flow.signIn();
+// Tokens are now stored; subsequent SDK calls include the Authorization header.
+
+// ... your code ...
+
+flow.signOut(); // Clears tokens/options in local storage (no redirect)
+```
+
 ## Authorization Code Flow
 
 ### Overview
@@ -178,6 +208,47 @@ code_verifier = <CODE_VERIFIER> &
 ```http
 Authorization: Bearer eyJhbGciOiJIUzI1...
 ```
+
+### Using the SDK
+
+The [SDK](./sdk) implements the Authorization Code Flow with PKCE in the `CodeFlow` class — it handles the redirect, `state` validation (CSRF protection), the code/token exchange, token storage and cleanup of the URL for you.
+
+Required options:
+- `host`: Base URL of your Centia.io instance, e.g. `https://api.centia.io`
+- `clientId`: OAuth client id configured in Centia.io
+- `redirectUri`: The URL in your app that handles the redirect back from Centia.io (must be whitelisted on the client)
+- `scope` (optional): Not in use yet, but will be used to request additional permissions from the user.
+
+```ts title="Browser SPA"
+import { CodeFlow } from "@centia-io/sdk";
+
+const codeFlow = new CodeFlow({
+  host: "https://api.centia.io",
+  clientId: "your-client-id",
+  redirectUri: window.location.origin + "/auth/callback"
+});
+
+// On app startup, call redirectHandle() once to complete a login redirect (if any)
+codeFlow.redirectHandle().then((signedIn) => {
+  if (signedIn) {
+    console.log("User signed in");
+  }
+});
+
+// Start sign-in when the user clicks Login
+function onLoginClick() {
+  codeFlow.signIn(); // Redirects to the Centia.io auth page
+}
+
+// Sign out (clears tokens/options and redirects to the signout endpoint)
+function onLogoutClick() {
+  codeFlow.signOut();
+}
+```
+
+:::note
+`signOut()` clears local tokens/options and redirects to the sign-out URL. If you only need to clear local state without a redirect, call `codeFlow.clear()`.
+:::
 
 ## Device Flow
 

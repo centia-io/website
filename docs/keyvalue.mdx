@@ -125,7 +125,7 @@ An empty path or path segment is rejected with `400` (`INVALID_PATHS`).
 
 ## Create a key
 
-`POST` creates a key owned by the caller. `value` is required and can be any JSON; `public` defaults to `false`. The response is `201 Created` with a `Location` header pointing to the new entry. Keys are globally unique — if the key already exists, the request is rejected with `409`:
+`POST` creates a key owned by the caller. `value` is required and can be any JSON — an object, an array or a scalar; `public` defaults to `false`. The response is `201 Created` with a `Location` header pointing to the new entry. Keys are globally unique — if the key already exists, the request is rejected with `409`:
 
 <Tabs>
     <TabItem value="webapp" label="Web App">
@@ -226,7 +226,7 @@ await kv.deleteKeyvalue('app_settings')
 | Field | Description |
 |---|---|
 | `key` | Globally unique key, given in the URL path. |
-| `value` | Arbitrary JSON value. Required when creating. |
+| `value` | Arbitrary JSON value — an object, array or scalar. Required when creating. |
 | `public` | When `true`, the entry is readable by any user in the database. Default `false`. |
 | `owner` | The user who owns the entry. Always set server-side from the token — read-only. |
 | `id` | Server-assigned numeric id — read-only. |

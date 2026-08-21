@@ -411,3 +411,157 @@ Clients should handle error responses gracefully by checking for the presence of
 
     </TabItem>
 </Tabs>
+
+## Using the SDK
+
+The [SDK](./sdk) calls JSON-RPC methods through the `Rpc` class:
+
+- Class: `new Rpc()`
+- Method: `call(request: RpcRequest): Promise<RpcResponse>`
+- Endpoint: `POST https://api.centia.io/api/v4/call`
+
+Types (simplified):
+- `RpcRequest` has `jsonrpc: "2.0"`, `method`, optional `params`, optional `id`
+- `RpcResponse` has `jsonrpc: "2.0"`, `id`, and `result` with `{ schema, data }`
+
+```ts
+import { Rpc } from "@centia-io/sdk";
+
+const rpc = new Rpc();
+
+const payload = { a: 1, b: "hello" };
+
+const res = await rpc.call({
+  jsonrpc: "2.0",
+  method: "typeTest",
+  params: payload,
+  id: 1
+});
+
+console.log(res.result.schema);
+console.log(res.result.data); // array of rows
+```
+
+Typing the rows:
+```ts
+import type { PgTypes } from "@centia-io/sdk";
+
+interface Row extends PgTypes.DataRow {
+  a: number;
+  b: string;
+}
+
+const res = await rpc.call({ jsonrpc: "2.0", method: "typeTest", params: payload }) as PgTypes.RpcResponse<Row>;
+```
+
+### createApi
+
+A tiny helper that builds a Proxy around `Rpc` so you can call `api.someMethod(params)` directly, with TypeScript autocompletion and type-checking based on your own interface.
+
+Under the hood, each property access becomes a JSON-RPC call with the property name as the method. The helper returns `result.data` (array of rows) from the RPC response.
+
+```ts
+import { createApi } from "@centia-io/sdk";
+import type { PgTypes, RowOfApiMethod } from "@centia-io/sdk";
+
+// Define the shape of your RPC methods and return types
+// Don't write this by hand. Get the interfaces from /api/v4/interfaces
+interface MyApi {
+  getBandById(params: {
+    band_id: number;
+  }): Promise<Array<{
+    name: PgTypes.Varchar;
+    subgenre: PgTypes.Varchar;
+    albums: PgTypes.PgArray<PgTypes.Varchar>;
+  }>>;
+}
+
+// Create the API proxy
+const api = createApi<MyApi>();
+
+// If you need the type of the result, use the helper RowOfApiMethod
+type Band = RowOfApiMethod<MyApi, "getBandById">
+
+// Call the method
+const bands: Band[] = await api.getBandById({
+  band_id: 1
+});
+
+console.log(bands); // typed row array
+```
+
+:::note
+- `createApi<T>()` relies on naming conventions: the property name is the JSON-RPC `method` name.
+- Each call returns `result.data` from the RPC response (array of rows).
+:::
+
+### JSON-RPC TypeScript interfaces
+
+Instead of defining the interfaces yourself as shown above, you can use the API `/api/v4/interfaces` helper to get the interfaces for all JSON-RPC methods.
+
+1) Define your JSON-RPC method. Input and output types are inferred from an actual request/response.
+
+Consider this method definition:
+
+```json
+{
+  "q": "select :x as unknown",
+  "method": "getX"
+}
+```
+The type of `x` can not be inferred from the definition. So requesting `/api/v4/interfaces` will return:
+
+```ts
+export interface Api {
+    getX(params: Record<string, unknown>): Promise<Record<string, unknown>>;
+}
+```
+
+2) You will need to 'cast' the field `x` to the correct type. This is not necessary for real columns in tables, but for the example above, you can cast the field to `int`:
+
+```json
+{
+  "q": "select :x::int as my_int",
+  "method": "getX"
+}
+```
+
+3) Dry run the request to set the types. Types are only inferred for dry run calls. This will cache the types on the server:
+
+```http request
+POST https://api.centia.io/api/v4/call/dry
+Content-Type: application/json
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+
+{
+  "jsonrpc": "2.0",
+  "method": "getX",
+  "params": { "x": 1 },
+  "id": 1
+}
+```
+And `/api/v4/interfaces` will now return a typed interface:
+
+```ts
+export interface Api {
+    getX(params: { x: number; }): Promise<{ my_int: number; }[]>;
+}
+```
+
+This is ready for import and use in your application:
+
+```ts title="api.ts"
+export interface Api {
+    getX(params: { x: number; }): Promise<{ my_int: number; }[]>
+}
+```
+
+```ts title="main.ts"
+import { createApi } from "@centia-io/sdk"
+import type { Api } from "./api"
+
+const api = createApi<Api>()
+const res = await api.getX({ x: 1 })
+console.log(res)
+```
