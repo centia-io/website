@@ -325,6 +325,43 @@ The device then uses the access_token to communicate with Centia.io.
 `client_secret` is only required for confidential clients.
 :::
 
+## Guest Tokens
+
+A guest token gives an app a bearer token for **public access — without any user credentials**. The token is issued for the database's **default user**: the [sub-user](./users.mdx) with `default_user` set, which is the same identity used for anonymous access when no token is sent. Use it when an app should act as the public user against endpoints that require a token.
+
+Request a guest token with the database and an OAuth client id — no `Authorization` header is needed:
+
+```http
+POST https://api.centia.io/api/v4/oauth/guest
+Content-Type: application/json
+
+{
+    "database": "mydb",
+    "client_id": "<CLIENT_ID>",
+    "client_secret": "<CLIENT_SECRET>"
+}
+```
+
+The response is `201` with the usual token payload:
+
+```json
+{
+    "access_token": "<ACCESS_TOKEN>",
+    "refresh_token": "<REFRESH_TOKEN>",
+    "token_type": "bearer",
+    "expires_in": 3600,
+    "scope": ""
+}
+```
+
+The token carries the same rights as the default user — nothing more.
+
+:::note
+- A default user must be configured on the database (`404`, `NO_DEFAULT_USER_FOUND` otherwise).
+- `client_secret` is only required for confidential clients; public clients skip the secret check.
+- An unknown `client_id` is rejected with `401` (`invalid_grant`); a wrong secret with `401` (`invalid_client`).
+:::
+
 ## Token Lifecycles and Refresh Tokens
 
 For all three flows, Centia.io issue refresh tokens alongside access tokens. A refresh token lets you request new
