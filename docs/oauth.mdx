@@ -362,6 +362,25 @@ The token carries the same rights as the default user — nothing more.
 - An unknown `client_id` is rejected with `401` (`invalid_grant`); a wrong secret with `401` (`invalid_client`).
 :::
 
+### Using the SDK
+
+The [SDK](./sdk) (0.2.14+) wraps the endpoint in the `GuestFlow` class. After `signIn()`, the tokens are stored and all subsequent SDK calls (`Sql`, `Rpc`, `Gql`, ...) are authenticated as the default user, with automatic refresh:
+
+```ts
+import { GuestFlow } from "@centia-io/sdk";
+
+const flow = new GuestFlow({
+  host: "https://api.centia.io",
+  clientId: "your-client-id",
+  database: "your-database",
+  // clientSecret: only for confidential clients
+});
+
+await flow.signIn(); // POST /api/v4/oauth/guest — stores the tokens
+// ... use Sql, Rpc, Gql etc. as the default user
+flow.signOut();
+```
+
 ## Token Lifecycles and Refresh Tokens
 
 For all three flows, Centia.io issue refresh tokens alongside access tokens. A refresh token lets you request new
