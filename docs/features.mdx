@@ -1,0 +1,270 @@
+---
+title: Features
+description: Read and write table rows as GeoJSON. Get features by primary key, insert, update and delete through WFS-T transactions — with reprojection on input and output.
+sidebar_position: 52
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Features
+
+The Feature API reads and writes table rows as **GeoJSON**. Every operation addresses features by their **primary key**, and writes run as WFS-T transactions under the hood — so read authentication, [geofence rules](./rules.mdx), versioning and tile-cache busting are all enforced exactly as for the [OGC services](./ogc.mdx).
+
+The endpoint is table-specific:
+
+`https://api.centia.io/api/v4/schemas/{schema}/tables/{table}/features/{feature}`
+
+The API is token-only: all requests require an `Authorization: Bearer` header, and sub-users are allowed. Access follows the layer's authentication level and the sub-user's [privileges](./privileges.mdx) on the table.
+
+:::note
+Reading requires a key — the Feature API does not read whole collections. Use the [SQL API](./statement.mdx), the [OGC API](./ogc-api.mdx) or [OGC WFS](./ogc.mdx) to query collections.
+:::
+
+## Get features
+
+`GET` with a primary-key value returns the matching row as a bare GeoJSON `Feature`. Pass a comma-separated list of keys to get several rows — the response is then a `FeatureCollection`. If no keys match, the response is `404` (`FEATURE_NOT_FOUND`).
+
+Geometry is returned in `EPSG:4326` (lon/lat) by default:
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Features in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Get a single feature"
+        GET https://api.centia.io/api/v4/schemas/rockhall/tables/venues/features/1 HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```json title="Response — one match is a bare Feature"
+        {
+            "type": "Feature",
+            "properties": {
+                "venue_id": 1,
+                "name": "Whisky a Go Go",
+                "city": "West Hollywood"
+            },
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-118.3856, 34.0906]
+            }
+        }
+        ```
+
+        ```http title="Get several features"
+        GET https://api.centia.io/api/v4/schemas/rockhall/tables/venues/features/1,2,3 HTTP/1.1
+        Accept: application/json; charset=utf-8
+        Authorization: Bearer abc123
+        ```
+
+        ```json title="Response — several matches is a FeatureCollection"
+        {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "venue_id": 1,
+                        "name": "Whisky a Go Go",
+                        "city": "West Hollywood"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-118.3856, 34.0906]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "venue_id": 2,
+                        "name": "The Troubadour",
+                        "city": "West Hollywood"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-118.3893, 34.0816]
+                    }
+                }
+            ]
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+### Reproject the output
+
+The `srs` query parameter sets the EPSG code (SRID) of the returned geometry:
+
+```http title="Request — coordinates in EPSG:25832 (UTM 32N)"
+GET https://api.centia.io/api/v4/schemas/rockhall/tables/venues/features/1?srs=25832 HTTP/1.1
+Accept: application/json; charset=utf-8
+Authorization: Bearer abc123
+```
+
+## Create features
+
+`POST` without a key in the path inserts one or more rows from a GeoJSON `Feature` or `FeatureCollection`. If a feature carries a primary-key value in `properties` it is used as the new key; otherwise one is generated. Geometry is optional — a feature without geometry inserts a row with `NULL` geometry.
+
+The response is `201 Created` with a `Location` header pointing at the new feature(s). Use `srs` to declare the SRID of the *incoming* geometry (default `4326`):
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Create features in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Request"
+        POST https://api.centia.io/api/v4/schemas/rockhall/tables/venues/features HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-118.3893, 34.0816]
+            },
+            "properties": {
+                "name": "The Troubadour",
+                "city": "West Hollywood"
+            }
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+The body must be a GeoJSON `Feature` or a non-empty `FeatureCollection` — anything else is rejected with `400` (`INVALID_GEOJSON`). The table must have a primary key (`400`, `NO_PRIMARY_KEY`) and its layer must be editable (`400`, `NOTHING_INSERTED`).
+
+## Update features
+
+`PATCH` updates the properties and/or geometry sent in the body — properties you leave out are unchanged. Address the feature in one of two ways:
+
+- **Key in the path** — `PATCH .../features/1` with a single `Feature` in the body.
+- **No key in the path** — each feature in the body must then carry its primary-key value in `properties`, which lets a single `FeatureCollection` update many rows at once (`400`, `PRIMARY_KEY_MISSING` if one is missing).
+
+The response is `303 See Other` with a `Location` header pointing back at the feature(s):
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Update features in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Update a single feature by path key"
+        PATCH https://api.centia.io/api/v4/schemas/rockhall/tables/venues/features/1 HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "type": "Feature",
+            "geometry": null,
+            "properties": {
+                "city": "Los Angeles"
+            }
+        }
+        ```
+
+        ```http title="Update several features — keys in properties"
+        PATCH https://api.centia.io/api/v4/schemas/rockhall/tables/venues/features HTTP/1.1
+        Content-Type: application/json
+        Authorization: Bearer abc123
+
+        {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": null,
+                    "properties": { "venue_id": 1, "city": "Los Angeles" }
+                },
+                {
+                    "type": "Feature",
+                    "geometry": null,
+                    "properties": { "venue_id": 2, "city": "Los Angeles" }
+                }
+            ]
+        }
+        ```
+
+    </TabItem>
+</Tabs>
+
+If no rows match, the response is `404` (`FEATURE_NOT_FOUND`). `PUT` is not supported — use `PATCH`.
+
+## Delete features
+
+`DELETE` removes the row(s) and returns `204 No Content`. Like `GET`, the path takes a single key or a comma-separated list. The response is `404` only when *no* keys match — a partial match deletes the rows that were found:
+
+<Tabs>
+    <TabItem value="webapp" label="Web App">
+        ![Delete features in the Centia Web App](/img/screenshots/webapp-placeholder.svg)
+    </TabItem>
+    <TabItem value="http" label="HTTP" default>
+
+        ```http title="Delete a single feature"
+        DELETE https://api.centia.io/api/v4/schemas/rockhall/tables/venues/features/1 HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+
+        ```http title="Delete several features"
+        DELETE https://api.centia.io/api/v4/schemas/rockhall/tables/venues/features/1,2,3 HTTP/1.1
+        Authorization: Bearer abc123
+        ```
+
+    </TabItem>
+</Tabs>
+
+## Using the SDK
+
+The [`@centia-io/sdk`](./sdk.mdx) (0.2.11+) exposes the API through the `Features` class. The GeoJSON types `GeoJsonFeature<P>`, `GeoJsonFeatureCollection<P>` and `GeoJsonGeometry` are exported, with `P` typing the feature properties. Errors are thrown as `CentiaApiError` with `.status` and `.code`:
+
+```ts
+import { createCentiaClient, Features } from '@centia-io/sdk'
+
+const features = new Features(createCentiaClient({ baseUrl, auth: { getAccessToken } }))
+
+// One key returns a bare Feature, a list of keys a FeatureCollection
+const one = await features.getFeature('rockhall', 'venues', 1)
+const many = await features.getFeature('rockhall', 'venues', [1, 2, 3])
+
+// Reproject the output geometry (default is EPSG:4326, lon/lat)
+const projected = await features.getFeature('rockhall', 'venues', 1, { srs: 25832 })
+
+// Insert (201) — the returned location points at the new feature(s)
+const { location } = await features.postFeature('rockhall', 'venues', {
+  type: 'Feature',
+  geometry: { type: 'Point', coordinates: [-118.3893, 34.0816] },
+  properties: { name: 'The Troubadour', city: 'West Hollywood' },
+})
+
+// Update (303) — address by path key, or omit `feature` and put the key in properties
+await features.patchFeature('rockhall', 'venues', {
+  type: 'Feature',
+  geometry: null,
+  properties: { city: 'Los Angeles' },
+}, { feature: 1 })
+
+// Delete (204) — a list of keys deletes several rows at once (0.2.12+)
+await features.deleteFeature('rockhall', 'venues', 1)
+await features.deleteFeature('rockhall', 'venues', [2, 3])
+```
+
+`srs` on `postFeature`/`patchFeature` declares the SRID of the incoming geometry.
+
+## Errors
+
+| Status | Code | Meaning |
+|---|---|---|
+| `400` | `FEATURE_ID_REQUIRED` | `GET`/`DELETE` without a key in the path. |
+| `400` | `INVALID_GEOJSON` | The body is not a `Feature` or a non-empty `FeatureCollection`. |
+| `400` | `PRIMARY_KEY_MISSING` | `PATCH` without a path key, and a feature lacks its key in `properties`. |
+| `400` | `NO_PRIMARY_KEY` | The table has no primary key. |
+| `400` | `NOTHING_INSERTED` | Nothing was inserted — the layer is not editable. |
+| `400` | `WFS_NOT_ENABLED` | WFS is not enabled for the layer. |
+| `404` | `TABLE_NOT_FOUND` | The table does not exist. |
+| `404` | `FEATURE_NOT_FOUND` | No features matched the key(s). |

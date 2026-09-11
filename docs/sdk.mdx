@@ -19,6 +19,8 @@ import TabItem from '@theme/TabItem';
 | JSON-RPC | `Rpc`, `createApi` | [Methods → Using the SDK](./methods#using-the-sdk) |
 | GraphQL | `Gql` | [GraphQL → Using the SDK](./graphql#using-the-sdk) |
 | Key/value store | `Keyvalue` | [Key/value store → Using the SDK](./keyvalue#using-the-sdk) |
+| Features (GeoJSON) | `Features` | [Features → Using the SDK](./features#using-the-sdk) |
+| OGC API (Features/Maps) | `Ogc` | [OGC API → Using the SDK](./ogc-api#using-the-sdk) |
 
 ## Installation
 
@@ -52,7 +54,7 @@ Requirements:
 
 ESM import:
 ```ts
-import { CodeFlow, PasswordFlow, Sql, Rpc, Gql, Keyvalue, createApi } from "@centia-io/sdk";
+import { CodeFlow, PasswordFlow, Sql, Rpc, Gql, Keyvalue, Features, createApi } from "@centia-io/sdk";
 import type { RpcRequest, RpcResponse, PgTypes } from "@centia-io/sdk";
 ```
 
@@ -68,7 +70,7 @@ The SDK handles token storage and refresh for you:
 ## Error handling
 
 - Network/HTTP errors: thrown as `Error` with the status/body text when available.
-- API errors from the newer classes (e.g. `Keyvalue`): thrown as `CentiaApiError` with `.status` and `.code`.
+- API errors from the newer classes (e.g. `Keyvalue`, `Features`): thrown as `CentiaApiError` with `.status` and `.code`.
 
 ## Environment details
 

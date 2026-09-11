@@ -1,0 +1,182 @@
+---
+title: OGC API
+description: Read features as GeoJSON and render map images through the standards-based OGC API — OGC API Features (Part 1 Core, Part 2 CRS) and OGC API Maps (Part 1 Core).
+sidebar_position: 76
+---
+
+# OGC API
+
+The OGC API is a **standards-based, read-only REST view** of the same layers the [OGC services](./ogc.mdx) (WMS/WFS) expose. It implements **OGC API Features** (Part 1 Core and Part 2 CRS) for reading features as GeoJSON and **OGC API Maps** (Part 1 Core) for rendered map images — so any client that speaks the OGC API standards (QGIS, GDAL/OGR and others) can browse and read your data with no Centia-specific code.
+
+Every layer with OGC services enabled is a **collection**, identified as `schema.table`. Features are served by the same WFS engine and maps by the same WMS backend as the classic services, so [privileges](./privileges.mdx), [geofence rules](./rules.mdx), versioning and workflow all apply. The API is read-only — write with the [Feature API](./features.mdx), [SQL](./statement.mdx) or WFS-T.
+
+All routes are `GET` under a database-qualified base URL:
+
+```
+https://api.centia.io/api/v4/ogc/database/{database}
+```
+
+| Route | Returns |
+|---|---|
+| `/` | Landing page with links: `conformance`, `data` (collections), `service-desc` (OpenAPI) |
+| `/conformance` | The conformance classes the API implements |
+| `/collections` | All collections visible to the caller (`limit` default 100, max 1000) |
+| `/collections/{id}` | One collection: title, description, `extent`, `crs` list, `storageCrs`, links |
+| `/collections/{id}/items` | The features as a GeoJSON `FeatureCollection` |
+| `/collections/{id}/items/{fid}` | One feature as a bare GeoJSON `Feature` |
+| `/collections/{id}/map` | A rendered map image of one collection |
+| `/map?collections=a,b` | A rendered map image of several collections (same schema) |
+
+Requests are authenticated like the classic OGC services: **Bearer token** (must belong to `{database}`), **HTTP Basic**, or **anonymous** for publicly readable layers.
+
+## Collections
+
+`/collections` lists what the caller may read — protected layers are simply omitted for callers without access. Each collection carries its spatial extent (in CRS84), the list of supported CRS URIs and, for versioned layers, a temporal extent. Raster layers appear as map-only collections without an `items` link:
+
+```http title="Request"
+GET https://api.centia.io/api/v4/ogc/database/mydb/collections/rockhall.venues HTTP/1.1
+Accept: application/json
+Authorization: Bearer abc123
+```
+
+## Items
+
+`/collections/{id}/items` returns the features as a streamed `application/geo+json` `FeatureCollection`. The response carries `numberMatched` (the total), `numberReturned`, and `next`/`prev` links for paging; the CRS of the returned geometry is echoed in the `Content-Crs` header:
+
+```http title="Request"
+GET https://api.centia.io/api/v4/ogc/database/mydb/collections/rockhall.venues/items?limit=2 HTTP/1.1
+Accept: application/geo+json
+Authorization: Bearer abc123
+```
+
+```json title="Response"
+{
+    "type": "FeatureCollection",
+    "numberMatched": 25,
+    "timeStamp": "2026-09-11T12:00:00Z",
+    "features": [
+        {
+            "type": "Feature",
+            "id": 1,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-118.3856, 34.0906]
+            },
+            "properties": {
+                "venue_id": 1,
+                "name": "Whisky a Go Go",
+                "city": "West Hollywood"
+            }
+        },
+        {
+            "type": "Feature",
+            "id": 2,
+            "geometry": {
+                "type": "Point",
+                "coordinates": [-118.3893, 34.0816]
+            },
+            "properties": {
+                "venue_id": 2,
+                "name": "The Troubadour",
+                "city": "West Hollywood"
+            }
+        }
+    ],
+    "links": [
+        { "rel": "self", "type": "application/geo+json", "title": "This document", "href": "..." },
+        { "rel": "collection", "type": "application/json", "title": "The collection", "href": "..." },
+        { "rel": "next", "type": "application/geo+json", "title": "Next page", "href": "..." }
+    ],
+    "numberReturned": 2
+}
+```
+
+Parameters:
+
+- **`limit`** — page size, default **10**, max 10000 (higher values are clamped). **`offset`** skips features; follow the `next` link to page through everything.
+- **`bbox`** — `minx,miny,maxx,maxy` in the axis order of `bbox-crs`. A lower corner above the upper corner is rejected with `400` (no antimeridian boxes).
+- **`crs`** / **`bbox-crs`** — CRS **URIs** from the collection's `crs` list, not bare EPSG codes:
+  - `http://www.opengis.net/def/crs/OGC/1.3/CRS84` — the default, **lon/lat**.
+  - `http://www.opengis.net/def/crs/EPSG/0/4326` — **lat/lon** axis order (per the standard), both in `bbox` input and GeoJSON output.
+  - `http://www.opengis.net/def/crs/EPSG/0/{code}` — projected CRSs, x/y.
+
+  Anything else is `400` (`INVALID_CRS`).
+- **`datetime`** — a single ISO 8601 instant (e.g. `2024-01-01T00:00:00Z`). On a versioned layer it selects the version valid at that time; on other layers it is ignored. Intervals are not supported (`400`).
+
+Unknown query parameters are rejected with `400` (`UNKNOWN_PARAMETER`), as required by OGC API Common.
+
+### Get one feature
+
+`/items/{fid}` returns a bare GeoJSON `Feature` (with `links`), or `404` if it does not exist. It accepts only `crs`, `datetime` and `f`:
+
+```http title="Request"
+GET https://api.centia.io/api/v4/ogc/database/mydb/collections/rockhall.venues/items/1 HTTP/1.1
+Accept: application/geo+json
+Authorization: Bearer abc123
+```
+
+## Maps
+
+`/collections/{id}/map` renders the collection as an image through the WMS backend, styled with the layer's [classes, styles and labels](./layer/layers.mdx):
+
+```http title="Request"
+GET https://api.centia.io/api/v4/ogc/database/mydb/collections/rockhall.venues/map?bbox=-118.5,33.9,-118.2,34.2&width=1024&f=png HTTP/1.1
+Authorization: Bearer abc123
+```
+
+Parameters:
+
+- **`bbox`** / **`bbox-crs`** / **`crs`** — as for items; `bbox` defaults to the collection's extent.
+- **`width`** / **`height`** — 1 to 16384 pixels. Give one and the other follows the bbox aspect ratio; give none and the width is 1024.
+- **`f`** — `png` (default, transparent background) or `jpeg` (opaque).
+- **`transparent`** / **`bgcolor`** — background control; `bgcolor` as `0xRRGGBB`.
+- **`datetime`** — as for items, on versioned layers.
+
+The dataset-level `/map?collections=a,b` renders several collections in one image — they must belong to the **same schema** (`400` otherwise):
+
+```http title="Request"
+GET https://api.centia.io/api/v4/ogc/database/mydb/map?collections=rockhall.venues,rockhall.tours&width=1024 HTTP/1.1
+Authorization: Bearer abc123
+```
+
+## Access and errors
+
+The per-layer access model is the same as for WMS/WFS: anonymous callers read layers whose authentication level is `None` or `Write`; `Read/write` layers require credentials and, for sub-users, a [privilege](./privileges.mdx) other than `none` (group inheritance applies). Note the distinction between the codes — `404` always means unknown, never hidden:
+
+| Status | Meaning |
+|---|---|
+| `400` | Bad or unknown parameter, invalid CRS URI, interval `datetime`, items on a raster collection, mixed schemas in `/map?collections=`. |
+| `401` | The collection exists and is protected, and the request is anonymous — answered with a `WWW-Authenticate: Basic` challenge. |
+| `403` | The identity is known but lacks privilege on the collection, or a geofence rule denies the request. |
+| `404` | Unknown collection or feature (`COLLECTION_NOT_FOUND` / `FEATURE_NOT_FOUND`). |
+
+## Using the SDK
+
+The [`@centia-io/sdk`](./sdk.mdx) (0.2.13+) wraps the API in the `Ogc` class. Feature properties can be typed, CRS URIs are built with the exported `OGC_CRS84` constant and `ogcEpsgCrs()` helper, and errors are thrown as `CentiaApiError` with `.status` and `.code`. Map images are fetched by URL — use `mapUrl`/`datasetMapUrl` to build URLs for `<img>` tags or map libraries:
+
+```ts
+import { createCentiaClient, Ogc, OGC_CRS84, ogcEpsgCrs } from '@centia-io/sdk'
+
+const ogc = new Ogc(createCentiaClient({ baseUrl, auth: { getAccessToken } }))
+
+const { collections } = await ogc.getCollections('mydb')
+const collection = await ogc.getCollection('mydb', 'rockhall.venues') // extent, crs list, links
+
+// GeoJSON items — default page size is 10; follow the `next` link or pass offset
+const page = await ogc.getItems<{ venue_id: number; name: string }>('mydb', 'rockhall.venues', {
+  bbox: [-118.5, 33.9, -118.2, 34.2], // lon/lat in CRS84 (the default bbox-crs)
+  crs: ogcEpsgCrs(25832),             // output CRS from the collection's crs list
+  limit: 100,
+})
+page.numberMatched // total; page.numberReturned; page.links (next/prev)
+
+const feature = await ogc.getItem('mydb', 'rockhall.venues', 1)
+
+// Map images are fetched by URL (e.g. an <img> or a map library)
+const url = ogc.mapUrl('mydb', 'rockhall.venues', {
+  bbox: [-118.5, 33.9, -118.2, 34.2],
+  width: 512,
+  format: 'png',
+})
+const multi = ogc.datasetMapUrl('mydb', ['rockhall.venues', 'rockhall.tours'], { width: 512 })
+```
