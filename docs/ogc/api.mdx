@@ -149,6 +149,7 @@ The per-layer access model is the same as for WMS/WFS: anonymous callers read la
 | `401` | The collection exists and is protected, and the request is anonymous — answered with a `WWW-Authenticate: Basic` challenge. |
 | `403` | The identity is known but lacks privilege on the collection, or a geofence rule denies the request. |
 | `404` | Unknown collection or feature (`COLLECTION_NOT_FOUND` / `FEATURE_NOT_FOUND`). |
+| `502` | The map rendering backend failed, e.g. a missing mapfile (`MAP_BACKEND_ERROR`) — always JSON, never an HTML error page. |
 
 ## Using the SDK
 
