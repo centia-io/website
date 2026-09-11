@@ -1,14 +1,14 @@
 ---
 title: OGC API
 description: Read features as GeoJSON and render map images through the standards-based OGC API — OGC API Features (Part 1 Core, Part 2 CRS) and OGC API Maps (Part 1 Core).
-sidebar_position: 76
+sidebar_position: 2
 ---
 
 # OGC API
 
-The OGC API is a **standards-based, read-only REST view** of the same layers the [OGC services](./ogc.mdx) (WMS/WFS) expose. It implements **OGC API Features** (Part 1 Core and Part 2 CRS) for reading features as GeoJSON and **OGC API Maps** (Part 1 Core) for rendered map images — so any client that speaks the OGC API standards (QGIS, GDAL/OGR and others) can browse and read your data with no Centia-specific code.
+The OGC API is a **standards-based, read-only REST view** of the same layers the [OGC services](./services.mdx) (WMS/WFS) expose. It implements **OGC API Features** (Part 1 Core and Part 2 CRS) for reading features as GeoJSON and **OGC API Maps** (Part 1 Core) for rendered map images — so any client that speaks the OGC API standards (QGIS, GDAL/OGR and others) can browse and read your data with no Centia-specific code.
 
-Every layer with OGC services enabled is a **collection**, identified as `schema.table`. Features are served by the same WFS engine and maps by the same WMS backend as the classic services, so [privileges](./privileges.mdx), [geofence rules](./rules.mdx), versioning and workflow all apply. The API is read-only — write with the [Feature API](./features.mdx), [SQL](./statement.mdx) or WFS-T.
+Every layer with OGC services enabled is a **collection**, identified as `schema.table`. Features are served by the same WFS engine and maps by the same WMS backend as the classic services, so [privileges](../privileges.mdx), [geofence rules](../rules.mdx), versioning and workflow all apply. The API is read-only — write with the [Feature API](../features.mdx), [SQL](../statement.mdx) or WFS-T.
 
 All routes are `GET` under a database-qualified base URL:
 
@@ -117,7 +117,7 @@ Authorization: Bearer abc123
 
 ## Maps
 
-`/collections/{id}/map` renders the collection as an image through the WMS backend, styled with the layer's [classes, styles and labels](./layer/layers.mdx):
+`/collections/{id}/map` renders the collection as an image through the WMS backend, styled with the layer's [classes, styles and labels](../layer/layers.mdx):
 
 ```http title="Request"
 GET https://api.centia.io/api/v4/ogc/database/mydb/collections/rockhall.venues/map?bbox=-118.5,33.9,-118.2,34.2&width=1024&f=png HTTP/1.1
@@ -141,7 +141,7 @@ Authorization: Bearer abc123
 
 ## Access and errors
 
-The per-layer access model is the same as for WMS/WFS: anonymous callers read layers whose authentication level is `None` or `Write`; `Read/write` layers require credentials and, for sub-users, a [privilege](./privileges.mdx) other than `none` (group inheritance applies). Note the distinction between the codes — `404` always means unknown, never hidden:
+The per-layer access model is the same as for WMS/WFS: anonymous callers read layers whose authentication level is `None` or `Write`; `Read/write` layers require credentials and, for sub-users, a [privilege](../privileges.mdx) other than `none` (group inheritance applies). Note the distinction between the codes — `404` always means unknown, never hidden:
 
 | Status | Meaning |
 |---|---|
@@ -152,7 +152,7 @@ The per-layer access model is the same as for WMS/WFS: anonymous callers read la
 
 ## Using the SDK
 
-The [`@centia-io/sdk`](./sdk.mdx) (0.2.13+) wraps the API in the `Ogc` class. Feature properties can be typed, CRS URIs are built with the exported `OGC_CRS84` constant and `ogcEpsgCrs()` helper, and errors are thrown as `CentiaApiError` with `.status` and `.code`. Map images are fetched by URL — use `mapUrl`/`datasetMapUrl` to build URLs for `<img>` tags or map libraries:
+The [`@centia-io/sdk`](../sdk.mdx) (0.2.13+) wraps the API in the `Ogc` class. Feature properties can be typed, CRS URIs are built with the exported `OGC_CRS84` constant and `ogcEpsgCrs()` helper, and errors are thrown as `CentiaApiError` with `.status` and `.code`. Map images are fetched by URL — use `mapUrl`/`datasetMapUrl` to build URLs for `<img>` tags or map libraries:
 
 ```ts
 import { createCentiaClient, Ogc, OGC_CRS84, ogcEpsgCrs } from '@centia-io/sdk'

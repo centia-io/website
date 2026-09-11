@@ -212,7 +212,7 @@ Privileges rank `none` < `read` < `write`. If `alx` has no explicit privilege on
 Schema ownership is inherited the same way: a sub-user owns a schema when the sub-user — or any group in its inheritance chain — has the same name as the schema. Since every sub-user gets a schema named after itself, adding members to the group `gunsnroses` also gives them full access to the `gunsnroses` schema.
 
 :::note
-Inheritance applies everywhere privileges are enforced: SQL and the HTTP API as well as the [OGC services](./ogc.mdx) (WMS/WFS). The super-user (the database owner) always has full access and is not affected by groups.
+Inheritance applies everywhere privileges are enforced: SQL and the HTTP API as well as the [OGC services](./ogc/services.mdx) (WMS/WFS). The super-user (the database owner) always has full access and is not affected by groups.
 :::
 
 ## Signup (Browser – Create a new user)

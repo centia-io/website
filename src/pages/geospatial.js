@@ -339,7 +339,7 @@ export default function Geospatial() {
                                     OGC-compliant client. Styling is configured with classes,
                                     styles and labels through the Layer API.
                                 </p>
-                                <Link to="/docs/ogc" className={styles.stepLink}>
+                                <Link to="/docs/ogc/services" className={styles.stepLink}>
                                     Read the OGC services docs →
                                 </Link>
                                 <br />

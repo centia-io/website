@@ -65,6 +65,14 @@ const config = {
                         from: '/docs/vibe-coding',
                         to: '/docs/agentic-development',
                     },
+                    {
+                        from: '/docs/ogc',
+                        to: '/docs/ogc/services',
+                    },
+                    {
+                        from: '/docs/ogc-api',
+                        to: '/docs/ogc/api',
+                    },
                 ],
             },
         ],

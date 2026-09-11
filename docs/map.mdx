@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # Map
 
-The Map API stores a **map view configuration per schema**: a center, a zoom level and an extent. Map clients use it as the initial view when opening a schema's map, and the extent is also used as the schema's bounding box in the [OGC services](./ogc.mdx) — it becomes the `GetCapabilities` bounding box for WMS/WFS. If no extent is set, a world extent is used.
+The Map API stores a **map view configuration per schema**: a center, a zoom level and an extent. Map clients use it as the initial view when opening a schema's map, and the extent is also used as the schema's bounding box in the [OGC services](./ogc/services.mdx) — it becomes the `GetCapabilities` bounding box for WMS/WFS. If no extent is set, a world extent is used.
 
 The Map API is orthogonal to the [Layer API](./layer/layers.mdx): layers control *how* data is rendered, the map configuration controls *where* the map starts.
 
@@ -92,4 +92,4 @@ Invalid input — an unknown property, a `center` that is not exactly 2 numbers,
 |---|---|
 | `center` | Map center as `[longitude, latitude]` in EPSG:4326. Nullable. |
 | `zoom` | Initial zoom level (unitless). Nullable. |
-| `extent` | Map extent as `[minx, miny, maxx, maxy]` in EPSG:4326. Sets the initial extent of the map **and** the schema's bounding box in the [OGC services](./ogc.mdx). Nullable. |
+| `extent` | Map extent as `[minx, miny, maxx, maxy]` in EPSG:4326. Sets the initial extent of the map **and** the schema's bounding box in the [OGC services](./ogc/services.mdx). Nullable. |
