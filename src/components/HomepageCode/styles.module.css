@@ -1,0 +1,106 @@
+.codeShowcase {
+    background: var(--ifm-pre-background);
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+    text-align: left;
+}
+
+.codeHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #1e293b;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    overflow-x: auto;
+}
+
+.windowControls {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-right: 1rem;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.dotRed { background: #ef4444; }
+.dotYellow { background: #f59e0b; }
+.dotGreen { background: #10b981; }
+
+.tabList {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+}
+
+.tabButton {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-family: var(--geo-mono);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.tabButton:hover {
+    color: #f8fafc;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.tabButtonActive {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.15);
+    font-weight: 600;
+}
+
+.codeBody {
+    position: relative;
+    display: grid;
+}
+
+/* All panels share the same grid cell, so the box keeps the height of the
+   tallest snippet and never jumps when switching tabs. */
+.codePanel {
+    grid-area: 1 / 1;
+    min-width: 0;
+    visibility: hidden;
+}
+
+.codePanelActive {
+    visibility: visible;
+}
+
+.codePanel :global(.theme-code-block) {
+    margin: 0;
+    box-shadow: none;
+    height: 100%;
+}
+
+.codeBody :global(pre) {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    height: 100%;
+    font-size: 0.85rem !important;
+    line-height: 1.55 !important;
+}
+
+.codeBody :global(pre),
+.codeBody :global(pre code) {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere;
+    overflow-x: hidden !important;
+}
+
