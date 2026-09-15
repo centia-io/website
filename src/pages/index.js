@@ -1,232 +1,193 @@
-import React, { useState } from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
-import HomepageFeatures from '@site/src/components/HomepageFeatures';
 import Head from '@docusaurus/Head';
 import Heading from '@theme/Heading';
 import CodeBlock from '@theme/CodeBlock';
-import { trackCtaClick } from '../utils/analytics';
+import {trackCtaClick} from '../utils/analytics';
+import CodeShowcase from '@site/src/components/HomepageCode';
 import styles from './index.module.css';
 
-const codeSnippets = [
+const pageTitle = 'Geospatial BaaS & Infrastructure — Cloud or Self-Hosted';
+const pageDescription =
+    'Build geospatial apps on PostGIS with spatial SQL, realtime APIs, OGC API Features & Maps and WMS/WFS. Use managed Centia Cloud or self-host with Docker.';
+
+const formats = ['GeoJSON', 'Shapefile', 'GeoPackage', 'CSV', 'GML'];
+
+const steps = [
     {
-        id: 'sdk',
-        label: 'JS / TS SDK',
-        language: 'typescript',
-        code: `import { PasswordFlow, Sql } from '@centia-io/sdk';
-
-// Sign in once — the SDK stores and refreshes tokens for you
-await new PasswordFlow({
-  host: 'https://api.centia.io',
-  clientId: 'your-client-id',
-  username: 'your-username',
-  password: process.env.CENTIA_PASSWORD,
-  database: 'your-database',
-}).signIn();
-
-// Parameterized spatial SQL on PostgreSQL + PostGIS
-const { data } = await new Sql().exec({
-  q: \`select name, st_asgeojson(geom) as location
-      from places
-      where st_dwithin(geom::geography,
-        st_setsrid(st_makepoint(:lng, :lat), 4326)::geography, :radius)\`,
-  params: { lng: 12.5683, lat: 55.6761, radius: 2000 },
-});`,
+        marker: '01',
+        title: 'Upload your data',
+        description:
+            'Import CSV, GeoJSON, Shapefile, GeoPackage or GML into PostGIS tables, with options for coordinate reference systems and reprojection.',
+        link: {to: '/docs/import', label: 'File import'},
     },
     {
-        id: 'mcp',
-        label: 'AI Agent (MCP)',
-        language: 'json',
-        code: `{
-  "mcpServers": {
-    "centia-io": {
-      "command": "npx",
-      "args": ["-y", "@centia-io/mcp-server"],
-      "env": {
-        "API_TOKEN": "your-access-token",
-        "API_BASE_URL": "https://api.centia.io"
-      }
-    }
-  }
-}`,
+        marker: '02',
+        title: 'Get instant APIs',
+        description:
+            'Query with parameterized SQL over REST or WebSocket and auto-generated GraphQL. Publish layers through OGC API Features & Maps and WMS/WFS.',
+        link: {to: '/docs/statement', label: 'SQL API'},
     },
     {
-        id: 'sql',
-        label: 'Spatial SQL',
-        language: 'sql',
-        code: `-- POST your SQL to /api/v4/sql with named parameters
-SELECT
-  name, 
-  category,
-  ST_Distance(
-    geom::geography, 
-    ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography
-  ) AS distance_meters
-FROM locations
-WHERE ST_DWithin(
-  geom::geography,
-  ST_SetSRID(ST_MakePoint(:lng, :lat), 4326)::geography,
-  :radius
-)
-ORDER BY distance_meters ASC
-LIMIT 10;`,
-    },
-    {
-        id: 'ogc',
-        label: 'OGC (WMS/WFS)',
-        language: 'bash',
-        code: `# Every layer is served through standard OGC services
-
-# Render a styled map image (WMS GetMap)
-https://api.centia.io/api/v4/ows/schema/parks/database/mydb
-  ?SERVICE=WMS&VERSION=1.1.0&REQUEST=GetMap
-  &LAYERS=parks.areas&SRS=EPSG:3857
-  &BBOX=1204164,7485240,1259200,7534200
-  &WIDTH=1024&HEIGHT=768&FORMAT=image/png
-
-# Fetch the vector features (WFS GetFeature)
-https://api.centia.io/api/v4/wfs/schema/parks/database/mydb
-  ?SERVICE=WFS&VERSION=1.1.0&REQUEST=GetFeature
-  &TYPENAME=areas&SRSNAME=EPSG:4326
-
-# Works with QGIS, OpenLayers, Leaflet — WFS-T for editing`,
-    },
-    {
-        id: 'docker',
-        label: 'Self-Host',
-        language: 'bash',
-        code: `# Self-host the full stack: app, WebSockets, PostGIS and Redis
-git clone https://github.com/centia-io/centia-docker.git
-cd centia-docker
-docker compose up --build -d
-
-# Connect with the CLI
-npm install -g @centia-io/cli
-centia connect http://localhost:81
-centia login`,
+        marker: '03',
+        title: 'Build your app',
+        description:
+            'TypeScript SDK with OAuth helpers, realtime subscriptions with server-side filtering, and fine-grained access control.',
+        link: {to: '/docs/sdk', label: 'SDK'},
     },
 ];
 
-const quickSteps = [
+const features = [
     {
-        step: '01',
-        title: 'Deploy in Seconds',
-        description: 'Launch in managed Centia Cloud with zero infrastructure setup, or spin up self-hosted with Docker Compose on your own servers.',
-        link: { to: '/docs/opensource', label: 'Explore Docker setup' },
+        icon: '⌖',
+        title: 'PostGIS built in',
+        description:
+            'Find nearby features with ST_DWithin, intersect geometries with ST_Intersects, and transform coordinates with spatial SQL.',
+        link: {to: '/docs/statement', label: 'Explore spatial SQL'},
     },
     {
-        step: '02',
-        title: 'Auto-Generated APIs',
-        description: 'Instant REST, GraphQL, Spatial SQL, Realtime WebSocket subscriptions, and OGC WMS/WFS map services over your PostgreSQL & PostGIS database tables.',
-        link: { to: '/docs/intro', label: 'View API docs' },
+        icon: '⛁',
+        title: 'Import your spatial data',
+        description: 'Bring GeoJSON, Shapefile, GeoPackage, CSV or GML into your database and expose it through APIs.',
+        link: {to: '/docs/import', label: 'Explore data import'},
     },
     {
-        step: '03',
-        title: 'Connect Apps & AI Agents',
-        description: 'Query via TypeScript SDKs with built-in OAuth2, or connect LLMs and AI coding assistants directly via Model Context Protocol (MCP).',
-        link: { to: '/docs/sdk', label: 'See SDK & MCP docs' },
+        icon: '▦',
+        title: 'OGC APIs & map services',
+        description:
+            'Read GeoJSON with OGC API Features, render images with OGC API Maps, and connect GIS tools through WMS/WFS. Edit features via WFS-T.',
+        link: {to: '/docs/ogc/api', label: 'Explore the OGC API'},
+    },
+    {
+        icon: '⬡',
+        title: 'GraphQL, auto-generated',
+        description: 'Queries, mutations and subscriptions derived from your schema.',
+    },
+    {
+        icon: '⇄',
+        title: 'Realtime over WebSocket',
+        description: 'Subscribe to table changes with server-side filtering (shapes).',
+    },
+    {
+        icon: '⚿',
+        title: 'Control access to your data',
+        description:
+            'OAuth 2.0 (PKCE, password, device flows), sub-users, table-level privileges and SQL rules.',
+    },
+    {
+        icon: '✳',
+        title: 'AI-agent ready',
+        description: 'Connect AI assistants to inspect schemas, query spatial data and manage your backend through the official MCP server.',
+        link: {to: '/docs/agentic-development', label: 'Connect AI agents'},
+    },
+    {
+        icon: '⌘',
+        title: 'Functions for your workflows',
+        description: 'Run Node.js or Python code on demand, on a schedule, or in response to events, with access to your data.',
+        link: {to: '/docs/functions', label: 'Explore functions'},
+    },
+    {
+        icon: '◍',
+        title: 'Open source roots',
+        description:
+            'Built on Geocloud2 (AGPLv3) by MapCentia, with 10+ years of geospatial domain expertise.',
+        link: {to: '/docs/opensource', label: 'Explore the open source stack'},
     },
 ];
 
-function CodeShowcase() {
-    const [activeTab, setActiveTab] = useState('sdk');
+const useCases = [
+    {
+        title: 'Web maps with live data',
+        description: 'Realtime layers without building a sync pipeline.',
+    },
+    {
+        title: 'Field data collection',
+        description: 'Upload from the field, query from the office.',
+    },
+    {
+        title: 'Open data portals',
+        description: 'Publish spatial datasets as queryable APIs.',
+    },
+    {
+        title: 'GIS + AI workflows',
+        description: 'Let agents query and manage spatial data via MCP.',
+    },
+    {
+        title: 'Desktop GIS integration',
+        description: 'Connect QGIS directly over WMS/WFS and edit with WFS-T.',
+    },
+    {
+        title: 'Location-based applications',
+        description: 'Find nearby places, intersect service areas and build spatial queries into your app.',
+    },
+];
 
-    const selectTab = (id) => {
-        setActiveTab(id);
-        trackCtaClick('hero_code_tab_click', { tab: id });
-    };
+const ogcExample = `# Read a collection as GeoJSON (OGC API Features)
+GET https://api.centia.io/api/v4/ogc/database/mydb/collections/parks.areas/items?limit=10 HTTP/1.1
+Accept: application/geo+json
+Authorization: Bearer your-access-token
 
-    const handleTabKeyDown = (event) => {
-        const currentIndex = codeSnippets.findIndex((s) => s.id === activeTab);
-        let nextIndex = null;
-        if (event.key === 'ArrowRight') {
-            nextIndex = (currentIndex + 1) % codeSnippets.length;
-        } else if (event.key === 'ArrowLeft') {
-            nextIndex = (currentIndex - 1 + codeSnippets.length) % codeSnippets.length;
-        } else if (event.key === 'Home') {
-            nextIndex = 0;
-        } else if (event.key === 'End') {
-            nextIndex = codeSnippets.length - 1;
-        }
-        if (nextIndex !== null) {
-            event.preventDefault();
-            selectTab(codeSnippets[nextIndex].id);
-            event.currentTarget
-                .closest('[role="tablist"]')
-                ?.querySelectorAll('[role="tab"]')[nextIndex]
-                ?.focus();
-        }
-    };
+# Render a styled map image (OGC API Maps)
+GET https://api.centia.io/api/v4/ogc/database/mydb/collections/parks.areas/map?width=1024&f=png HTTP/1.1
+Accept: image/png
+Authorization: Bearer your-access-token`;
 
+function HeroMap() {
     return (
-        <div className={styles.codeShowcase}>
-            <div className={styles.codeHeader}>
-                <div className={styles.windowControls} aria-hidden="true">
-                    <span className={clsx(styles.dot, styles.dotRed)} />
-                    <span className={clsx(styles.dot, styles.dotYellow)} />
-                    <span className={clsx(styles.dot, styles.dotGreen)} />
-                </div>
-                <div className={styles.tabList} role="tablist" aria-label="Code examples">
-                    {codeSnippets.map((snippet) => (
-                        <button
-                            key={snippet.id}
-                            id={`code-tab-${snippet.id}`}
-                            role="tab"
-                            aria-selected={activeTab === snippet.id}
-                            aria-controls={`code-tabpanel-${snippet.id}`}
-                            tabIndex={activeTab === snippet.id ? 0 : -1}
-                            className={clsx(styles.tabButton, activeTab === snippet.id && styles.tabButtonActive)}
-                            onClick={() => selectTab(snippet.id)}
-                            onKeyDown={handleTabKeyDown}
-                        >
-                            {snippet.label}
-                        </button>
+        <div className={styles.heroArt} aria-hidden="true">
+            <svg className={styles.heroMap} viewBox="0 0 480 360" role="presentation">
+                {/* graticule */}
+                <g className={styles.graticule}>
+                    {[60, 120, 180, 240, 300, 360, 420].map((x) => (
+                        <line key={`v${x}`} x1={x} y1="0" x2={x} y2="360" />
                     ))}
-                </div>
-            </div>
-            <div className={styles.codeBody}>
-                {codeSnippets.map((snippet) => (
-                    <div
-                        key={snippet.id}
-                        id={`code-tabpanel-${snippet.id}`}
-                        role="tabpanel"
-                        aria-labelledby={`code-tab-${snippet.id}`}
-                        aria-hidden={activeTab !== snippet.id}
-                        className={clsx(styles.codePanel, activeTab === snippet.id && styles.codePanelActive)}
-                    >
-                        <CodeBlock language={snippet.language}>
-                            {snippet.code}
-                        </CodeBlock>
-                    </div>
-                ))}
-            </div>
+                    {[60, 120, 180, 240, 300].map((y) => (
+                        <line key={`h${y}`} x1="0" y1={y} x2="480" y2={y} />
+                    ))}
+                </g>
+                {/* park polygons */}
+                <g className={styles.polygons}>
+                    <polygon points="48,210 112,168 176,196 162,268 84,282" />
+                    <polygon points="262,52 348,38 396,96 342,150 270,128" />
+                    <polygon points="330,220 414,196 452,260 398,318 326,296" />
+                </g>
+                {/* ST_DWithin radius */}
+                <circle className={styles.queryRadius} cx="216" cy="172" r="92" />
+                <circle className={styles.queryPoint} cx="216" cy="172" r="6" />
+                {/* feature points */}
+                <g className={styles.points}>
+                    <circle cx="140" cy="226" r="4" />
+                    <circle cx="296" cy="108" r="4" />
+                    <circle cx="252" cy="218" r="4" />
+                    <circle cx="372" cy="252" r="4" />
+                    <circle cx="96" cy="96" r="4" />
+                </g>
+            </svg>
+            <pre className={styles.heroResponse}>
+{`{ "name": "Nørrebroparken",
+  "distance_m": 420 }`}
+            </pre>
         </div>
     );
 }
 
 export default function Home() {
-    const { siteConfig } = useDocusaurusContext();
-    const pageTitle = 'Postgres BaaS — Cloud, Self-Hosted & AI-Ready';
-    const pageDescription = 'Build fast on managed Centia Cloud or self-host with Docker. Get PostgreSQL with PostGIS, OAuth2, realtime APIs, SDKs, and native MCP support for AI agents.';
-
     return (
         <Layout title={pageTitle} description={pageDescription}>
             <Head>
                 <link rel="canonical" href="https://centia.io/" />
-                <meta property="og:title" content="Centia.io | Postgres BaaS for Cloud and Self-Hosting" />
+                <meta property="og:title" content={`${pageTitle} | Centia.io`} />
                 <meta property="og:description" content={pageDescription} />
-                <meta property="og:image" content="https://centia.io/img/social-card.png" />
+                <meta property="og:image" content="https://centia.io/img/social-card-geospatial.png" />
                 <meta property="og:image:width" content="1200" />
                 <meta property="og:image:height" content="630" />
                 <meta property="og:url" content="https://centia.io/" />
                 <meta property="og:type" content="website" />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="Centia.io | Postgres BaaS for Cloud and Self-Hosting" />
+                <meta name="twitter:title" content={`${pageTitle} | Centia.io`} />
                 <meta name="twitter:description" content={pageDescription} />
-                <meta name="twitter:image" content="https://centia.io/img/social-card.png" />
-
+                <meta name="twitter:image" content="https://centia.io/img/social-card-geospatial.png" />
                 <script type="application/ld+json">
                     {JSON.stringify({
                         '@context': 'https://schema.org',
@@ -257,81 +218,85 @@ export default function Home() {
                     })}
                 </script>
             </Head>
-            <div className="front-page">
-                <header className={clsx(styles.heroBanner)}>
-                    <div className={clsx('container', styles.heroContainer)}>
+
+            <div className={styles.page}>
+                <header className={styles.hero}>
+                    <div className={clsx('container', styles.heroInner)}>
                         <div className={styles.heroCopy}>
-                            <div className={styles.heroBadge}>
-                                <span className={styles.badgeSparkle}>✨</span>
-                                <span>Managed Postgres & PostGIS • AI Agent Ready (MCP) • Cloud & Self-Hosted</span>
-                            </div>
+                            <p className={styles.kicker}>Geospatial BaaS &amp; infrastructure</p>
                             <Heading as="h1" className={styles.heroTitle}>
-                                The Postgres Backend for Modern Apps & AI Agents
+                                The backend for your geospatial applications
                             </Heading>
                             <p className={styles.heroSubtitle}>
-                                Build fast on managed <strong>Centia Cloud</strong> or self-host with <strong>Docker</strong>. Get PostgreSQL with PostGIS, OAuth2, Realtime APIs, SDKs, and native MCP support out of the box.
+                                From spatial data to working APIs. Centia brings together
+                                PostGIS, data import, spatial SQL, realtime APIs and OGC map
+                                services in one geospatial backend as a service. Build on
+                                managed <strong>Centia Cloud</strong> or run the platform on
+                                your own infrastructure with <strong>Docker</strong>.
                             </p>
                             <div className={styles.ctaButtons}>
                                 <Link
                                     className="button button--primary button--lg"
                                     to="/console"
-                                    onClick={() => trackCtaClick('cta_cloud_start_click', { location: 'home_hero' })}
+                                    onClick={() =>
+                                        trackCtaClick('cta_cloud_start_click', {location: 'home_hero'})
+                                    }
                                 >
                                     Start in Centia Cloud
                                 </Link>
                                 <Link
                                     className="button button--secondary button--lg"
                                     to="/docs/opensource"
-                                    onClick={() => trackCtaClick('cta_self_host_click', { location: 'home_hero' })}
+                                    onClick={() =>
+                                        trackCtaClick('cta_self_host_click', {location: 'home_hero'})
+                                    }
                                 >
                                     Self-host with Docker
                                 </Link>
                                 <Link
                                     className={styles.docsGhostLink}
-                                    to="/docs/start"
-                                    onClick={() => trackCtaClick('cta_docs_start_click', { location: 'home_hero' })}
+                                    to="/docs/import"
+                                    onClick={() =>
+                                        trackCtaClick('cta_import_demo_click', {location: 'home_hero'})
+                                    }
                                 >
-                                    Read the Docs →
+                                    Explore data import →
                                 </Link>
                             </div>
+                            <ul className={styles.formatPills} aria-label="Supported import formats">
+                                {formats.map((format) => (
+                                    <li key={format}>{format}</li>
+                                ))}
+                            </ul>
                             <p className={styles.heroTrust}>
                                 Open source (AGPLv3)
                                 <span aria-hidden="true"> · </span>
                                 <Link
                                     to="https://github.com/centia-io"
-                                    onClick={() => trackCtaClick('cta_github_click', { location: 'home_hero' })}
+                                    onClick={() => trackCtaClick('cta_github_click', {location: 'home_hero'})}
                                 >
                                     GitHub
                                 </Link>
                                 <span aria-hidden="true"> · </span>
-                                PostgreSQL 16 + PostGIS 3.4
+                                PostgreSQL + PostGIS
                             </p>
                         </div>
-
-                        <div className={styles.heroVisual}>
-                            <CodeShowcase />
-                        </div>
+                        <HeroMap />
                     </div>
                 </header>
 
                 <main>
-                    {/* Quickstart 3-Step Section */}
-                    <section className={styles.quickstartSection}>
+                    <section className={styles.section}>
                         <div className="container">
-                            <div className={styles.sectionHeader}>
-                                <Heading as="h2" className={styles.sectionTitle}>
-                                    From Schema to Production in Minutes
-                                </Heading>
-                                <p className={styles.sectionSub}>
-                                    Everything you need to ship full-stack backends without infrastructure complexity.
-                                </p>
-                            </div>
-                            <div className={styles.quickStepsGrid}>
-                                {quickSteps.map((step) => (
-                                    <div key={step.step} className={styles.stepCard}>
-                                        <div className={styles.stepBadge}>{step.step}</div>
-                                        <Heading as="h3" className={styles.stepTitle}>{step.title}</Heading>
-                                        <p className={styles.stepDesc}>{step.description}</p>
+                            <Heading as="h2" className={styles.sectionTitle}>
+                                From spatial data to API in three steps
+                            </Heading>
+                            <div className={styles.steps}>
+                                {steps.map((step) => (
+                                    <div key={step.marker} className={styles.step}>
+                                        <span className={styles.stepMarker}>{step.marker}</span>
+                                        <Heading as="h3">{step.title}</Heading>
+                                        <p>{step.description}</p>
                                         <Link to={step.link.to} className={styles.stepLink}>
                                             {step.link.label} →
                                         </Link>
@@ -341,90 +306,188 @@ export default function Home() {
                         </div>
                     </section>
 
-                    {/* Features Grid */}
-                    <HomepageFeatures />
-
-                    {/* AI Agent / MCP Spotlight Section */}
-                    <section className={styles.mcpSection}>
+                    <section className={clsx(styles.section, styles.sectionAlt)}>
                         <div className="container">
-                            <div className={styles.mcpBox}>
-                                <div className={styles.mcpCopy}>
-                                    <div className={styles.mcpBadge}>
-                                        <span>🤖 Native MCP Support</span>
+                            <Heading as="h2" className={styles.sectionTitle}>
+                                Built for geospatial work, end to end
+                            </Heading>
+                            <div className={styles.featureGrid}>
+                                {features.map((feature) => (
+                                    <div key={feature.title} className={styles.featureCard}>
+                                        <span className={styles.featureIcon} aria-hidden="true">
+                                            {feature.icon}
+                                        </span>
+                                        <Heading as="h3">{feature.title}</Heading>
+                                        <p>{feature.description}</p>
+                                        {feature.link && (
+                                            <Link to={feature.link.to} className={styles.stepLink}>
+                                                {feature.link.label} →
+                                            </Link>
+                                        )}
                                     </div>
-                                    <Heading as="h2" className={styles.mcpTitle}>
-                                        Built for the AI-Assisted Era
-                                    </Heading>
-                                    <p className={styles.mcpSub}>
-                                        Give Cursor, Claude Desktop, and custom LLM agents direct context to inspect schemas, execute spatial SQL, and run backend workflows through Centia&apos;s official Model Context Protocol (MCP) server.
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className={styles.section}>
+                        <div className={clsx('container', styles.codeSection)}>
+                            <div className={styles.codeCopy}>
+                                <Heading as="h2" className={styles.sectionTitle}>
+                                    Query spatial data. Connect your stack.
+                                </Heading>
+                                <p>
+                                    Run PostGIS queries over REST or WebSocket, or use the
+                                    TypeScript SDK with built-in OAuth helpers. Bind values
+                                    with named parameters such as <code>:lng</code>,{' '}
+                                    <code>:lat</code> and <code>:radius</code> to find nearby
+                                    features without building your own API server.
+                                </p>
+                                <Link to="/docs/statement" className={styles.stepLink}>
+                                    Read the SQL API docs →
+                                </Link>
+                                <br />
+                                <Link to="/docs/sdk" className={styles.stepLink}>
+                                    Build with the TypeScript SDK →
+                                </Link>
+                            </div>
+                            <div className={styles.codeBlock}>
+                                <CodeShowcase />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className={clsx(styles.section, styles.sectionAlt)}>
+                        <div className={clsx('container', styles.codeSection)}>
+                            <div className={styles.codeCopy}>
+                                <Heading as="h2" className={styles.sectionTitle}>
+                                    Open standards: OGC API, WMS &amp; WFS
+                                </Heading>
+                                <p>
+                                    Browse collections and read GeoJSON through <strong>OGC API
+                                    Features</strong>, or render styled map images with <strong>OGC
+                                    API Maps</strong>. Filter features by bounding box, page through
+                                    results and choose a supported coordinate reference system.
+                                    The OGC API provides read-only REST access to your published
+                                    layers, with the same privileges and geofence rules as WMS/WFS.
+                                </p>
+                                <p>
+                                    Connect QGIS, OpenLayers, Leaflet and other GIS clients through
+                                    WMS/WFS, and edit features through WFS-T. Configure map styling
+                                    with classes, styles and labels through the Layer API.
+                                </p>
+                                <Link to="/docs/ogc/api" className={styles.stepLink}>
+                                    Read the OGC API Features &amp; Maps docs →
+                                </Link>
+                                <br />
+                                <Link to="/docs/ogc/services" className={styles.stepLink}>
+                                    Read the WMS/WFS services docs →
+                                </Link>
+                                <br />
+                                <Link to="/docs/layer/layers" className={styles.stepLink}>
+                                    Style layers with the Layer API →
+                                </Link>
+                            </div>
+                            <div className={styles.codeBlock}>
+                                <CodeBlock language="http">{ogcExample}</CodeBlock>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className={styles.section}>
+                        <div className="container">
+                            <Heading as="h2" className={styles.sectionTitle}>
+                                What developers build on Centia
+                            </Heading>
+                            <div className={styles.useCaseGrid}>
+                                {useCases.map((useCase) => (
+                                    <div key={useCase.title} className={styles.useCaseCard}>
+                                        <Heading as="h3">{useCase.title}</Heading>
+                                        <p>{useCase.description}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className={clsx(styles.section, styles.sectionAlt)}>
+                        <div className="container">
+                            <Heading as="h2" className={styles.sectionTitle}>
+                                Your geospatial platform. Your choice of deployment.
+                            </Heading>
+                            <div className={styles.deploymentGrid}>
+                                <div className={styles.deploymentCard}>
+                                    <p className={styles.kicker}>Managed geospatial BaaS</p>
+                                    <Heading as="h3">Build on Centia Cloud</Heading>
+                                    <p>
+                                        Start with a managed PostGIS backend. Import your data
+                                        and connect your apps and GIS tools while Centia handles
+                                        the infrastructure.
                                     </p>
-                                    <ul className={styles.mcpList}>
-                                        <li>
-                                            <strong>Automated Schema Context:</strong> AI agents understand your database tables, foreign keys, and GIS columns instantly.
-                                        </li>
-                                        <li>
-                                            <strong>Safe Execution Boundaries:</strong> Enforce strict OAuth2 permissions, SQL parameterization, and environment scoping.
-                                        </li>
-                                        <li>
-                                            <strong>Natural Language Workflows:</strong> Go from user prompt to live database queries and spatial analytics seamlessly.
-                                        </li>
+                                    <ul>
+                                        <li>Managed PostgreSQL and PostGIS</li>
+                                        <li>Data APIs, OGC services and authentication</li>
+                                        <li>Free during beta — <Link to="/faq">see limits in the FAQ</Link></li>
                                     </ul>
-                                    <div className={styles.mcpCta}>
-                                        <Link
-                                            className="button button--primary button--lg"
-                                            to="/docs/agentic-development"
-                                            onClick={() => trackCtaClick('cta_mcp_docs_click', { location: 'mcp_spotlight' })}
-                                        >
-                                            Connect AI Agents via MCP →
-                                        </Link>
-                                    </div>
+                                    <Link
+                                        className="button button--primary"
+                                        to="/console"
+                                        onClick={() => trackCtaClick('cta_cloud_start_click', {location: 'home_deployment'})}
+                                    >
+                                        Start in Centia Cloud
+                                    </Link>
                                 </div>
-                                <div className={styles.mcpVisual}>
-                                    <div className={styles.mcpTerminalCard}>
-                                        <div className={styles.mcpTerminalHeader}>
-                                            <span className={styles.mcpTerminalDot} />
-                                            <span className={styles.mcpTerminalTitle}>centia-mcp-agent.log</span>
-                                        </div>
-                                        <pre className={styles.mcpLogOutput}>
-{`[MCP Agent] Connected to Centia Backend (https://api.centia.io)
-[MCP Schema] Loaded 14 tables (PostgreSQL 16 + PostGIS 3.4)
-[MCP Command] Executing spatial query for prompt: "Find nearest parks"
-[SQL Execution] SELECT name, ST_Distance(...) FROM parks LIMIT 5;
-[Response] 5 rows returned in 12ms. Context injected.`}
-                                        </pre>
-                                    </div>
+                                <div className={styles.deploymentCard}>
+                                    <p className={styles.kicker}>Geospatial infrastructure</p>
+                                    <Heading as="h3">Run it on your infrastructure</Heading>
+                                    <p>
+                                        Deploy the open source stack with Docker Compose.
+                                        Keep control of your runtime, networking and data
+                                        environment, from local development to production.
+                                    </p>
+                                    <ul>
+                                        <li>App, WebSockets, PostGIS and Redis</li>
+                                        <li>Your servers and deployment environment</li>
+                                        <li>Open source under AGPLv3</li>
+                                    </ul>
+                                    <Link
+                                        className="button button--secondary"
+                                        to="/docs/opensource"
+                                        onClick={() => trackCtaClick('cta_self_host_click', {location: 'home_deployment'})}
+                                    >
+                                        Explore self-hosting
+                                    </Link>
                                 </div>
                             </div>
                         </div>
                     </section>
 
-                    {/* Final Call to Action */}
-                    <section className={styles.finalCtaSection}>
+                    <section className={styles.finalCta}>
                         <div className="container">
-                            <div className={styles.finalCtaBox}>
-                                <Heading as="h2" className={styles.finalCtaTitle}>
-                                    Ready to build your next Postgres backend?
-                                </Heading>
-                                <p className={styles.finalCtaSub}>
-                                    Centia Cloud is free while in beta — or spin up a self-hosted instance with Docker.{' '}
-                                    <Link to="/faq">See the FAQ</Link> for beta limits.
-                                </p>
-                                <div className={styles.finalCtaButtons}>
-                                    <Link
-                                        className="button button--primary button--lg"
-                                        to="/console"
-                                        onClick={() => trackCtaClick('cta_cloud_start_click', { location: 'home_bottom' })}
-                                    >
-                                        Start in Centia Cloud
-                                    </Link>
-                                    <Link
-                                        className="button button--secondary button--lg"
-                                        to="/docs/start"
-                                        onClick={() => trackCtaClick('cta_docs_start_click', { location: 'home_bottom' })}
-                                    >
-                                        Read the Docs →
-                                    </Link>
-                                </div>
+                            <Heading as="h2">Build your next geospatial application</Heading>
+                            <p>
+                                Bring your spatial data. Start with managed cloud or deploy
+                                the platform yourself, then connect your maps, apps and GIS tools.
+                            </p>
+                            <div className={styles.ctaButtons}>
+                                <Link
+                                    className="button button--secondary button--lg"
+                                    to="/console"
+                                    onClick={() =>
+                                        trackCtaClick('cta_cloud_start_click', {location: 'home_bottom'})
+                                    }
+                                >
+                                    Start in Centia Cloud
+                                </Link>
+                                <Link
+                                    className={clsx('button', 'button--lg', styles.ctaGhost)}
+                                    to="/docs/start"
+                                    onClick={() =>
+                                        trackCtaClick('cta_docs_start_click', {location: 'home_bottom'})
+                                    }
+                                >
+                                    Explore the docs
+                                </Link>
                             </div>
                         </div>
                     </section>
@@ -433,4 +496,3 @@ export default function Home() {
         </Layout>
     );
 }
-

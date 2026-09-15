@@ -25,7 +25,7 @@ const config = {
     customFields: {stripeLinks, webAppUrl},
 
     title: 'Centia.io',
-    tagline: 'Managed Postgres backend in the cloud or self-hosted with Docker',
+    tagline: 'Geospatial BaaS and infrastructure — managed PostGIS in the cloud or self-hosted with Docker',
     favicon: 'img/centia-logo.svg',
 
     // Set the production url of your site here
@@ -61,6 +61,10 @@ const config = {
             '@docusaurus/plugin-client-redirects',
             {
                 redirects: [
+                    {
+                        from: '/geospatial',
+                        to: '/',
+                    },
                     {
                         from: '/docs/vibe-coding',
                         to: '/docs/agentic-development',
@@ -126,11 +130,11 @@ const config = {
 
     themeConfig:
         {
-            image: 'img/social-card.png',
+            image: 'img/social-card-geospatial.png',
             metadata: [
                 {
                     name: 'description',
-                    content: 'Centia.io is a PostgreSQL/PostGIS backend platform. Launch fast in managed cloud or self-host with Docker. Includes OAuth, realtime APIs, SDKs, and MCP support for AI agents.'
+                    content: 'Centia.io is a geospatial BaaS and infrastructure platform with PostGIS, data import, spatial SQL, realtime APIs and OGC WMS/WFS. Use managed cloud or self-host with Docker.'
                 },
                 {property: 'og:type', content: 'website'},
                 {property: 'og:site_name', content: 'Centia.io'},
