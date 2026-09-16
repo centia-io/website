@@ -1,0 +1,376 @@
+---
+title: Snapshots
+description: Point-in-time GeoParquet exports of a table or view, stored in object storage and served over HTTP with byte-range support so DuckDB, Python, R and QGIS can query them directly.
+sidebar_position: 72
+---
+
+# Snapshots
+
+A **snapshot** is a point-in-time export of a table, view or materialized view to a **GeoParquet** file. Snapshots are taken asynchronously by a background worker, stored in object storage (or on local disk when self-hosting) and served back through the API with `HEAD` and HTTP byte-range support — so analytical tools like DuckDB can read them straight from Centia without downloading the whole file, and without any storage credentials.
+
+Snapshots never touch the operational PostGIS data. They give you an **immutable, dated history** of a relation that you can query, diff, archive or hand to a partner.
+
+## What is (Geo)Parquet?
+
+[Apache Parquet](https://parquet.apache.org/) is a **columnar, compressed, self-describing** file format for tabular data. Instead of storing one row after another (as CSV or GeoJSON do), a Parquet file stores each column together, split into **row groups**, with a **footer** that holds the schema and per-column statistics (min/max, null counts) for every row group.
+
+That layout has two consequences that matter for geodata:
+
+- **Columnar compression** — values of the same column compress extremely well, so a Parquet file is typically a fraction of the size of the same data as GeoJSON or CSV.
+- **Selective reads** — a reader first fetches the footer, then only the columns and row groups it actually needs. Over HTTP this is done with **range requests**, which is why the snapshot endpoints support them: a `SELECT count(*)` or a query filtered on an indexed column reads a few kilobytes of a multi-gigabyte file.
+
+[GeoParquet](https://geoparquet.org/) is Parquet with a standardised `geo` metadata block describing the geometry column (WKB encoding, CRS, bounding box). It is understood by GDAL/OGR, DuckDB (`spatial` extension), GeoPandas, R (`sfarrow`), QGIS, Apache Spark, Amazon Athena and most other modern data tools.
+
+## Why snapshots?
+
+- **History without copies in the database** — one file per relation per day, versioned by date, without adding tables or load to PostGIS.
+- **Small files** — columnar compression makes them cheap to store and fast to transfer.
+- **Query in place** — analysts read footers and row groups over HTTP; nothing has to be downloaded or imported first.
+- **Works everywhere** — DuckDB, Python (pyarrow/GeoPandas), R, QGIS, Spark and cloud query engines all read GeoParquet natively.
+- **Change detection** — every snapshot carries a row count and a `schema_version` fingerprint of the column list, so schema drift and data changes are easy to detect and analyses are reproducible.
+- **Same access model** — reads are authenticated with the usual bearer token and follow [privileges](./privileges.mdx) and [geofence rules](./rules.mdx). Users never see S3 credentials.
+
+Typical use cases:
+
+- Point-in-time analyses and audits — *"how did the dataset look on date X?"*
+- Change detection between two dates.
+- Offloading heavy analytics from the operational database to DuckDB or Spark.
+- Delivering data to partners as files rather than database access.
+- Feature pipelines for machine learning.
+- Long-term archiving in inexpensive object storage.
+
+## Taking a snapshot
+
+Snapshots are queued by the **super-user** with the job API. `POST` returns `202 Accepted` immediately; a worker picks the job up within about a minute, exports the relation with `ogr2ogr` and publishes the files.
+
+```http title="Request"
+POST https://api.centia.io/api/v4/snapshots HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "schema": "geodanmark",
+    "relation": "bygning",
+    "srs": 25832
+}
+```
+
+- **`schema`** and **`relation`** — required. The relation may be a table, a view or a materialized view. Names must match `^[A-Za-z0-9_-]+$`.
+- **`srs`** — optional EPSG code to reproject to. Omit it to keep the relation's native SRID.
+
+```json title="Response 202"
+{
+    "id": "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b",
+    "status": "pending",
+    "_links": {
+        "self": "/api/v4/snapshots/0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b"
+    }
+}
+```
+
+Only one job per relation can be active at a time — a second `POST` while one is `pending` or `running` is answered with `409` (`SNAPSHOT_IN_PROGRESS`). Snapshots are keyed by relation and **UTC date**: running a second snapshot of the same relation on the same day publishes the new one and marks the earlier one `superseded`, so readers always see at most one snapshot per day.
+
+### Polling the job
+
+Follow `_links.self` until `status` is `succeeded` or `failed`:
+
+```http title="Request"
+GET https://api.centia.io/api/v4/snapshots/0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b HTTP/1.1
+Authorization: Bearer abc123
+```
+
+```json title="Response"
+{
+    "id": "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b",
+    "schema": "geodanmark",
+    "relation": "bygning",
+    "srs": 25832,
+    "status": "succeeded",
+    "snapshot_date": "2026-09-16",
+    "s3_path": "s3://gc2-parquet/prod/mydb/schema=geodanmark/relation=bygning/_gc2_snapshot_date=2026-09-16/",
+    "row_count": 123456,
+    "schema_version": "9e107d9d372bb6826bd81d3542a419d6",
+    "relation_schema": [
+        { "column_name": "gid", "data_type": "integer" },
+        { "column_name": "the_geom", "data_type": "geometry(Point,25832)" }
+    ],
+    "error": null,
+    "username": "mydb",
+    "created": "2026-09-16T10:00:00+00:00",
+    "started": "2026-09-16T10:00:31+00:00",
+    "finished": "2026-09-16T10:02:10+00:00"
+}
+```
+
+| Status | Meaning |
+|---|---|
+| `pending` | Queued, not yet picked up by the worker. |
+| `running` | Export in progress. |
+| `succeeded` | Published and readable through the read API under `snapshot_date`. |
+| `failed` | The export failed; `error` holds the reason (for example the relation was dropped, or `ogr2ogr` reported an error). There are no automatic retries — `POST` again. |
+| `superseded` | Replaced by a later snapshot of the same relation on the same date. |
+
+`snapshot_date`, `s3_path`, `row_count`, `schema_version`, `relation_schema`, `started` and `finished` are `null` until set. `schema_version` is an MD5 fingerprint of the column names and types at snapshot time — compare it across snapshots to detect schema changes.
+
+`GET /api/v4/snapshots` lists the 50 newest jobs, newest first, with optional `?schema=` and `?relation=` filters:
+
+```http title="Request"
+GET https://api.centia.io/api/v4/snapshots?schema=geodanmark&relation=bygning HTTP/1.1
+Authorization: Bearer abc123
+```
+
+| Status | Meaning |
+|---|---|
+| `400` | `INVALID_REQUEST` — missing or malformed `schema`/`relation`, or a non-integer `srs`. |
+| `403` | The caller is not the super-user. |
+| `404` | `RELATION_NOT_FOUND` on `POST`; `NO_SNAPSHOT_ERROR` on `GET` with an unknown id. |
+| `409` | `SNAPSHOT_IN_PROGRESS` — a job for the relation is already pending or running. |
+| `501` | `SNAPSHOT_NOT_CONFIGURED` — the server has no snapshot storage configured. |
+
+## What gets stored
+
+Each snapshot is a directory of two files under a **Hive-style partitioned** path, so query engines that understand `key=value` path segments (DuckDB, Spark, Athena) can scan a whole relation history at once and filter by date:
+
+```
+{prefix}/{database}/schema={schema}/relation={relation}/_gc2_snapshot_date=2026-09-16/
+    data-{snapshot_id}.parquet
+    metadata-{snapshot_id}.json
+```
+
+The date segment is prefixed with `_gc2_` so the partition column a Hive reader derives from it can never collide with a column of your data. File names carry the snapshot id, so a re-run on the same day never overwrites a file someone may be reading.
+
+`metadata-{snapshot_id}.json` describes the export:
+
+```json title="metadata-{snapshot_id}.json"
+{
+    "snapshot_id": "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b",
+    "snapshot_date": "2026-09-16",
+    "created_at": "2026-09-16T10:02:10Z",
+    "database": "mydb",
+    "source": "geodanmark.bygning",
+    "row_count": 123456,
+    "schema_version": "9e107d9d372bb6826bd81d3542a419d6",
+    "schema": [
+        { "column_name": "gid", "data_type": "integer" },
+        { "column_name": "the_geom", "data_type": "geometry(Point,25832)" }
+    ],
+    "crs": "EPSG:25832",
+    "files": [
+        { "name": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet", "size_bytes": 8421376 }
+    ]
+}
+```
+
+## Reading snapshots
+
+Published snapshots are read per relation. Any user with a bearer token and read access to the relation can use these endpoints (see [Access](#access)); anonymous access is not supported.
+
+```
+https://api.centia.io/api/v4/schemas/{schema}/relations/{relation}/snapshots
+```
+
+| Method | Route | Returns |
+|---|---|---|
+| `GET` | `/snapshots` | Array of published snapshots, newest first |
+| `GET` | `/snapshots/{date}` | One snapshot with full metadata and links |
+| `GET` `HEAD` | `/snapshots/{date}/data` | The Parquet file (`application/vnd.apache.parquet`), with byte-range support |
+| `GET` `HEAD` | `/snapshots/{date}/files/{name}` | Any file of the snapshot by name, including `metadata-{id}.json` |
+
+### List snapshots
+
+```http title="Request"
+GET https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots HTTP/1.1
+Authorization: Bearer abc123
+```
+
+```json title="Response"
+[
+    {
+        "snapshot_date": "2026-09-16",
+        "snapshot_id": "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b",
+        "row_count": 123456,
+        "size_bytes": 8421376,
+        "schema_version": "9e107d9d372bb6826bd81d3542a419d6",
+        "files": [
+            {
+                "name": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet",
+                "size_bytes": 8421376,
+                "href": "/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/files/data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet"
+            }
+        ],
+        "published": "2026-09-16T10:02:10+00:00"
+    },
+    {
+        "snapshot_date": "2026-09-15",
+        "snapshot_id": "c2a7e9d4-1b3f-4e5a-8c6d-0f1e2d3c4b5a",
+        "row_count": 123101,
+        "size_bytes": 8398112,
+        "schema_version": "9e107d9d372bb6826bd81d3542a419d6",
+        "files": [ "..." ],
+        "published": "2026-09-15T10:01:44+00:00"
+    }
+]
+```
+
+Only `succeeded` snapshots appear here — failed, pending and superseded jobs are visible in the job API only.
+
+### Get one snapshot
+
+`/snapshots/{date}` returns the same entry plus the column list, the CRS and links to the data:
+
+```http title="Request"
+GET https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16 HTTP/1.1
+Authorization: Bearer abc123
+```
+
+```json title="Response"
+{
+    "snapshot_date": "2026-09-16",
+    "snapshot_id": "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b",
+    "row_count": 123456,
+    "size_bytes": 8421376,
+    "schema_version": "9e107d9d372bb6826bd81d3542a419d6",
+    "files": [ "..." ],
+    "published": "2026-09-16T10:02:10+00:00",
+    "srs": 25832,
+    "relation_schema": [
+        { "column_name": "gid", "data_type": "integer" },
+        { "column_name": "the_geom", "data_type": "geometry(Point,25832)" }
+    ],
+    "crs": "EPSG:25832",
+    "_links": {
+        "data": "/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data",
+        "files": [ "..." ]
+    }
+}
+```
+
+The date must be a valid `YYYY-MM-DD`; an unknown date is `404` (`NO_SNAPSHOT_ERROR`).
+
+### Download the data
+
+`/snapshots/{date}/data` serves the Parquet file. Both `HEAD` and `GET` return `Accept-Ranges: bytes`, `Content-Length`, an `ETag` equal to the snapshot id and `Last-Modified` from the publish time, so Parquet readers can size the file and fetch the footer and individual row groups with `Range` requests:
+
+```http title="Request — the last 64 KiB (where the footer lives)"
+GET https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data HTTP/1.1
+Authorization: Bearer abc123
+Range: bytes=-65536
+```
+
+```http title="Response"
+HTTP/1.1 206 Partial Content
+Content-Type: application/vnd.apache.parquet
+Content-Range: bytes 8355840-8421375/8421376
+Content-Length: 65536
+Accept-Ranges: bytes
+ETag: "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b"
+```
+
+A single range (`bytes=a-b`, `bytes=a-` or `bytes=-n`) is honoured with `206`; a range that starts beyond the end of the file is `416` with `Content-Range: bytes */{size}`. A header naming several ranges is ignored and the whole file is returned with `200`.
+
+`/snapshots/{date}/files/{name}` serves any file listed in the snapshot's `files`, plus `metadata-{snapshot_id}.json`, with the same `HEAD`/`Range` semantics. Should a snapshot ever consist of several data files, `/data` answers `409` (`MULTI_FILE_SNAPSHOT`) with the file names in the message, and you fetch them through `/files/{name}` instead.
+
+:::note Proxy or redirect
+By default the file is **streamed through the API** (proxy mode). A self-hosted server can be configured for **redirect mode** instead, where `/data` and `/files/{name}` answer `302` with a short-lived presigned storage URL after the same authorization check, so large downloads bypass the API server. Clients should follow redirects and repeat their `Range` header against the redirected URL.
+:::
+
+## Access
+
+Reads are authorized before any file name or storage location is resolved:
+
+- The **super-user** can always read.
+- A **sub-user** can read snapshots of relations in schemas they own, and of relations where they hold `read` or `write` [privilege](./privileges.mdx).
+- A sub-user with a `deny` or `limit` [geofence rule](./rules.mdx) on the relation is refused with `403` (`GEOFENCE_RULES_APPLY`): a snapshot is the whole relation in one file and cannot honour a row filter. An `allow` rule does not block the read.
+- Anonymous requests are not accepted.
+
+| Status | Meaning |
+|---|---|
+| `400` | `INVALID_REQUEST` — malformed schema, relation, date or file name. |
+| `403` | `INSUFFICIENT_PRIVILEGES` or `GEOFENCE_RULES_APPLY`. |
+| `404` | `NO_SNAPSHOT_ERROR` — no published snapshot for that date, or no such file. |
+| `409` | `MULTI_FILE_SNAPSHOT` — several data files; use `/files/{name}`. |
+| `416` | Range not satisfiable. |
+| `501` | `SNAPSHOT_NOT_CONFIGURED` — no snapshot storage on this server. |
+| `502` | `SNAPSHOT_STORAGE_ERROR` — the storage backend failed. |
+
+## Querying snapshots
+
+### DuckDB
+
+DuckDB's `httpfs` extension reads Parquet over HTTP with range requests, and an `http` secret carries the bearer token. Row counts and filtered queries touch only the footer and the row groups they need:
+
+```sql title="DuckDB"
+INSTALL httpfs; LOAD httpfs;
+INSTALL spatial; LOAD spatial;
+
+CREATE SECRET centia (TYPE http, BEARER_TOKEN 'abc123');
+
+-- Count rows without downloading the file
+SELECT count(*)
+FROM read_parquet('https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data');
+
+-- Query attributes and geometry
+SELECT gid, ST_Area(the_geom) AS area
+FROM read_parquet('https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data')
+WHERE kommunekode = '0101';
+```
+
+Combine several dates to compare them — `union_by_name` keeps this working when columns were added between snapshots:
+
+```sql title="Rows that exist today but not yesterday"
+WITH today AS (
+    SELECT * FROM read_parquet('https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data')
+), yesterday AS (
+    SELECT * FROM read_parquet('https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-15/data')
+)
+SELECT count(*) FROM today WHERE gid NOT IN (SELECT gid FROM yesterday);
+```
+
+```sql title="Several snapshots as one table"
+SELECT *
+FROM read_parquet([
+    'https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-15/data',
+    'https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data'
+], union_by_name = true);
+```
+
+Before joining two snapshots, compare their `schema_version` from the list endpoint: a different fingerprint means the column set or types changed in between.
+
+### Python
+
+```python title="GeoPandas"
+import io, requests, geopandas as gpd
+
+url = "https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data"
+r = requests.get(url, headers={"Authorization": "Bearer abc123"})
+r.raise_for_status()
+
+gdf = gpd.read_parquet(io.BytesIO(r.content))
+print(gdf.crs, len(gdf))
+```
+
+### GDAL/OGR and QGIS
+
+GDAL (3.5 or later, built with the Parquet driver) reads the file over HTTP through `/vsicurl/` when the bearer token is passed as a header, and any GDAL-based desktop tool — including QGIS — opens a downloaded snapshot as a normal vector layer:
+
+```bash title="ogrinfo over HTTP"
+GDAL_HTTP_HEADERS="Authorization: Bearer abc123" \
+ogrinfo -so -al "/vsicurl/https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data"
+```
+
+```bash title="Convert a snapshot to GeoPackage"
+GDAL_HTTP_HEADERS="Authorization: Bearer abc123" \
+ogr2ogr bygning-2026-09-16.gpkg "/vsicurl/https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data"
+```
+
+## Snapshots after scheduled imports
+
+A [scheduler](./import.mdx) job can queue a snapshot automatically after each successful import by setting the job flag `"snapshot": true` through the job API. The flag is API-only for now — the admin UI has no field for it yet.
+
+## Self-hosting
+
+Snapshots are available on Centia Cloud out of the box. On a self-hosted [open source](./opensource.mdx) installation the feature is off until storage is configured:
+
+- **Configuration** — the `snapshot` block in `App.php`: `storage` is `s3` (with `bucket`, `prefix`, `region`; credentials from the `s3` block) or `local` (with `localPath`); `download` is `proxy` (default) or `redirect`, and `urlTtl` sets the presigned URL lifetime in seconds (default 300). Without a configured storage the API answers `501` (`SNAPSHOT_NOT_CONFIGURED`).
+- **Worker** — the export runs from `app/scripts/snapshot_worker.php`, scheduled by cron every minute under `flock` (the official Docker image ships the crontab line). It needs `ogr2ogr` with the Parquet driver (GDAL 3.5 or later).
+- **Apache** — the vhost must set `SetEnv ap_trust_cgilike_cl 1`; without it, `mod_proxy_fcgi` on Apache 2.4.6x strips the backend's `Content-Length`, which makes `HEAD` answer without a length and `GET` chunked, and breaks Parquet readers. The official image includes it.
