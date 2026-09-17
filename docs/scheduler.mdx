@@ -1,0 +1,278 @@
+---
+title: Scheduler
+description: Import data from files, WFS services and other URLs on a cron schedule, start and stop runs, and follow their status through the Scheduler API.
+sidebar_position: 71
+---
+
+# Scheduler
+
+The scheduler runs **recurring imports**: a job names a source URL (a file, a WFS service, a GeoJSON or CSV feed), a target schema and table, and a cron schedule. On every tick the server fetches the source with `ogr2ogr`, loads it into a working table and swaps it into place when the import succeeds, so the table is never half-written. A job can also [queue a GeoParquet snapshot](./snapshots.mdx) after each successful import.
+
+The API has two resources under `https://api.centia.io/api/v4/scheduler`:
+
+| Resource | What it is |
+|---|---|
+| `/jobs` | The job definitions of your database: what to import, where to, and when. |
+| `/runs` | The run registry: every execution of a job, running or finished, with status and exit reason. Start a job now or stop a running one here. |
+
+Both are **super-user only** and require a Bearer token. Like every v4 collection, lists are returned as bare arrays, and the id segment on `GET` and `DELETE` accepts a comma-separated list (see [API conventions](./intro.mdx#api-conventions)).
+
+## Jobs
+
+A job object:
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | integer | Read-only. |
+| `name` | string | **Required.** The target table name (normalised to a safe identifier). |
+| `schema` | string | **Required.** The target schema. |
+| `url` | string | **Required.** The source, see [Source URLs](#source-urls). |
+| `schedule` | string | **Required.** Five-field cron expression: `min hour dayofmonth month dayofweek`, e.g. `0 3 * * *`. |
+| `epsg` | integer | SRID to import into. Default `4326`. |
+| `type` | string | Geometry type passed to `ogr2ogr -nlt`, or `AUTO` (default). |
+| `encoding` | string | Source encoding. Default `UTF8`. |
+| `extra` | string | Extra `ogr2ogr` arguments. |
+| `delete_append` | boolean | `true` appends to the existing table instead of replacing it. Default `false`. |
+| `download_schema` | boolean | Let the WFS driver fetch the feature type schema (`DescribeFeatureType`) before downloading. Default `true`. |
+| `presql` | string | SQL to run before the import. |
+| `postsql` | string | SQL to run after the import. |
+| `active` | boolean | Inactive jobs are skipped by cron but can still be started manually. Default `true`. |
+| `snapshot` | boolean | Queue a [snapshot](./snapshots.mdx) after each successful import. Default `false`. |
+| `lastcheck` | boolean | Read-only. Whether the last run succeeded. |
+| `lasttimestamp` | string | Read-only. When the last run finished. |
+| `lastrun` | string | Read-only. When the last run started. |
+| `report` | object | Read-only. The report of the last run. |
+
+### Create jobs
+
+`POST` takes one job object or an array of them and answers `201` with a `Location` header pointing at the created id (or ids, comma-separated). A list is **all-or-nothing**: every element is validated first, so one bad element (for example an invalid cron field) creates nothing.
+
+```http title="Request"
+POST https://api.centia.io/api/v4/scheduler/jobs HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "name": "bygning",
+    "schema": "geodanmark",
+    "url": "https://example.com/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=bygning",
+    "schedule": "0 3 * * *",
+    "epsg": 25832,
+    "snapshot": true
+}
+```
+
+```http title="Response"
+HTTP/1.1 201 Created
+Location: /api/v4/scheduler/jobs/5497
+```
+
+```http title="Request — several jobs"
+POST https://api.centia.io/api/v4/scheduler/jobs HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+[
+    { "name": "bygning", "schema": "geodanmark", "url": "https://example.com/bygning.geojson", "schedule": "0 3 * * *" },
+    { "name": "vejmidte", "schema": "geodanmark", "url": "https://example.com/vejmidte.geojson", "schedule": "30 3 * * *" }
+]
+```
+
+```http title="Response"
+HTTP/1.1 201 Created
+Location: /api/v4/scheduler/jobs/5497,5498
+```
+
+### Get jobs
+
+`GET /jobs` lists all jobs of your database ordered by id. `GET /jobs/{id}` returns one job as an object; a comma-separated list of ids returns an array. If any id is unknown the response is `404` (`JOB_NOT_FOUND`).
+
+```http title="Request"
+GET https://api.centia.io/api/v4/scheduler/jobs/5497 HTTP/1.1
+Authorization: Bearer abc123
+```
+
+```json title="Response"
+{
+    "id": 5497,
+    "name": "bygning",
+    "schema": "geodanmark",
+    "url": "https://example.com/wfs?service=WFS&version=2.0.0&request=GetFeature&typeNames=bygning",
+    "schedule": "0 3 * * *",
+    "epsg": 25832,
+    "type": "AUTO",
+    "encoding": "UTF8",
+    "extra": null,
+    "delete_append": false,
+    "download_schema": true,
+    "presql": null,
+    "postsql": null,
+    "active": true,
+    "snapshot": true,
+    "lastcheck": true,
+    "lasttimestamp": "2026-09-17T03:04:12+00:00",
+    "lastrun": "2026-09-17T03:00:01+00:00",
+    "report": { "..." : "..." }
+}
+```
+
+### Update a job
+
+`PATCH /jobs/{id}` updates any writable field and answers `303` with a `Location` header. `PATCH` takes a single id only.
+
+```http title="Request"
+PATCH https://api.centia.io/api/v4/scheduler/jobs/5497 HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "schedule": "0 */6 * * *",
+    "active": false
+}
+```
+
+### Delete jobs
+
+`DELETE /jobs/{id}` (or a comma-separated list) answers `204`. Every id is checked before anything is deleted: an unknown id is `404` (`JOB_NOT_FOUND`) and a job with a run in progress is `409` (`JOB_RUNNING`), and in both cases no job is deleted.
+
+```http title="Request"
+DELETE https://api.centia.io/api/v4/scheduler/jobs/5497,5498 HTTP/1.1
+Authorization: Bearer abc123
+```
+
+| Status | Meaning |
+|---|---|
+| `400` | `INVALID_REQUEST` — missing required field, non-integer id, or a list on `PATCH`; `INVALID_CRON_FIELD` — `schedule` does not have five valid cron fields. |
+| `403` | The caller is not the super-user. |
+| `404` | `JOB_NOT_FOUND`. |
+| `409` | `JOB_RUNNING` — a run of the job is in progress (`DELETE`). |
+
+### Source URLs
+
+`url` is anything `ogr2ogr` can read over HTTP — a GeoJSON, GeoPackage, shapefile zip, CSV or a WFS `GetFeature` request:
+
+- A **WFS 2.0.0 `GetFeature`** URL is fetched **page by page** with `startIndex` and `count` (the URL's own `count`, otherwise 10 000 per page), with a `sortBy` picked from the feature type's id-like property. Add your own `startIndex` if you want to page the service yourself.
+- Prefix the URL with `json:` to force the source to be treated as JSON and converted through CSV.
+- The legacy grid notation `grid,id|https://…` still works: the source is fetched in grid cells (by bounding box) instead of pages.
+
+## Runs
+
+A run object:
+
+| Field | Description |
+|---|---|
+| `uuid` | The run id. |
+| `job` | The job id. |
+| `name` | Who started it: `Started by Scheduler`, `Started via API v4 by <user>`, … |
+| `pid`, `host`, `slot` | The process, the host it runs on and the concurrency slot it holds. |
+| `status` | `running`, `succeeded`, `failed`, `skipped` or `lost`. |
+| `stale` | `true` when a `running` run has given no progress signal for 5 minutes. |
+| `started_at`, `heartbeat`, `finished_at` | Timestamps. |
+| `exit_reason` | Why it ended, e.g. `timeout`, `cooldown: last run started …`. |
+
+| Status | Meaning |
+|---|---|
+| `running` | In progress. |
+| `succeeded` / `failed` | Finished. |
+| `skipped` | A cron tick that did not run, because the job was already running or was inside the cooldown window. |
+| `lost` | The process died without reporting back. |
+
+### List and inspect runs
+
+`GET /runs` returns the running runs followed by the newest 50 finished ones. Filter with `?job={id}` and `?status={status}`. `GET /runs/{uuid}` returns one run, or `404` (`RUN_NOT_FOUND`).
+
+```http title="Request"
+GET https://api.centia.io/api/v4/scheduler/runs?job=5497 HTTP/1.1
+Authorization: Bearer abc123
+```
+
+```json title="Response"
+[
+    {
+        "uuid": "6a1f0c2e-8b3d-4f7a-9c1e-2d3b4a5f6e7d",
+        "job": 5497,
+        "name": "Started by Scheduler",
+        "pid": 41233,
+        "host": "gc2-1",
+        "slot": 3,
+        "status": "running",
+        "stale": false,
+        "started_at": "2026-09-17T03:00:01+00:00",
+        "heartbeat": "2026-09-17T03:03:40+00:00",
+        "finished_at": null,
+        "exit_reason": null
+    },
+    {
+        "uuid": "0c9e7d5b-3a2f-4c1d-8e6b-7f5a4d3c2b1a",
+        "job": 5497,
+        "name": "Started by Scheduler",
+        "pid": 40118,
+        "host": "gc2-1",
+        "slot": null,
+        "status": "skipped",
+        "stale": false,
+        "started_at": "2026-09-17T02:00:00+00:00",
+        "heartbeat": null,
+        "finished_at": "2026-09-17T02:00:00+00:00",
+        "exit_reason": "cooldown: last run started 2026-09-17T01:00:01+00:00"
+    }
+]
+```
+
+### Start a job now
+
+`POST /runs` starts a job immediately and answers `202` — the run is asynchronous, follow the `_links.runs` link to watch it. A manual start ignores the cooldown described below. Pass `"force": true` to replace the table even if the job has `delete_append` set.
+
+```http title="Request"
+POST https://api.centia.io/api/v4/scheduler/runs HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+{
+    "job": 5497
+}
+```
+
+```json title="Response 202"
+{
+    "job": 5497,
+    "status": "starting",
+    "_links": {
+        "runs": "/api/v4/scheduler/runs?job=5497"
+    }
+}
+```
+
+### Stop a run
+
+`DELETE /runs/{uuid}` stops a running run. The process gets `SIGINT` first and `SIGKILL` 30 seconds later if it is stuck in a download, so the request can take up to about 30 seconds.
+
+```http title="Request"
+DELETE https://api.centia.io/api/v4/scheduler/runs/6a1f0c2e-8b3d-4f7a-9c1e-2d3b4a5f6e7d HTTP/1.1
+Authorization: Bearer abc123
+```
+
+```json title="Response"
+{
+    "uuid": "6a1f0c2e-8b3d-4f7a-9c1e-2d3b4a5f6e7d",
+    "signal": "SIGINT"
+}
+```
+
+| Status | Meaning |
+|---|---|
+| `400` | `INVALID_REQUEST` — missing or non-integer `job`. |
+| `404` | `JOB_NOT_FOUND` on start; `RUN_NOT_FOUND` when the uuid is unknown or the run is not running (stop). |
+| `409` | `JOB_RUNNING` — a run of the job is already in progress; `RUN_ON_OTHER_HOST` — the run cannot be signalled from the host that received the request. |
+
+## How runs are coordinated
+
+Runs coordinate through PostgreSQL advisory locks. Only **one run per job** can be active at a time, and at most `maxJobs` runs (default 20) execute concurrently across the server; further jobs wait for a free slot. A cron tick that finds its job already running is recorded as `skipped`.
+
+A **cooldown** (`minInterval`, in seconds, default 0) sets the minimum time between two runs of the same job. Cron ticks inside the window are recorded as `skipped` with the reason in `exit_reason`, which protects against a job accidentally left on `* * * * *`. Manual starts through the API or the admin UI bypass the cooldown.
+
+A run whose process dies loses its lock immediately and is marked `lost`; a run that is still `running` but has sent no progress signal for 5 minutes is flagged `stale`. Finished runs are kept for 30 days.
+
+:::note Self-hosting
+`maxJobs` and `minInterval` live in the `gc2scheduler` block of `App.php`. The advisory locks require a session-sticky database connection — the scheduler refuses to run behind a transaction-pooled PgBouncer.
+:::

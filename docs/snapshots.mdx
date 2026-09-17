@@ -58,6 +58,8 @@ Authorization: Bearer abc123
 - **`schema`** and **`relation`** — required. The relation may be a table, a view or a materialized view. Names must match `^[A-Za-z0-9_-]+$`.
 - **`srs`** — optional EPSG code to reproject to. Omit it to keep the relation's native SRID.
 
+The body may also be an **array** of request objects to queue several relations at once. Every relation is checked before anything is queued, so one bad element (unknown relation, a job already active, a relation listed twice, or an empty list) queues nothing — and the `202` body is then an array in request order.
+
 ```json title="Response 202"
 {
     "id": "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b",
@@ -68,11 +70,29 @@ Authorization: Bearer abc123
 }
 ```
 
+```http title="Request — several relations"
+POST https://api.centia.io/api/v4/snapshots HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer abc123
+
+[
+    { "schema": "geodanmark", "relation": "bygning" },
+    { "schema": "geodanmark", "relation": "vejmidte", "srs": 25832 }
+]
+```
+
+```json title="Response 202"
+[
+    { "id": "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b", "status": "pending", "_links": { "self": "/api/v4/snapshots/0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b" } },
+    { "id": "c2a7e9d4-1b3f-4e5a-8c6d-0f1e2d3c4b5a", "status": "pending", "_links": { "self": "/api/v4/snapshots/c2a7e9d4-1b3f-4e5a-8c6d-0f1e2d3c4b5a" } }
+]
+```
+
 Only one job per relation can be active at a time — a second `POST` while one is `pending` or `running` is answered with `409` (`SNAPSHOT_IN_PROGRESS`). Snapshots are keyed by relation and **UTC date**: running a second snapshot of the same relation on the same day publishes the new one and marks the earlier one `superseded`, so readers always see at most one snapshot per day.
 
 ### Polling the job
 
-Follow `_links.self` until `status` is `succeeded` or `failed`:
+Follow `_links.self` until `status` is `succeeded` or `failed`. A comma-separated list of ids returns an array of jobs; if any id is unknown the response is `404`:
 
 ```http title="Request"
 GET https://api.centia.io/api/v4/snapshots/0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b HTTP/1.1
@@ -121,7 +141,7 @@ Authorization: Bearer abc123
 
 | Status | Meaning |
 |---|---|
-| `400` | `INVALID_REQUEST` — missing or malformed `schema`/`relation`, or a non-integer `srs`. |
+| `400` | `INVALID_REQUEST` — missing or malformed `schema`/`relation`, a non-integer `srs`, a relation listed twice, or an empty list. |
 | `403` | The caller is not the super-user. |
 | `404` | `RELATION_NOT_FOUND` on `POST`; `NO_SNAPSHOT_ERROR` on `GET` with an unknown id. |
 | `409` | `SNAPSHOT_IN_PROGRESS` — a job for the relation is already pending or running. |
@@ -365,7 +385,7 @@ ogr2ogr bygning-2026-09-16.gpkg "/vsicurl/https://api.centia.io/api/v4/schemas/g
 
 ## Snapshots after scheduled imports
 
-A [scheduler](./import.mdx) job can queue a snapshot automatically after each successful import by setting the job flag `"snapshot": true` through the job API. The flag is API-only for now — the admin UI has no field for it yet.
+A [scheduler](./scheduler.mdx) job can queue a snapshot automatically after each successful import by setting the job's `"snapshot": true` through the Scheduler API. The flag is API-only for now — the admin UI has no field for it yet.
 
 ## Self-hosting
 

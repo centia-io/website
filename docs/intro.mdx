@@ -33,6 +33,15 @@ Centia.io gives you three interfaces — use whichever fits your workflow:
 2. **CLI** — Automate provisioning from the terminal. Great for scripting, CI/CD, and local development. [Install the CLI →](./start#install-the-cli)
 3. **API** — Full HTTP REST and WebSocket access for every operation. Ideal for programmatic control and integration. [API reference →](https://api.centia.io/swagger-ui/index.html)
 
+## API conventions
+
+The REST API follows a few rules across all `/api/v4` resources, so once you know one endpoint you know them all:
+
+- **Lists are bare JSON arrays**, single resources are objects.
+- **One or many by the same route.** A `GET` or `DELETE` with a single id answers with (or acts on) one resource; a comma-separated list of ids in the same path segment answers with an array or acts on all of them. Likewise a `POST` takes either one object or an array of objects.
+- **All-or-nothing on lists.** Every element is validated first — an unknown id, a bad field or a conflict in any element means nothing is created, deleted or queued, and the error names the element.
+- **Errors** carry an HTTP status and a stable `errorCode` string (such as `JOB_NOT_FOUND` or `INVALID_REQUEST`) that each page documents.
+
 ## How you’ll build with Centia.io
 
 Choose deployment:
