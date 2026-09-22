@@ -1,16 +1,25 @@
 ---
 title: Snapshots
-description: Point-in-time GeoParquet exports of a table or view, stored in object storage and served over HTTP with byte-range support so DuckDB, Python, R and QGIS can query them directly.
+description: Point-in-time GeoParquet and FlatGeobuf exports of a table or view, stored in object storage with a STAC catalog and served over HTTP with byte-range support so DuckDB, Python, R, QGIS and web maps can read them directly.
 sidebar_position: 72
 ---
 
 # Snapshots
 
-A **snapshot** is a point-in-time export of a table, view or materialized view to a **GeoParquet** file. Snapshots are taken asynchronously by a background worker, stored in object storage (or on local disk when self-hosting) and served back through the API with `HEAD` and HTTP byte-range support — so analytical tools like DuckDB can read them straight from Centia without downloading the whole file, and without any storage credentials.
+A **snapshot** is a point-in-time export of a table, view or materialized view to a cloud-native file — **GeoParquet** by default, optionally also **FlatGeobuf**. Snapshots are taken asynchronously by a background worker, stored in object storage (or on local disk when self-hosting) and served back through the API with `HEAD` and HTTP byte-range support — so analytical tools like DuckDB can read them straight from Centia without downloading the whole file, and without any storage credentials.
 
 Snapshots never touch the operational PostGIS data. They give you an **immutable, dated history** of a relation that you can query, diff, archive or hand to a partner.
 
-## What is (Geo)Parquet?
+## Formats
+
+Snapshots can be produced in one or more formats. The default is Parquet; the server is extensible, and today two formats are available:
+
+| Format id | File | Media type | Needs geometry | Best for |
+|---|---|---|---|---|
+| `parquet` | `data-{id}.parquet` | `application/vnd.apache.parquet` | No (plain Parquet for non-spatial relations) | Analytics: DuckDB, pandas/Arrow, Spark, Athena |
+| `flatgeobuf` | `data-{id}.fgb` | `application/flatgeobuf` | Yes | Web maps and streaming features by bounding box |
+
+### What is (Geo)Parquet?
 
 [Apache Parquet](https://parquet.apache.org/) is a **columnar, compressed, self-describing** file format for tabular data. Instead of storing one row after another (as CSV or GeoJSON do), a Parquet file stores each column together, split into **row groups**, with a **footer** that holds the schema and per-column statistics (min/max, null counts) for every row group.
 
@@ -20,6 +29,16 @@ That layout has two consequences that matter for geodata:
 - **Selective reads** — a reader first fetches the footer, then only the columns and row groups it actually needs. Over HTTP this is done with **range requests**, which is why the snapshot endpoints support them: a `SELECT count(*)` or a query filtered on an indexed column reads a few kilobytes of a multi-gigabyte file.
 
 [GeoParquet](https://geoparquet.org/) is Parquet with a standardised `geo` metadata block describing the geometry column (WKB encoding, CRS, bounding box). It is understood by GDAL/OGR, DuckDB (`spatial` extension), GeoPandas, R (`sfarrow`), QGIS, Apache Spark, Amazon Athena and most other modern data tools.
+
+### What is FlatGeobuf?
+
+[FlatGeobuf](https://flatgeobuf.org/) is a **single-file, binary vector format** built on FlatBuffers, with a **packed spatial index** at the front of the file. A reader that wants the features inside a bounding box fetches the index with a range request and then only the byte ranges of the matching features — so a web map can stream just the visible part of a large layer straight from the snapshot URL. It carries one layer (named after the relation), is read by GDAL/OGR and QGIS, by Leaflet, OpenLayers and MapLibre through the [flatgeobuf](https://github.com/flatgeobuf/flatgeobuf) JavaScript library, and by DuckDB's `spatial` extension through `ST_Read`. Unlike Parquet it is row-oriented and uncompressed, so it is the wrong tool for column scans and aggregations.
+
+### Choosing a format
+
+- **Parquet** when the consumer is an analytical engine — DuckDB, pandas/pyarrow, Spark — or when the relation has no geometry. Columnar reads and compression make it the smaller and faster file for queries, joins and change detection.
+- **FlatGeobuf** when the consumer is a map: a browser client that streams features by bbox, or a desktop GIS that wants a single spatial file with an index.
+- **Both** when a dataset is delivered to analysts and to map clients alike; the two files sit side by side in the same snapshot and are downloaded separately.
 
 ## Why snapshots?
 
@@ -57,6 +76,7 @@ Authorization: Bearer abc123
 
 - **`schema`** and **`relation`** — required. The relation may be a table, a view or a materialized view. Names must match `^[A-Za-z0-9_-]+$`.
 - **`srs`** — optional EPSG code to reproject to. Omit it to keep the relation's native SRID.
+- **`formats`** — optional array of [format ids](#formats), e.g. `["parquet", "flatgeobuf"]`, produced in that order. Omit it to use the server default (`["parquet"]` unless configured otherwise; scheduled imports with `snapshot: true` use the same default). Unknown ids, duplicates and an empty array are `400`. A format that needs a geometry column is **skipped** with a reason when the relation has none, and the snapshot fails only if nothing at all could be produced; requesting *only* geometry formats for a non-spatial relation is refused up front with `400`.
 
 The body may also be an **array** of request objects to queue several relations at once. Every relation is checked before anything is queued, so one bad element (unknown relation, a job already active, a relation listed twice, or an empty list) queues nothing — and the `202` body is then an array in request order.
 
@@ -114,6 +134,10 @@ Authorization: Bearer abc123
         { "column_name": "gid", "data_type": "integer" },
         { "column_name": "the_geom", "data_type": "geometry(Point,25832)" }
     ],
+    "formats": [
+        { "format": "parquet", "status": "produced", "file": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet", "size_bytes": 8421376, "media_type": "application/vnd.apache.parquet" },
+        { "format": "flatgeobuf", "status": "produced", "file": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.fgb", "size_bytes": 19873402, "media_type": "application/flatgeobuf" }
+    ],
     "error": null,
     "username": "mydb",
     "created": "2026-09-16T10:00:00+00:00",
@@ -130,7 +154,7 @@ Authorization: Bearer abc123
 | `failed` | The export failed; `error` holds the reason (for example the relation was dropped, or `ogr2ogr` reported an error). There are no automatic retries — `POST` again. |
 | `superseded` | Replaced by a later snapshot of the same relation on the same date. |
 
-`snapshot_date`, `s3_path`, `row_count`, `schema_version`, `relation_schema`, `started` and `finished` are `null` until set. `schema_version` is an MD5 fingerprint of the column names and types at snapshot time — compare it across snapshots to detect schema changes.
+`snapshot_date`, `s3_path`, `row_count`, `schema_version`, `relation_schema`, `started` and `finished` are `null` until set. `formats` lists every requested format and its outcome: `requested` while the job is queued, then `produced` (with `file`, `size_bytes` and `media_type`) or `skipped` (with a `reason`, e.g. `relation has no geometry column`). `schema_version` is an MD5 fingerprint of the column names and types at snapshot time — compare it across snapshots to detect schema changes.
 
 `GET /api/v4/snapshots` lists the 50 newest jobs, newest first, with optional `?schema=` and `?relation=` filters:
 
@@ -141,7 +165,7 @@ Authorization: Bearer abc123
 
 | Status | Meaning |
 |---|---|
-| `400` | `INVALID_REQUEST` — missing or malformed `schema`/`relation`, a non-integer `srs`, a relation listed twice, or an empty list. |
+| `400` | `INVALID_REQUEST` — missing or malformed `schema`/`relation`, a non-integer `srs`, an unknown, duplicate or empty `formats` list, only geometry formats for a non-spatial relation, a relation listed twice, or an empty list. |
 | `403` | The caller is not the super-user. |
 | `404` | `RELATION_NOT_FOUND` on `POST`; `NO_SNAPSHOT_ERROR` on `GET` with an unknown id. |
 | `409` | `SNAPSHOT_IN_PROGRESS` — a job for the relation is already pending or running. |
@@ -149,12 +173,14 @@ Authorization: Bearer abc123
 
 ## What gets stored
 
-Each snapshot is a directory of two files under a **Hive-style partitioned** path, so query engines that understand `key=value` path segments (DuckDB, Spark, Athena) can scan a whole relation history at once and filter by date:
+Each snapshot is a directory under a **Hive-style partitioned** path, so query engines that understand `key=value` path segments (DuckDB, Spark, Athena) can scan a whole relation history at once and filter by date. It holds one data file per produced format plus a metadata file:
 
 ```
 {prefix}/{database}/schema={schema}/relation={relation}/_gc2_snapshot_date=2026-09-16/
     data-{snapshot_id}.parquet
+    data-{snapshot_id}.fgb          (when flatgeobuf was requested)
     metadata-{snapshot_id}.json
+    item.json                        (STAC Item, see below)
 ```
 
 The date segment is prefixed with `_gc2_` so the partition column a Hive reader derives from it can never collide with a column of your data. File names carry the snapshot id, so a re-run on the same day never overwrites a file someone may be reading.
@@ -175,11 +201,35 @@ The date segment is prefixed with `_gc2_` so the partition column a Hive reader 
         { "column_name": "the_geom", "data_type": "geometry(Point,25832)" }
     ],
     "crs": "EPSG:25832",
+    "bbox": [8.07, 54.56, 15.19, 57.75],
+    "formats": [
+        { "format": "parquet", "status": "produced", "file": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet", "size_bytes": 8421376, "media_type": "application/vnd.apache.parquet" },
+        { "format": "flatgeobuf", "status": "produced", "file": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.fgb", "size_bytes": 19873402, "media_type": "application/flatgeobuf" }
+    ],
     "files": [
-        { "name": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet", "size_bytes": 8421376 }
+        { "name": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet", "size_bytes": 8421376 },
+        { "name": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.fgb", "size_bytes": 19873402 }
     ]
 }
 ```
+
+`bbox` is the relation's extent in WGS84 (`[minx, miny, maxx, maxy]`), or `null` for a non-spatial or empty relation.
+
+### STAC catalog
+
+Every publish also rewrites a static **[STAC](https://stacspec.org/) 1.1.0 catalog** of the whole database next to the data, so the store itself is browsable with STAC Browser, pystac or the QGIS STAC plugin — no API involved:
+
+```
+{prefix}/{database}/catalog.json                                            Catalog, id = database
+{prefix}/{database}/schema={schema}/relation={relation}/collection.json     Collection, id = schema.relation
+{prefix}/{database}/schema={schema}/relation={relation}/_gc2_snapshot_date=2026-09-16/item.json   Item, id = schema.relation/2026-09-16
+```
+
+- The **catalog** links one child collection per relation with at least one published snapshot.
+- Each **collection** carries the layer's title, abstract and tags from its [metadata](./metadata.mdx), a spatial extent that is the union of its snapshots' footprints, a temporal extent from oldest to newest snapshot date, and summaries of `schema_version` and CRS.
+- Each **item** has the snapshot's bbox as a WGS84 polygon, `datetime` at the snapshot date, `gc2:row_count`, `gc2:snapshot_id`, `gc2:schema_version`, the CRS as `proj:code`, and one **asset per produced format** — `data` for the Parquet, `flatgeobuf` for the FlatGeobuf — plus a `metadata` asset for the JSON file.
+
+All links are relative to the document that carries them, so the catalog works unchanged on S3 and on local disk. The catalog is written to the storage, not served by the API; it is meant for consumers with direct access to the bucket or directory. The rebuild is best effort: a snapshot counts as succeeded even if the catalog could not be rewritten.
 
 ## Reading snapshots
 
@@ -193,7 +243,8 @@ https://api.centia.io/api/v4/schemas/{schema}/relations/{relation}/snapshots
 |---|---|---|
 | `GET` | `/snapshots` | Array of published snapshots, newest first |
 | `GET` | `/snapshots/{date}` | One snapshot with full metadata and links |
-| `GET` `HEAD` | `/snapshots/{date}/data` | The Parquet file (`application/vnd.apache.parquet`), with byte-range support |
+| `GET` `HEAD` | `/snapshots/{date}/data` | The primary data file — the Parquet when produced, else the only produced file — with byte-range support |
+| `GET` `HEAD` | `/snapshots/{date}/data/{format}` | The data file in one named format (`/data/parquet`, `/data/flatgeobuf`), same semantics as `/data` |
 | `GET` `HEAD` | `/snapshots/{date}/files/{name}` | Any file of the snapshot by name, including `metadata-{id}.json` |
 
 ### List snapshots
@@ -216,6 +267,29 @@ Authorization: Bearer abc123
                 "name": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet",
                 "size_bytes": 8421376,
                 "href": "/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/files/data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet"
+            },
+            {
+                "name": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.fgb",
+                "size_bytes": 19873402,
+                "href": "/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/files/data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.fgb"
+            }
+        ],
+        "formats": [
+            {
+                "format": "parquet",
+                "status": "produced",
+                "file": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.parquet",
+                "size_bytes": 8421376,
+                "media_type": "application/vnd.apache.parquet",
+                "href": "/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data/parquet"
+            },
+            {
+                "format": "flatgeobuf",
+                "status": "produced",
+                "file": "data-0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b.fgb",
+                "size_bytes": 19873402,
+                "media_type": "application/flatgeobuf",
+                "href": "/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data/flatgeobuf"
             }
         ],
         "published": "2026-09-16T10:02:10+00:00"
@@ -227,12 +301,16 @@ Authorization: Bearer abc123
         "size_bytes": 8398112,
         "schema_version": "9e107d9d372bb6826bd81d3542a419d6",
         "files": [ "..." ],
+        "formats": [
+            { "format": "parquet", "status": "produced", "file": "data-c2a7e9d4-1b3f-4e5a-8c6d-0f1e2d3c4b5a.parquet", "size_bytes": 8398112, "media_type": "application/vnd.apache.parquet", "href": "/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-15/data/parquet" },
+            { "format": "flatgeobuf", "status": "skipped", "reason": "relation has no geometry column" }
+        ],
         "published": "2026-09-15T10:01:44+00:00"
     }
 ]
 ```
 
-Only `succeeded` snapshots appear here — failed, pending and superseded jobs are visible in the job API only.
+Every `produced` format carries an `href` to download it; a `skipped` one says why there is nothing to download. Only `succeeded` snapshots appear here — failed, pending and superseded jobs are visible in the job API only.
 
 ### Get one snapshot
 
@@ -251,6 +329,7 @@ Authorization: Bearer abc123
     "size_bytes": 8421376,
     "schema_version": "9e107d9d372bb6826bd81d3542a419d6",
     "files": [ "..." ],
+    "formats": [ "..." ],
     "published": "2026-09-16T10:02:10+00:00",
     "srs": 25832,
     "relation_schema": [
@@ -265,11 +344,11 @@ Authorization: Bearer abc123
 }
 ```
 
-The date must be a valid `YYYY-MM-DD`; an unknown date is `404` (`NO_SNAPSHOT_ERROR`).
+The date must be a valid `YYYY-MM-DD`; an unknown date is `404` (`NO_SNAPSHOT_ERROR`). `_links.data` is present only when the snapshot has a Parquet file; the per-format download links are always in `formats[].href`.
 
 ### Download the data
 
-`/snapshots/{date}/data` serves the Parquet file. Both `HEAD` and `GET` return `Accept-Ranges: bytes`, `Content-Length`, an `ETag` equal to the snapshot id and `Last-Modified` from the publish time, so Parquet readers can size the file and fetch the footer and individual row groups with `Range` requests:
+`/snapshots/{date}/data` serves the primary data file: the Parquet when one was produced, otherwise the only produced file. `/snapshots/{date}/data/{format}` serves the file in a named format — `/data/flatgeobuf` for the FlatGeobuf — with its own media type (`application/flatgeobuf`); an unknown format id is `400` and a format the snapshot did not produce (skipped or never requested) is `404`. Both `HEAD` and `GET` return `Accept-Ranges: bytes`, `Content-Length`, an `ETag` equal to the snapshot id and `Last-Modified` from the publish time, so Parquet readers can size the file and fetch the footer and individual row groups with `Range` requests:
 
 ```http title="Request — the last 64 KiB (where the footer lives)"
 GET https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data HTTP/1.1
@@ -288,10 +367,10 @@ ETag: "0f4c1b2e-4d1a-4c3f-9a0b-7b1d2e3f4a5b"
 
 A single range (`bytes=a-b`, `bytes=a-` or `bytes=-n`) is honoured with `206`; a range that starts beyond the end of the file is `416` with `Content-Range: bytes */{size}`. A header naming several ranges is ignored and the whole file is returned with `200`.
 
-`/snapshots/{date}/files/{name}` serves any file listed in the snapshot's `files`, plus `metadata-{snapshot_id}.json`, with the same `HEAD`/`Range` semantics. Should a snapshot ever consist of several data files, `/data` answers `409` (`MULTI_FILE_SNAPSHOT`) with the file names in the message, and you fetch them through `/files/{name}` instead.
+`/snapshots/{date}/files/{name}` serves any file listed in the snapshot's `files`, plus `metadata-{snapshot_id}.json`, with the same `HEAD`/`Range` semantics. When a snapshot has several data files and none of them is Parquet, the bare `/data` is ambiguous and answers `409` (`MULTI_FILE_SNAPSHOT`) with the `/data/{format}` paths in the message.
 
 :::note Proxy or redirect
-By default the file is **streamed through the API** (proxy mode). A self-hosted server can be configured for **redirect mode** instead, where `/data` and `/files/{name}` answer `302` with a short-lived presigned storage URL after the same authorization check, so large downloads bypass the API server. Clients should follow redirects and repeat their `Range` header against the redirected URL.
+By default the file is **streamed through the API** (proxy mode). A self-hosted server can be configured for **redirect mode** instead, where `/data`, `/data/{format}` and `/files/{name}` answer `302` with a short-lived presigned storage URL after the same authorization check, so large downloads bypass the API server. Clients should follow redirects and repeat their `Range` header against the redirected URL.
 :::
 
 ## Access
@@ -305,10 +384,10 @@ Reads are authorized before any file name or storage location is resolved:
 
 | Status | Meaning |
 |---|---|
-| `400` | `INVALID_REQUEST` — malformed schema, relation, date or file name. |
+| `400` | `INVALID_REQUEST` — malformed schema, relation, date or file name, or an unknown format id. |
 | `403` | `INSUFFICIENT_PRIVILEGES` or `GEOFENCE_RULES_APPLY`. |
-| `404` | `NO_SNAPSHOT_ERROR` — no published snapshot for that date, or no such file. |
-| `409` | `MULTI_FILE_SNAPSHOT` — several data files; use `/files/{name}`. |
+| `404` | `NO_SNAPSHOT_ERROR` — no published snapshot for that date, no such file, or the snapshot did not produce that format. |
+| `409` | `MULTI_FILE_SNAPSHOT` — several data files and no Parquet; use `/data/{format}`. |
 | `416` | Range not satisfiable. |
 | `501` | `SNAPSHOT_NOT_CONFIGURED` — no snapshot storage on this server. |
 | `502` | `SNAPSHOT_STORAGE_ERROR` — the storage backend failed. |
@@ -369,6 +448,34 @@ gdf = gpd.read_parquet(io.BytesIO(r.content))
 print(gdf.crs, len(gdf))
 ```
 
+### FlatGeobuf in a web map
+
+The [flatgeobuf](https://github.com/flatgeobuf/flatgeobuf) JavaScript library streams only the features inside a bounding box, using range requests against the snapshot URL. Because the endpoint requires a bearer token, pass it with the `headers` option; here with Leaflet:
+
+```js title="Leaflet — stream the features in the current view"
+import { geojson } from 'flatgeobuf';
+
+const url = 'https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data/flatgeobuf';
+const headers = { Authorization: 'Bearer abc123' };
+
+async function loadView() {
+    const b = map.getBounds();
+    const rect = { minX: b.getWest(), minY: b.getSouth(), maxX: b.getEast(), maxY: b.getNorth() };
+    const layer = L.geoJSON().addTo(map);
+    for await (const feature of geojson.deserialize(url, { rect, headers })) {
+        layer.addData(feature);
+    }
+}
+map.on('moveend', loadView);
+```
+
+DuckDB's `spatial` extension reads the same file with `ST_Read`, which is convenient when a FlatGeobuf is the only format produced:
+
+```sql title="DuckDB"
+INSTALL spatial; LOAD spatial;
+SELECT count(*) FROM ST_Read('https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data/flatgeobuf');
+```
+
 ### GDAL/OGR and QGIS
 
 GDAL (3.5 or later, built with the Parquet driver) reads the file over HTTP through `/vsicurl/` when the bearer token is passed as a header, and any GDAL-based desktop tool — including QGIS — opens a downloaded snapshot as a normal vector layer:
@@ -383,6 +490,8 @@ GDAL_HTTP_HEADERS="Authorization: Bearer abc123" \
 ogr2ogr bygning-2026-09-16.gpkg "/vsicurl/https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data"
 ```
 
+The FlatGeobuf works the same way through `/data/flatgeobuf`; its spatial index lets `ogrinfo -spat` and QGIS fetch only the features in a bounding box.
+
 ## Snapshots after scheduled imports
 
 A [scheduler](./scheduler.mdx) job can queue a snapshot automatically after each successful import by setting the job's `"snapshot": true` through the Scheduler API. The flag is API-only for now — the admin UI has no field for it yet.
@@ -391,6 +500,6 @@ A [scheduler](./scheduler.mdx) job can queue a snapshot automatically after each
 
 Snapshots are available on Centia Cloud out of the box. On a self-hosted [open source](./opensource.mdx) installation the feature is off until storage is configured:
 
-- **Configuration** — the `snapshot` block in `App.php`: `storage` is `s3` (with `bucket`, `prefix`, `region`; credentials from the `s3` block) or `local` (with `localPath`); `download` is `proxy` (default) or `redirect`, and `urlTtl` sets the presigned URL lifetime in seconds (default 300). Without a configured storage the API answers `501` (`SNAPSHOT_NOT_CONFIGURED`).
-- **Worker** — the export runs from `app/scripts/snapshot_worker.php`, scheduled by cron every minute under `flock` (the official Docker image ships the crontab line). It needs `ogr2ogr` with the Parquet driver (GDAL 3.5 or later).
+- **Configuration** — the `snapshot` block in `App.php`: `storage` is `s3` (with `bucket`, `prefix`, `region`; credentials from the `s3` block) or `local` (with `localPath`); `download` is `proxy` (default) or `redirect`, `urlTtl` sets the presigned URL lifetime in seconds (default 300), and `formats` is the list of formats produced when a request names none (default `["parquet"]`). Without a configured storage the API answers `501` (`SNAPSHOT_NOT_CONFIGURED`).
+- **Worker** — the export runs from `app/scripts/snapshot_worker.php`, scheduled by cron every minute under `flock` (the official Docker image ships the crontab line). It needs `ogr2ogr` with the Parquet driver (GDAL 3.5 or later); the FlatGeobuf driver ships with GDAL 3.1 or later.
 - **Apache** — the vhost must set `SetEnv ap_trust_cgilike_cl 1`; without it, `mod_proxy_fcgi` on Apache 2.4.6x strips the backend's `Content-Length`, which makes `HEAD` answer without a length and `GET` chunked, and breaks Parquet readers. The official image includes it.
