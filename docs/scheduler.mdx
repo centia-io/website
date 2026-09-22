@@ -38,6 +38,7 @@ A job object:
 | `postsql` | string | SQL to run after the import. |
 | `active` | boolean | Inactive jobs are skipped by cron but can still be started manually. Default `true`. |
 | `snapshot` | boolean | Queue a [snapshot](./snapshots.mdx) after each successful import. Default `false`. |
+| `snapshot_formats` | array | [Formats](./snapshots.mdx#formats) of that snapshot, e.g. `["parquet", "flatgeobuf"]`. Same ids and rules as `formats` on the snapshot API (unknown id is `400`; a geometry-only format is skipped on a table without geometry). Omitted or `null` uses the server default; `PATCH` with `null` resets to it. |
 | `lastcheck` | boolean | Read-only. Whether the last run succeeded. |
 | `lasttimestamp` | string | Read-only. When the last run finished. |
 | `lastrun` | string | Read-only. When the last run started. |
@@ -109,6 +110,7 @@ Authorization: Bearer abc123
     "postsql": null,
     "active": true,
     "snapshot": true,
+    "snapshot_formats": ["parquet", "flatgeobuf"],
     "lastcheck": true,
     "lasttimestamp": "2026-09-17T03:04:12+00:00",
     "lastrun": "2026-09-17T03:00:01+00:00",
