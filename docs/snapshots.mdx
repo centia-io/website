@@ -344,7 +344,18 @@ Authorization: Bearer abc123
 }
 ```
 
-The date must be a valid `YYYY-MM-DD`; an unknown date is `404` (`NO_SNAPSHOT_ERROR`). `_links.data` is present only when the snapshot has a Parquet file; the per-format download links are always in `formats[].href`.
+The date must be a valid `YYYY-MM-DD` or `latest`; an unknown date is `404` (`NO_SNAPSHOT_ERROR`). `_links.data` is present only when the snapshot has a Parquet file; the per-format download links are always in `formats[].href`.
+
+### Latest snapshot
+
+Use `latest` in place of a date to keep a **fixed URL to the newest published snapshot** of a relation: `/snapshots/latest` (metadata), `/snapshots/latest/data`, `/snapshots/latest/data/{format}` and `/snapshots/latest/files/{name}` all resolve to the newest snapshot at request time. The metadata still reports the real `snapshot_date`, and dated responses carry a `_links.latest` link. These responses are sent with `Cache-Control: no-cache`, so clients revalidate after every publish; `404` (`NO_SNAPSHOT_ERROR`) means nothing is published yet.
+
+```http title="Request"
+GET https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/latest HTTP/1.1
+Authorization: Bearer abc123
+```
+
+In the data store the partition layout is unchanged; each relation additionally gets a small `latest.json` pointer (snapshot date, id, item and asset paths) next to its STAC collection, and the collection carries a `latest-version` link to the newest item.
 
 ### Download the data
 
@@ -412,6 +423,13 @@ FROM read_parquet('https://api.centia.io/api/v4/schemas/geodanmark/relations/byg
 SELECT gid, ST_Area(the_geom) AS area
 FROM read_parquet('https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/2026-09-16/data')
 WHERE kommunekode = '0101';
+```
+
+A dashboard or notebook that should always see the current data reads the `latest` alias instead of a date:
+
+```sql title="Always the newest snapshot"
+SELECT count(*)
+FROM read_parquet('https://api.centia.io/api/v4/schemas/geodanmark/relations/bygning/snapshots/latest/data');
 ```
 
 Combine several dates to compare them — `union_by_name` keeps this working when columns were added between snapshots:
