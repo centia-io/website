@@ -5,7 +5,7 @@ Status: godkendt design, klar til implementeringsplan
 
 ## Mål
 
-Produktet Centia omdøbes til GC2. Det omfatter domæner, npm-pakker, GitHub-repos,
+Produktet Centia omdøbes til GC2, der står for **Geo Compute Cloud**. Det omfatter domæner, npm-pakker, GitHub-repos,
 CLI-binary, OAuth-client, MCP-toolprefix, Claude-skills og brandtekst i docs og UI.
 Firmaet hedder fortsat MapCentia, og npm-scope'et er `@mapcentia`.
 
@@ -115,7 +115,7 @@ Rækkefølge inden i fasen, fordi pakkerne afhænger af hinanden:
 4. Default `API_BASE_URL` til `https://api.gc2.io` i `mcpPool.ts`, `auth.ts`,
    `.env.example` og `docker-compose.yml`. MCP-klientnavn `gc2-agent`.
 5. Systemprompt (`prompt.ts`) og `chat.test.ts`: brandtekst læses igennem manuelt.
-   "Centia" som produkt bliver "GC2"; "MapCentia" som firma bevares. Skill-navnet
+   "Centia" som produkt bliver "GC2 (Geo Compute Cloud)"; "MapCentia" som firma bevares. Skill-navnet
    `centia-map-styling` følger fase 5.
 6. Workspace-navn, Docker-stack og traefik-backend til `gc2-agent`. Det er et nyt
    stack-navn, så den gamle stack fjernes eksplicit ved redeploy.
@@ -132,7 +132,9 @@ Rækkefølge inden i fasen, fordi pakkerne afhænger af hinanden:
 - Alle 36 docs-sider og `src/pages/faq.mdx`: `api.centia.io` → `api.gc2.io`,
   `@centia-io/sdk` → `@mapcentia/gc2-sdk`, `@centia-io/cli` → `@mapcentia/gc2-cli`,
   `@centia-io/mcp-server` → `@mapcentia/gc2-mcp-server`, CLI-eksempler `centia …` → `gc2 …`.
-  Brandtekst ("Centia.io is a Backend as a Service") læses igennem manuelt.
+  Brandtekst ("Centia.io is a Backend as a Service") læses igennem manuelt. Navnet
+  udfoldes som "GC2 (Geo Compute Cloud)" første gang på intro-siden, forsiden og i
+  `docusaurus.config.js` (title og tagline); derefter bare "GC2".
 - Logo-filer `centia-logo*.svg` erstattes.
 - Deploy til gc2.io.
 
