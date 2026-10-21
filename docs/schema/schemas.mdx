@@ -1,5 +1,6 @@
 ---
-description: A database contains one or more named schemas, which in turn contain tables.
+title: Schemas
+description: Create, inspect, rename and delete schemas in your Centia.io database through the Schema API, CLI or Web App, and see how schemas scope tables and sub-user access.
 sidebar_position: 10
 ---
 
@@ -8,10 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Schemas
 
-A database contains one or more named schemas, which in turn contain tables. Within one schema, two tables cannot have
-the same name. The same table name can be used in different schemas without conflict; for example, both schema1 and
-schema2
-can contain tables named inductees.
+A schema is a named namespace inside your Centia.io database that groups [tables](./tables.mdx), views and [sequences](./sequences.mdx). Within one schema two tables cannot share a name, but the same table name can be reused in different schemas; `schema1.inductees` and `schema2.inductees` are distinct tables.
+
+In Centia.io the schema is also the unit of ownership and addressing. Every [sub-user](../users.mdx) owns a schema named after itself, and several APIs are schema-qualified: the [SQL API](../statement.mdx) and [GraphQL](../graphql.mdx) resolve unqualified table names within a schema, and the [OGC services](../ogc/services.mdx) expose one endpoint per schema. The Schema API below creates, lists, renames and deletes schemas, and a new schema can be created together with nested table definitions in a single request.
 
 ## Add schema
 

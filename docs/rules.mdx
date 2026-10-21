@@ -1,6 +1,6 @@
 ---
 title: Rules
-description: Rules...
+description: Control access to tables and rows in Centia.io with geofence rules that allow, deny or limit incoming SQL statements by user, request type, schema, table and IP range.
 sidebar_position: 65
 ---
 
@@ -9,7 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Rules
 
-Rules can deny or allow access to tables or rewrite the SQL statement by adding a `where` clause. Rules are not attached to tables but applied to the incoming SQL statement before it actually runs in the database engine.
+Rules are Centia.io's row-level access control. Where [privileges](./privileges.mdx) decide whether a [sub-user](./users.mdx) may read or write a table at all, a rule decides what happens to a specific statement: it can `allow` it, `deny` it, or `limit` it by injecting a `where` clause so the user only sees or changes the rows the filter permits. This is how you give a field worker access to features inside their municipality, or let a tenant query a shared table while only ever seeing its own rows.
+
+Rules are not attached to tables. They are evaluated against every incoming [SQL](./statement.mdx) statement before it reaches the database, and the same rules are enforced for the [OGC services](./ogc/services.mdx), the [Feature API](./features.mdx) and [Functions](./functions.mdx). The rest of this page explains how statements are matched, how priorities and multiple rules combine, and how to manage rules through the API.
 
 Incoming statements are matched against the rules in a prioritized order, and if there is a match, the rule will be applied.
 

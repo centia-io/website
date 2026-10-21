@@ -1,5 +1,6 @@
 ---
-description: A sequence is a database object that generates a sequence of integers.
+title: Sequences
+description: Create, inspect, update and delete PostgreSQL sequences in a Centia.io schema through the Sequence API, typically to drive auto-incrementing primary keys.
 sidebar_position: 60
 ---
 
@@ -8,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # Sequences
 
-A sequence is a database object that generates a sequence of integers, often used for auto-incrementing primary key columns.
+A sequence is a database object inside a [schema](./schemas.mdx) that hands out consecutive integers. Its usual job is to supply values for an auto-incrementing primary key [column](./columns.mdx), so that rows inserted through the [SQL API](../statement.mdx), the [Feature API](../features.mdx) or an [import](../import.mdx) get unique ids without the client choosing them. Tables created with a `serial` column get a sequence automatically; the Sequence API is for when you need to create one explicitly, share it between tables, change its start value or increment, or remove it.
 
 ## Add sequence
 

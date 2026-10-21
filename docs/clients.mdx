@@ -9,7 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Clients
 
-OAuth clients are applications that request and manage access to user resources through the OAuth authorization protocol. These clients act as intermediaries, enabling secure, delegated access to user accounts without directly handling sensitive credentials.
+A client is an application you register with your Centia.io database so that it can obtain access tokens on behalf of users through [OAuth](./oauth.mdx). Every web app, mobile app, server process or CLI that signs users in needs a client: the `client_id` identifies the application in the authorization flow, and the registered redirect URIs decide where the browser may be sent back with an authorization code.
+
+You create a client once, then use its id when initialising the [SDK](./sdk.mdx) or building the authorization URL. Public clients, such as single-page and mobile apps, use the Authorization Code flow with PKCE and have no secret; confidential clients run on a server you control and authenticate with a `client_secret`. This page covers the registration requirements, the security recommendations that follow from the client type, and the API for adding, reading, updating and deleting clients.
 
 ## Registration Requirements
 

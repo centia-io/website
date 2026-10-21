@@ -1,12 +1,14 @@
 ---
 title: GraphQL
-description: The GraphQL API provides a flexible way to query and manipulate data using a dynamic schema based on your database tables.
+description: Query and mutate Centia.io tables through a GraphQL schema generated from your database, with per-schema endpoints, nested selection and Bearer token authentication.
 sidebar_position: 62
 ---
 
 # GraphQL
 
-The GraphQL API allows you to query and manipulate your database data using a dynamically generated schema. Each table in your schema is automatically mapped to GraphQL types, queries, and mutations.
+The GraphQL API exposes each database [schema](./schema/schemas.mdx) as a GraphQL endpoint whose types, queries and mutations are generated from the tables in it. There is nothing to define or deploy: add a table or a column and it appears in the GraphQL schema on the next request, with the PostgreSQL types mapped to GraphQL scalars.
+
+Use GraphQL when a client needs to pick exactly the fields it wants, fetch related data in one round trip, or benefit from the typed schema in tooling and code generation. For ad-hoc or spatial queries that need the full power of PostgreSQL, the [SQL API](./statement.mdx) is the better fit, and for stable server-side queries use [methods](./methods.mdx). Authentication, [privileges](./privileges.mdx) and [rules](./rules.mdx) apply as for every other API.
 
 ## Endpoint and Authentication
 

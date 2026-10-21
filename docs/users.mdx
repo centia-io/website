@@ -1,6 +1,6 @@
 ---
 title: Sub-users
-description: Manage application sub-users in Centia.io. Create, list, update, and delete users via HTTP API or CLI.
+description: Create and manage sub-users in Centia.io, the API identities your application authenticates as. Covers creation, groups, privilege inheritance and self-service signup.
 sidebar_position: 40
 ---
 
@@ -9,7 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Sub-users
 
-Sub-users are API users. While you can use the super-user for single-user projects, it is recommended to create sub-users for multi-user projects and assign [privileges](./privileges.mdx) per table.
+A sub-user is an identity within your Centia.io database that can authenticate with [OAuth](./oauth.mdx) and call the API with its own, limited rights. The database itself has one super-user, the account you created the backend with, which has unrestricted access. For anything beyond a single-user project you create sub-users so that each application, team member or end user gets its own credentials and only the access it needs.
+
+Each sub-user owns a [schema](./schema/schemas.mdx) with the same name and starts with no access to tables outside it. You open up access per table with [privileges](./privileges.mdx), restrict it further with row-level [rules](./rules.mdx), and organise sub-users in groups so that privileges are inherited. This page covers creating, listing, updating and deleting sub-users, group membership and inheritance, and the self-service signup flow for end users.
 
 ## Create a new sub-user
 

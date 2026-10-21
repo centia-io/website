@@ -1,5 +1,6 @@
 ---
-description: A table in a database is much like a table on paper. It consists of rows and columns.
+title: Tables
+description: Create, inspect, rename, move and delete tables in a Centia.io schema through the Table API, with nested columns, indices and constraints in one request.
 sidebar_position: 20
 ---
 
@@ -8,9 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Tables
 
-A table is much like a table on paper: It consists of rows and columns. The number and order of
-the columns is fixed, and each column has a name. The number of rows is variable — it reflects how much data is stored
-at a given moment.
+A table stores your data as rows under a fixed set of named [columns](./columns.mdx), each with a PostgreSQL data [type](../types.mdx). Tables live inside a [schema](./schemas.mdx) and are addressed as `schema.table` throughout Centia.io.
+
+The Table API is the provisioning interface for tables: it creates a table, optionally with nested columns, [indices](./indexes.mdx) and [constraints](./constraints.mdx) in one request, reads its definition, renames it or moves it to another schema, and drops it. Once a table exists you read and write its rows with [SQL](../statement.mdx), GraphQL or the [Feature API](../features.mdx), and a table with a geometry column is automatically available as a map layer through the [OGC services](../ogc/services.mdx). Use this API from migrations, CLI scripts or the Web App when you need to change the structure of your data rather than its content.
 
 ## Add table
 

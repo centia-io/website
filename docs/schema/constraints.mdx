@@ -1,5 +1,6 @@
 ---
-description: Constraints give you as much control over the data in your tables as you wish.
+title: Constraints
+description: Add primary key, unique, foreign key and check constraints to Centia.io tables through the Constraint API, and inspect or drop them again.
 sidebar_position: 50
 ---
 
@@ -7,6 +8,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 #  Constraints
+
+A constraint is a rule the database enforces on a [table's](./tables.mdx) rows: a primary key identifies each row uniquely, a unique constraint prevents duplicates, a foreign key keeps a reference pointing at an existing row in another table, and a check constraint validates values against an expression. The Constraint API adds, inspects and drops these on Centia.io tables without writing DDL, and constraints can also be declared inline when the table is created. A primary key matters in particular for the [Feature API](../features.mdx) and WFS-T editing, which address rows by their key.
 
 Data types are a way to limit the kind of data that can be stored in a table. For many applications, however, the constraint they provide is too coarse. For example, a column containing a product price should probably only accept positive values. But there is no standard data type that accepts only positive numbers. Another issue is that you might want to constrain column data with respect to other columns or rows. For example, in a table containing product information, there should be only one row for each product number.
 

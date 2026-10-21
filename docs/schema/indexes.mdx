@@ -1,5 +1,6 @@
 ---
-description: Indices are essential for good database performance.
+title: Indices
+description: Create btree, gin, gist, brin and hash indices on Centia.io tables through the Index API to speed up queries and spatial operations, and inspect or drop them.
 sidebar_position: 40
 ---
 
@@ -7,6 +8,8 @@ import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
 # Indices
+
+An index is a data structure the database maintains next to a [table](./tables.mdx) so that lookups, joins and sorts on the indexed [columns](./columns.mdx) do not have to scan every row. On a Centia.io table you typically add a btree index on columns used in `where` clauses and joins, a gist index on a geometry column so spatial queries and map rendering through the [OGC services](../ogc/services.mdx) stay fast, and a gin index for JSON or array columns. The Index API adds, inspects and drops indices; they can also be declared inline when a table is created.
 
 Indices in a database use a similar approach as in most non-fiction books: terms and concepts that are frequently looked
 up by readers are collected in an alphabetic index at the end of the book. The interested reader can scan the index

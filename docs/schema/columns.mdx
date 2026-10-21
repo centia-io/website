@@ -1,5 +1,6 @@
 ---
-description: Tables has a fixed number of columns and each column has a data type.
+title: Columns
+description: Add, inspect, alter and drop columns on Centia.io tables through the Column API. Set data types, nullability and defaults without writing DDL.
 sidebar_position: 30
 ---
 
@@ -8,12 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Columns
 
-Each column has a data type. The data type constrains the set of possible values that can be assigned to a column and
-assigns semantics to the data stored in the column so that it can be used for computations. For instance, a column
-declared to be of a numerical type will not accept arbitrary text strings, and the data stored in such a column can be
-used for mathematical computations. By contrast, a column declared to be of a character string type will accept almost
-any kind of data but it does not lend itself to mathematical calculations, although other operations such as string
-concatenation are available.
+A column is one named field of a [table](./tables.mdx), and every column has a PostgreSQL data type. The type constrains which values the column accepts and gives them meaning: a numeric column rejects arbitrary text and can be used in calculations, a text column accepts almost anything but supports string operations instead, and a PostGIS `geometry` column turns the table into a map layer. See [Types](../types.mdx) for how each type is sent and returned through the API.
+
+The Column API lets you evolve a table's structure after it has been created: add a column, read its definition, rename it, change its type, nullability or default value, and drop it. Because the [SQL API](../statement.mdx) does not accept DDL statements, this API, the CLI and the Web App are the ways to alter columns on a Centia.io table.
 
 ## Get column
 

@@ -1,6 +1,6 @@
 ---
 title: Privileges
-description: Privileges...
+description: Grant Centia.io sub-users none, read or write privilege on individual tables, inspect effective privileges and understand how schema ownership and groups affect access.
 sidebar_position: 45
 ---
 
@@ -9,7 +9,9 @@ import TabItem from '@theme/TabItem';
 
 # Privileges
 
-Centia.io has a simple privilege system that enables the super-user to grant [sub-users](./users.mdx) read or write privileges on tables. Sub-users can grant privileges on tables in their own schemas.
+Privileges are the table-level access control in Centia.io. A [sub-user](./users.mdx) owns its own schema and can do anything there, but has no access to tables in other schemas until a privilege is granted. The super-user can grant `read` or `write` on any table, and a sub-user can grant privileges on tables in the schemas it owns, so a team can share a dataset without sharing credentials.
+
+Privileges are enforced everywhere a table is reached: the [SQL API](./statement.mdx), GraphQL, the [Feature API](./features.mdx), [Realtime](./realtime.mdx) subscriptions and the [OGC services](./ogc/services.mdx). They answer whether a user may touch a table; to restrict which rows the user sees, combine them with [rules](./rules.mdx). Privileges granted to a group are inherited by its members, as described under [groups and inheritance](./users.mdx#groups-and-inheritance).
 
 ## Set privileges for a user on a table
 
