@@ -1,6 +1,6 @@
 ---
 title: Import
-description: Upload CSV, GeoJSON, GeoParquet, shapefile, GeoPackage and other files to Centia.io and import them into a table with the two-step file API, the CLI or the Web App.
+description: Upload CSV, GeoJSON, GeoParquet, FlatGeobuf, shapefile, GeoPackage, MapInfo and File Geodatabase files to Centia.io and import them into tables with the file API, CLI or Web App.
 sidebar_position: 70
 ---
 
@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # Import
 
-The import API turns a data file into a table. You upload one or more files, such as CSV, GeoJSON, GeoParquet, a zipped shapefile or a GeoPackage, to temporary storage, then ask the server to process them into a target [schema](./schema/schemas.mdx) and table. The server reads the file with GDAL/OGR, so most vector and tabular formats are accepted, coordinate reference systems can be set or reprojected on the way in, and a dry run validates the result before anything is written.
+The import API turns a data file into a table. You upload one or more files, such as CSV, GeoJSON, GeoParquet, FlatGeobuf, a zipped shapefile, a GeoPackage, a MapInfo table or a File Geodatabase, to temporary storage, then ask the server to process them into a target [schema](./schema/schemas.mdx) and table. The server reads the file with GDAL/OGR, so most vector and tabular formats are accepted, coordinate reference systems can be set or reprojected on the way in, and a dry run validates the result before anything is written.
 
 This is the quickest way to get existing data into Centia.io, whether you are seeding a new backend, appending a monthly delivery to an existing table or loading a dataset for a map. Spatial files become tables with a geometry column and are immediately available through [SQL](./statement.mdx) and the [OGC services](./ogc/services.mdx).
 
@@ -62,8 +62,8 @@ centia import ./mydata_dir
 :::note
 - Cli will compress the selected file or directory and upload/process in one step.
 - File can be a zip archive containing multiple files in subdirectories
-- File format is determined by the file extension (e.g. .csv, .geojson, .parquet, .zip)
-- File formats with multiple parts (e.g. ESRI Shape Files) must be zipped
+- File format is determined by the file extension (e.g. .csv, .geojson, .parquet, .fgb, .gpkg, .zip)
+- File formats with multiple parts (ESRI Shapefile, MapInfo TAB) and directory-based formats (File Geodatabase .gdb) must be zipped
 :::
 
 Responses
@@ -126,6 +126,9 @@ Supported formats
 - GeoJSON (.geojson): Single layer. Geometry type is detected. Source SRID defaults to EPSG:4326 (GeoJSON default). Attributes are imported as text/number/boolean where possible.
 - ESRI Shapefile (.shp): Must be uploaded as a .zip including all sidecar files (.dbf, .shx, .prj, etc.). One PostGIS table is created per shapefile.
 - GeoPackage (.gpkg): May contain multiple layers. One PostGIS table is created per layer.
+- FlatGeobuf (.fgb): Single layer. Geometry type and CRS are read from the file header. This is also one of the formats [snapshots](./snapshots.mdx) can be exported in.
+- MapInfo TAB (.tab): Must be uploaded as a .zip including all sidecar files (.dat, .map, .id, .ind). One PostGIS table is created per TAB file.
+- ESRI File Geodatabase (.gdb): A directory; zip the whole .gdb folder. May contain multiple feature classes. One PostGIS table is created per feature class.
 - Parquet / GeoParquet (.parquet): Single layer. A GeoParquet file carries its geometry column, geometry type and CRS in the file metadata, and these are used as-is. A plain Parquet file without geometry metadata is imported as a table without a geometry column. This is also the format [snapshots](./snapshots.mdx) are exported in, so a snapshot of one table can be imported into another.
 - Geography Markup Language (.gml): May contain multiple layers. One PostGIS table is created per layer.
 - CSV (.csv): If the file contains coordinates, a geometry column will be constructed. See CSV geometry detection below.
@@ -144,6 +147,7 @@ How data becomes a PostGIS table
 Multiple layers in one upload
 - Zip with multiple shapefiles: Each shapefile becomes a separate table.
 - GeoPackage and Geography Markup Language with multiple layers: Each layer becomes a separate table.
+- File Geodatabase with multiple feature classes: Each feature class becomes a separate table.
 
 Append and truncate semantics
 - append: true will insert features into an existing table (schema.table). The table must be compatible (same or castable attribute types and geometry type/SRID).

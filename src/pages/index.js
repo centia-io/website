@@ -12,14 +12,14 @@ const pageTitle = 'Geospatial BaaS & Infrastructure — Cloud or Self-Hosted';
 const pageDescription =
     'Build geospatial apps on PostGIS with spatial SQL, realtime APIs, OGC API Features & Maps and WMS/WFS. Use managed Centia Cloud or self-host with Docker.';
 
-const formats = ['GeoJSON', 'Shapefile', 'GeoPackage', 'CSV', 'GML'];
+const formats = ['GeoParquet', 'GeoJSON', 'Shapefile', 'GeoPackage', 'FlatGeobuf', 'CSV', 'GML', 'MapInfo', 'File Geodatabase'];
 
 const steps = [
     {
         marker: '01',
         title: 'Upload your data',
         description:
-            'Import CSV, GeoJSON, Shapefile, GeoPackage or GML into PostGIS tables, with options for coordinate reference systems and reprojection.',
+            'Import GeoParquet, GeoJSON, Shapefile, GeoPackage, FlatGeobuf, CSV, GML, MapInfo or File Geodatabase into PostGIS tables, with options for coordinate reference systems and reprojection.',
         link: {to: '/docs/import', label: 'File import'},
     },
     {
@@ -49,7 +49,7 @@ const features = [
     {
         icon: '⛁',
         title: 'Import your spatial data',
-        description: 'Bring GeoJSON, Shapefile, GeoPackage, CSV or GML into your database and expose it through APIs.',
+        description: 'Bring GeoParquet, GeoJSON, Shapefile, GeoPackage, FlatGeobuf, CSV or GML into your database and expose it through APIs.',
         link: {to: '/docs/import', label: 'Explore data import'},
     },
     {
