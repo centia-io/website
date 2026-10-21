@@ -10,7 +10,7 @@ import styles from './index.module.css';
 
 const pageTitle = 'Geospatial BaaS & Infrastructure — Cloud or Self-Hosted';
 const pageDescription =
-    'Build geospatial apps on PostGIS with spatial SQL, realtime APIs, OGC API Features & Maps and WMS/WFS. Use managed Centia Cloud or self-host with Docker.';
+    'Build geospatial apps on PostGIS with spatial SQL, realtime APIs, OGC API Features & Maps, WMS/WFS, scheduled imports and GeoParquet snapshots. Use managed Centia Cloud or self-host with Docker.';
 
 const formats = ['GeoParquet', 'GeoJSON', 'Shapefile', 'GeoPackage', 'FlatGeobuf', 'CSV', 'GML', 'MapInfo', 'File Geodatabase'];
 
@@ -51,6 +51,20 @@ const features = [
         title: 'Import your spatial data',
         description: 'Bring GeoParquet, GeoJSON, Shapefile, GeoPackage, FlatGeobuf, CSV or GML into your database and expose it through APIs.',
         link: {to: '/docs/import', label: 'Explore data import'},
+    },
+    {
+        icon: '⏲',
+        title: 'Scheduled imports',
+        description:
+            'Keep tables in sync with files, WFS services and feeds on a cron schedule. Imports are atomic, runs are tracked, and a snapshot can be queued after each one.',
+        link: {to: '/docs/scheduler', label: 'Explore the scheduler'},
+    },
+    {
+        icon: '⧉',
+        title: 'Snapshots as GeoParquet',
+        description:
+            'Export tables as dated GeoParquet or FlatGeobuf files with a STAC catalog, and query them straight from DuckDB, Python or a web map over HTTP range requests.',
+        link: {to: '/docs/snapshots', label: 'Explore snapshots'},
     },
     {
         icon: '▦',
@@ -116,6 +130,10 @@ const useCases = [
     {
         title: 'Desktop GIS integration',
         description: 'Connect QGIS directly over WMS/WFS and edit with WFS-T.',
+    },
+    {
+        title: 'Analytics on dated snapshots',
+        description: 'Query GeoParquet exports in DuckDB and compare how a dataset looked on any date.',
     },
     {
         title: 'Location-based applications',
