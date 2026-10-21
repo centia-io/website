@@ -116,8 +116,9 @@ const config = {
                     }
                     : {}),
                 sitemap: {
-                    changefreq: 'weekly',
-                    priority: 0.6,
+                    lastmod: 'date',
+                    changefreq: null,
+                    priority: null,
                     filename: 'sitemap.xml',
                     ignorePatterns: ['/tags/**', '/__docusaurus/**'],
                 },
