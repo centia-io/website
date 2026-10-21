@@ -1,6 +1,6 @@
 ---
 title: Import
-description: Upload CSV, GeoJSON, shapefile, GeoPackage and other files to Centia.io and import them into a table with the two-step file API, the CLI or the Web App.
+description: Upload CSV, GeoJSON, GeoParquet, shapefile, GeoPackage and other files to Centia.io and import them into a table with the two-step file API, the CLI or the Web App.
 sidebar_position: 70
 ---
 
@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 
 # Import
 
-The import API turns a data file into a table. You upload one or more files, such as CSV, GeoJSON, a zipped shapefile or a GeoPackage, to temporary storage, then ask the server to process them into a target [schema](./schema/schemas.mdx) and table. The server reads the file with GDAL/OGR, so most vector and tabular formats are accepted, coordinate reference systems can be set or reprojected on the way in, and a dry run validates the result before anything is written.
+The import API turns a data file into a table. You upload one or more files, such as CSV, GeoJSON, GeoParquet, a zipped shapefile or a GeoPackage, to temporary storage, then ask the server to process them into a target [schema](./schema/schemas.mdx) and table. The server reads the file with GDAL/OGR, so most vector and tabular formats are accepted, coordinate reference systems can be set or reprojected on the way in, and a dry run validates the result before anything is written.
 
 This is the quickest way to get existing data into Centia.io, whether you are seeding a new backend, appending a monthly delivery to an existing table or loading a dataset for a map. Spatial files become tables with a geometry column and are immediately available through [SQL](./statement.mdx) and the [OGC services](./ogc/services.mdx).
 
@@ -62,7 +62,7 @@ centia import ./mydata_dir
 :::note
 - Cli will compress the selected file or directory and upload/process in one step.
 - File can be a zip archive containing multiple files in subdirectories
-- File format is determined by the file extension (e.g. .csv, .geojson, .zip)
+- File format is determined by the file extension (e.g. .csv, .geojson, .parquet, .zip)
 - File formats with multiple parts (e.g. ESRI Shape Files) must be zipped
 :::
 
@@ -126,6 +126,7 @@ Supported formats
 - GeoJSON (.geojson): Single layer. Geometry type is detected. Source SRID defaults to EPSG:4326 (GeoJSON default). Attributes are imported as text/number/boolean where possible.
 - ESRI Shapefile (.shp): Must be uploaded as a .zip including all sidecar files (.dbf, .shx, .prj, etc.). One PostGIS table is created per shapefile.
 - GeoPackage (.gpkg): May contain multiple layers. One PostGIS table is created per layer.
+- Parquet / GeoParquet (.parquet): Single layer. A GeoParquet file carries its geometry column, geometry type and CRS in the file metadata, and these are used as-is. A plain Parquet file without geometry metadata is imported as a table without a geometry column. This is also the format [snapshots](./snapshots.mdx) are exported in, so a snapshot of one table can be imported into another.
 - Geography Markup Language (.gml): May contain multiple layers. One PostGIS table is created per layer.
 - CSV (.csv): If the file contains coordinates, a geometry column will be constructed. See CSV geometry detection below.
 
@@ -175,4 +176,17 @@ curl -X POST "https://api.centia.io/api/v4/file/process" \
 centia import ./points.csv --dry_run
 # 2) Commit
 centia import ./points.csv my_schema
+```
+
+```bash title="Import a GeoParquet file into my_schema"
+# 1) Upload
+curl -X POST "https://api.centia.io/api/v4/file/upload" \
+  -H "Authorization: Bearer abc123" \
+  -F "filename=@./buildings.parquet"
+
+# 2) Process (commit). The CRS is read from the GeoParquet metadata, so s_srs is only a fallback.
+curl -X POST "https://api.centia.io/api/v4/file/process" \
+  -H "Authorization: Bearer abc123" \
+  -H "Content-Type: application/json" \
+  -d "{\n  \"file\": \"buildings.parquet\",\n  \"schema\": \"my_schema\",\n  \"import\": true,\n  \"p_multi\": true\n}"
 ```
